@@ -8,27 +8,31 @@ Template.body.events
   'click .a': ->
     Session.set 'module', 'a'
     pointList = []
-    pointList.push new L.LatLng(window.LUtil.getRandomLatLng()[0],window.LUtil.getRandomLatLng()[1]) for num in [1..10]    
-    L.Mapper.drawPath(pointList, 'red', 5, window.LUtil.map)    
+    #pointList.push new L.LatLng(window.LUtil.getRandomLatLng()[0],window.LUtil.getRandomLatLng()[1]) for num in [1..2]  
+    pointList.push new L.LatLng(37.721201, -115.428235)
+    pointList.push new L.LatLng(37.022733, -80.140149)
+    mapPath = new L.mapPath pointList
+    mapPath.drawPath('red', 5, window.LUtil.map)    
   'click .b': ->
     Session.set 'module', 'b'
     pointList = []
-    pointList.push new L.LatLng(window.LUtil.getRandomLatLng()[0],window.LUtil.getRandomLatLng()[1]) for num in [1..10]
-    path = new L.Mapper.drawPath(pointList, 'blue', 10, window.LUtil.map)
-    popup = L.popup().setLatLng(pointA).setContent('<p>Path Details:<br />Origin:<br />Destination:</p>').openOn(window.LUtil.map)    
-    path.bindPopup(popup).openPopup()
+    mapPath = new L.mapPath pointList
+    mapPath.drawPath('red', 5, window.LUtil.map) 
   'click .c': ->
     Session.set 'module', 'c'
     pointList = []
     pointList.push new L.LatLng(window.LUtil.getRandomLatLng()[0],window.LUtil.getRandomLatLng()[1]) for num in [1..10]
-    L.Mapper.drawPath(pointList, 'green', 15, window.LUtil.map)
+    mapPath = new L.mapPath pointList
+    mapPath.drawPath('red', 5, window.LUtil.map) 
   'click .d': ->
     Session.set 'module', 'd'
     pointList = []
     pointList.push new L.LatLng(window.LUtil.getRandomLatLng()[0],window.LUtil.getRandomLatLng()[1]) for num in [1..10]
-    L.Mapper.drawPath(pointList, 'black', 20, window.LUtil.map)
+    mapPath = new L.mapPath pointList
+    mapPath.drawPath('red', 5, window.LUtil.map) 
   'click .e': ->
     Session.set 'module', 'e'
     pointList = []
     pointList.push new L.LatLng(window.LUtil.getRandomLatLng()[0],window.LUtil.getRandomLatLng()[1]) for num in [1..10]
-    L.Mapper.drawPath(pointList, 'orange', 25, window.LUtil.map)
+    mapPath = new L.mapPath pointList
+    mapPath.drawPath('red', 5, window.LUtil.map) 
