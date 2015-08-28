@@ -9,7 +9,8 @@ Package.describe({
 Package.onUse(function(api) {
   api.versionsFrom('1.1.0.3');  
   api.use('coffeescript');
-  api.use('fuatsengul:leaflet', 'client');
+  api.use('fuatsengul:leaflet', 'client'); 
+  api.addFiles('leafnav.js', ['client']);
   api.addFiles('mapper.coffee', ['client']);
 });
 
