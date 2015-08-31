@@ -65,3 +65,4 @@ window.LUtil =
 Template.map.created = ->
 Template.map.rendered = ->
   window.LUtil.initMap()
+  Meteor.buildFlight.build(flight) for flight in Meteor.flights

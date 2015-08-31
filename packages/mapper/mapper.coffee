@@ -10,16 +10,32 @@ if Meteor.isClient
       IDLpathLine: null
       origin: null
       destination: null
+      destWAC: null
+      alliance: null
+      arrFlag: null
+      arrTerm: null
+      arrTime: null
+      blockMins: null
+      date: null
+      depTerm: null
+      depTime: null
+      equip: null
       flight: null
       miles: null
-      stops: null
+      mktgAl: null
+      opsAl: null
+      ops_day: null
+      ops_week: null
+      origWAC: null
       seats: null
+      seats_week: null
+      stops: null      
       visible: false
       origin_terminal: null
       destination_terminal: null
       archPosition: 0 #defines the arch position for drawing the path on a curve to avoid path overlap
       show: () ->
-      	@drawPath(@color, @weight, @map)
+      	@drawPath()
       hide: () ->
       	@visible = false
       	@map.removeLayer @pathLine
@@ -29,13 +45,37 @@ if Meteor.isClient
         @pointList = latlngs
         @visible = true
         L.MapPaths.addPath(this)
-      initialize: (origin, destination) ->
+      initialize: (flight, map) ->
+        @map = map
         @visible = true
-        @origin = origin
-        @destination = destination
-        @pointList = [origin.latlng, destination.latlng]
+        @alliance = flight.Alliance
+        @arrFlag = flight['Arr Flag']
+        @arrTerm = flight['Arr Term']
+        @arrTime = flight['Arr Time']
+        @blockMins = flight['Block Mins']
+        @arrTime = flight['Arr Time']
+        @arrTime = flight['Arr Time']
+        @origin = new L.MapNode(flight.Orig, @map)
+        @destination = new L.MapNode(flight.Dest, @map)
+        @blockMins= flight['Block Mins']
+        @date= flight.Date
+        @depTerm= flight['Dep Term']
+        @depTime= flight['Dep Time']
+        @equip= flight.Equip
+        @flight= flight.Flight
+        @miles= flight.Miles
+        @mktgAl= flight['Mktg Al']
+        @opsAl= flight['Op Al']
+        @ops_day= flight['Ops Day']
+        @ops_week = flight['Ops/Week']
+        @origWAC = flight['Orig WAC']
+        @seats = flight.Seats
+        @seats_week= flight['Seats/Week']
+        @stops = flight.Stops
+        @pointList = [@origin.latlng, @destination.latlng]
         L.MapPaths.addPath(this)
-      calculateArch: (archPos)->       
+        this.drawPath()
+      calculateArch: (archPos)->
         orgDestDist = Meteor.leafnav.getDistance(@origin.latlng, @destination.latlng, "K")
         #v this works for north south
         pm = @origin.latlng.lng < @destination.latlng.lng or @origin.latlng.lat < @destination.latlng.lat? true : false     
@@ -82,44 +122,46 @@ if Meteor.isClient
           arcCoords.push(@destination.latlng)
         @pointList = arcCoords
         @IDLpointList = IDLarcCoords
-      drawPath: (color, weight, map) ->
-        @visible = true
-        @map = map
-        @color = color
-        @weight = weight        
+      setStyle: () ->
+        @color = '#'+Math.floor(Math.random()*16777215).toString(16)
+        @weight = Math.floor(Math.random() * 25) + 5  
+      drawPath: () ->
+        this.setStyle()
+        @visible = true              
         #is there an existing path displayed (visible) between the path nodes?
         archPos = []
         for mapPath in L.MapPaths.mapPaths
           if mapPath isnt this
             if (mapPath.origin.equals @origin) and (mapPath.destination.equals @destination)
               archPos[mapPath.archPosition]=true
-            if (mapPath.origin.equals @destination) and (mapPath.destination.equals @origin)
-              archPos[mapPath.archPosition]=true
-        mapPath.calculateArch(archPos)                
+            #if (mapPath.origin.equals @destination) and (mapPath.destination.equals @origin)
+            #  archPos[mapPath.archPosition]=true
+        mapPath.calculateArch(archPos)          
+        popup = L.popup()
+        div = L.DomUtil.create("div","lbqs")              
+        Blaze.renderWithData(Template.pathDetails, this, div);
+        popup.setContent(div)        
         @pathLine = new (L.Polyline)(
           @pointList
-          color: color
-          weight: weight
+          color: @color
+          weight: @weight
           opacity: 0.5
           smoothFactor: 1)
         if @IDLpointList isnt null
           @IDLpathLine = new (L.Polyline)(
             @IDLpointList
-            color: color
-            weight: weight
+            color: @color
+            weight: @weight
             opacity: 0.5
             smoothFactor: 1)
-          @IDLpathLine.addTo map
-          @IDLpathLine.bindPopup("<b>path</b>"); 
-        @pathLine.addTo map
-        @pathLine.bindPopup("<b>path</b>");
+          @IDLpathLine.addTo @map
+          @IDLpathLine.bindPopup(popup);
+        @pathLine.addTo @map        
+        @pathLine.bindPopup(popup);
       )
 
-    L.mapPath = (latlngs) ->
-      new (L.MapPath)(latlngs)
-
-    L.mapPath = (origin, destination) ->
-      new (L.MapPath)(origin,destination)
+    L.mapPath = (flight, map) ->
+      new (L.MapPath)(flight, map)
 
     L.MapPaths =
       mapPaths : []
@@ -142,26 +184,61 @@ if Meteor.isClient
 
     L.MapNode = L.Path.extend(
       latlng: null
-      airport_code: null
+      city: null
+      code: null
+      country: null
+      countryName: null
+      globalRegion: null
+      name: null
+      notes: null
+      state: null
+      stateName: null
+      wac: null
+      key: null      
       map: null
       marker: null
       setPopup: (text) ->
         @marker.bindPopup("<b>#{text}</b>");
-      initialize: (latlng, map) ->
+      initialize: (node, map) ->
         @map = map
-        @latlng = latlng
-        @marker = L.marker(@latlng).addTo(@map);
+        @city = node.City
+        @code = node.Code
+        @country = node.Country
+        @countryName = node['Country Name']
+        @globalRegion = node['Global Region']
+        @name = node.Name
+        @notes = node.Notes
+        @state = node.State
+        @stateName = node['State Name']
+        @wac= node.WAC
+        @key= node.key
+        @latlng = new L.LatLng(node.loc.coordinates[1],node.loc.coordinates[0])
+        if !L.MapNodes.contains(this)
+          @marker = L.marker(@latlng).addTo(@map);
+          L.MapNodes.addNode(this)
+          popup = L.popup()
+          div = L.DomUtil.create("div","")       
+          Blaze.renderWithData(Template.nodeDetails, this, div);
+          popup.setContent(div)
+          @marker.bindPopup(popup);   
       equals: (otherNode) ->
         return (otherNode.latlng.lat is this.latlng.lat) and (otherNode.latlng.lng is this.latlng.lng)
       )
 
     L.MapNodes =
       mapNodes : []
+      addNode : (node) ->
+        @mapNodes.push(node)
+      contains : (node) ->
+      	mapNodesContains : false
+      	for mapNode in @mapNodes when mapNode.code is node.Code
+      	  mapNodesContains = true
+      	mapNodesContains
       mapNodeCount : () ->
         @mapNodes.length
 
-    L.mapNode = (latlng, map) ->
-      new (L.MapNode)(latlng, map)
+    L.mapNode = (node, map) ->
+      new (L.MapNode)(node, map)
 
   else
     console.log 'Leaflet Object [L] is missing.'

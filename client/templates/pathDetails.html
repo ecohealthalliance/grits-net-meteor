@@ -1,0 +1,34 @@
+<template name="pathDetails">
+  <div class="pathDetailsHeader">
+    <div>
+      <a href="#" id="detMinMax" class="pull-left">
+        <span id="detMinMaxSpan" class="glyphicon glyphicon-minus"></span>
+      </a>
+    </div>
+    <div><h3> Path Details </h3></div>
+  </div>
+  <br>
+  <div id="pathDetails">
+    <div><b>Flight : </b> {{this.flight}} </div>
+    <div><b>Alliance : </b> {{this.alliance}} </div>
+    <div><b>Origin : </b> {{this.origin.code}} </div>
+    <div><b>Origin WAC: </b> {{this.origWAC}} </div>
+    <div><b>Destination : </b> {{this.destination.code}} </div>
+    <div><b>Destination WAC: </b> {{this.destWAC}} </div>
+    <div><b>Arrival Terminal : </b> {{this.arrTerm}} </div>
+    <div><b>Arrival Time : </b> {{this.arrTime}} </div>
+    <div><b>Block Mins : </b> {{this.blockMins}} </div>
+    <div><b>Date : </b> {{this.date.$date}} </div>
+    <div><b>Departure Terminal : </b> {{this.depTerm}} </div>
+    <div><b>Departure Time : </b> {{this.depTime}} </div>
+    <div><b>Equipment : </b> {{this.equip}} </div>
+    <div><b>Miles : </b> {{this.miles}} </div>    
+    <div><b>mktgAl : </b> {{this.mktgAl}} </div>
+    <div><b>opsAl : </b> {{this.opsAl}} </div>
+    <div><b>Ops/Day : </b> {{this.ops_day}} </div>
+    <div><b>Ops/Week : </b> {{this.ops_week}} </div>
+    <div><b>Stops : </b> {{this.stops}} </div>
+    <div><b>Seats : </b> {{this.seats}} </div> 
+    <div><b>Arch Position : </b> {{this.archPosition}} </div>   
+  </div>
+</template>
