@@ -105,9 +105,9 @@ if Meteor.isClient
                 latArch -= (gain * ((180-(bng+rbng))/180))
                 lngArch -= (gain * ((bng+rbng)/180))            
             currentPoint = Meteor.leafnav.calculateNewPositionArch(currentPoint, distBetweenPoints, Meteor.leafnav.getBearing(currentPoint, @destination.latlng), latArch*.01, lngArch*.01, pm)
-            if currentPoint.lng > 0 and arcCoords[arcCoords.length-1].lng < 0
+            if currentPoint.lng > 0 and arcCoords[arcCoords.length-1].lng < 0  and currentPoint.lng > 5
               IDLsplit = true
-            if currentPoint.lng < 0 and arcCoords[arcCoords.length-1].lng > 0
+            if currentPoint.lng < 0 and arcCoords[arcCoords.length-1].lng > 0 and currentPoint.lng < -5
               IDLsplit = true
             if IDLsplit
               IDLarcCoords.push(currentPoint)
@@ -124,7 +124,7 @@ if Meteor.isClient
         @IDLpointList = IDLarcCoords
       setStyle: () ->
         @color = '#'+Math.floor(Math.random()*16777215).toString(16)
-        @weight = Math.floor(Math.random() * 25) + 5  
+        @weight = Math.floor(Math.random() * 5) + 5  
       drawPath: () ->
         this.setStyle()
         @visible = true              
@@ -145,14 +145,14 @@ if Meteor.isClient
           @pointList
           color: @color
           weight: @weight
-          opacity: 0.5
+          opacity: 0.8
           smoothFactor: 1)
         if @IDLpointList isnt null
           @IDLpathLine = new (L.Polyline)(
             @IDLpointList
             color: @color
             weight: @weight
-            opacity: 0.5
+            opacity: 0.8
             smoothFactor: 1)
           @IDLpathLine.addTo @map
           @IDLpathLine.bindPopup(popup);
@@ -230,10 +230,10 @@ if Meteor.isClient
       addNode : (node) ->
         @mapNodes.push(node)
       contains : (node) ->
-      	mapNodesContains : false
-      	for mapNode in @mapNodes when mapNode.code is node.Code
-      	  mapNodesContains = true
-      	mapNodesContains
+      	mapNodesContains = false
+      	for mapNode in @mapNodes when mapNode.code is node.code
+      	    mapNodesContains = true
+      	return mapNodesContains
       mapNodeCount : () ->
         @mapNodes.length
 
