@@ -85,20 +85,19 @@ Template.map.onRendered () ->
   L.layerGroup(L.MapNodes.mapNodes).addTo(Meteor.gritsUtil.map)
   
   this.autorun () ->
-    initializing = true
     if Session.get('flightsReady')
-      Meteor.gritsUtil.populateMap Flights.find().fetch()
+      #Meteor.gritsUtil.populateMap Flights.find().fetch()
       # we may listen for changes now the the collection has been fetched from
-      # the server and populated, conversely we could not call the initial
-      # window.Lutil.populateMap, remove the check on initializing, and let
-      # the added method populate the map as the collection is being loaded.
+      # the server and is ready
       Flights.find().observeChanges(
         added: (id, fields) ->
-          if not initializing
-            new (L.MapPath)(fields)
+          console.log 'added id: ', id
+          console.log 'added fields: ', fields
+          new (L.MapPath)(fields)
         changed: (id, fields) ->
+          console.log 'changed fields: ', fields
           L.MapPaths.updatePath fields
         removed: (id) ->
+          console.log 'remove id: ', id
           L.MapPaths.removePath id
       )
-      initilizing = false
