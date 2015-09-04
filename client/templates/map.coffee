@@ -1,6 +1,5 @@
-do ->
-  'use strict'
-
+Meteor.startup ->
+  window.LUtil.initLeaflet()
 window.LUtil =
   map: null
   baseLayers: null
@@ -10,11 +9,11 @@ window.LUtil =
       $('#map').css 'height', window.innerHeight
       return
     $(window).resize()
-    # trigger resize event
-    return
   initMap: (element, view) ->
+    Esri_WorldImagery = undefined
+    MapQuestOpen_OSM = undefined
+    cloudmade = undefined
     L.Icon.Default.imagePath = @imagePath
-    # sensible defaults if nothing specified
     element = element or 'map'
     view = view or {}
     view.zoom = view.zoom or 5
@@ -22,31 +21,42 @@ window.LUtil =
       37.8
       -92
     ]
-    mbUrl = 'https://{s}.tile.openstreetmap.org/{id}/{z}/{x}/{y}.png'
     Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {})
     cloudmade = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       key: '1234'
       styleId: 22677)
-    Stamen_Watercolor = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.png',
-      attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      minZoom: 1
-      maxZoom: 16
-      ext: 'png')
+    MapQuestOpen_OSM = L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/{type}/{z}/{x}/{y}.{ext}',
+      type: 'map'
+      ext: 'jpg'
+      subdomains: '1234')
     @map = L.map(element,
       zoomControl: false
-      layers: [ Esri_WorldImagery ]).setView(view.latlong, view.zoom)
+      worldCopyJump: true
+      layers: [ MapQuestOpen_OSM ]).setView(view.latlong, view.zoom)
     @baseLayers =
-      'Stamen Watercolor': Stamen_Watercolor
       'Esri WorldImagery': Esri_WorldImagery
+      'MapQuestOpen_OSM': MapQuestOpen_OSM
     L.control.layers(@baseLayers).addTo @map
     @addControls()
-    return
+  populateMap: (flights) ->
+    flight = undefined
+    i = undefined
+    len = undefined
+    results = undefined
+    results = []
+    i = 0
+    len = flights.length
+    while i < len
+      flight = flights[i]
+      results.push new (L.mapPath)(flight, window.LUtil.map)
+      i++
+    results
   addControls: ->
+    moduleSelector = undefined
     moduleSelector = L.control(position: 'topleft')
     moduleSelector.onAdd = @onAddHandler('info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
     moduleSelector.addTo @map
     $('#moduleSelector').appendTo('#moduleSelectorDiv').show()
-    return
   onAddHandler: (selector, html) ->
     ->
       @_div = L.DomUtil.create('div', selector)
@@ -54,21 +64,29 @@ window.LUtil =
       L.DomEvent.disableClickPropagation @_div
       L.DomEvent.disableScrollPropagation @_div
       @_div
-  getRandomLatLng: ->
-    [
-      @getRandomInRange(-85, 85, 3)
-      @getRandomInRange(-180, 180, 3)
-    ]
-  getRandomInRange: (from, to, fixed) ->
-    (Math.random() * (to - from) + from).toFixed(fixed) * 1
 
-Tracker.autorun ->
-    console.log 'flightsReady', Session.get('flightsReady')
-    # is the flights collection ready?
-    if Session.get('flightsReady') == true
-        flights = Flights.find().fetch()
-        Meteor.buildFlight.build(flight) for flight in flights;
-
-Template.map.created = ->
-Template.map.rendered = ->
+Template.body.helpers template_name: ->
+  Session.get 'module'
+  
+Template.map.onRendered ->
   window.LUtil.initMap()
+  @autorun ->
+    initializing = true
+    if Session.get('flightsReady')
+      window.LUtil.populateMap Flights.find().fetch()
+      # we may listen for changes now the the collection has been fetched from
+      # the server and populated, conversely we could not call the initial
+      # window.Lutil.populateMap, remove the check on initializing, and let
+      # the added method populate the map as the collection is being loaded.
+      Flights.find().observeChanges(
+        added: (id, fields) ->
+          if not initializing
+            console.log 'id: ', id
+            console.log 'fields: ', fields
+            new (L.MapPath)(fields)
+        changed: (id, fields) ->
+          L.MapPaths.updatePath fields
+        removed: (id) ->
+          L.MapPaths.removePath id
+      )
+      initilizing = false
