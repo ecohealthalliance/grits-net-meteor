@@ -93,10 +93,10 @@ Template.map.onRendered () ->
         added: (id, fields) ->
           console.log 'added id: ', id
           console.log 'added fields: ', fields
-          new (L.MapPath)(fields)
+          L.MapPaths.addPath id, fields, Meteor.gritsUtil.map
         changed: (id, fields) ->
           console.log 'changed fields: ', fields
-          L.MapPaths.updatePath fields
+          L.MapPaths.updatePath id, fields, Meteor.gritsUtil.map
         removed: (id) ->
           console.log 'remove id: ', id
           L.MapPaths.removePath id
