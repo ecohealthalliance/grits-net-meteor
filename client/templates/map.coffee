@@ -1,58 +1,44 @@
-Meteor.startup ->
-  window.LUtil.initLeaflet()
-window.LUtil =
+do ->
+  'use strict'
+
+Meteor.gritsUtil =
   map: null
   baseLayers: null
   imagePath: 'packages/fuatsengul_leaflet/images'
-  initLeaflet: ->
-    $(window).resize ->
-      $('#map').css 'height', window.innerHeight
-      return
-    $(window).resize()
-  initMap: (element, view) ->
-    Esri_WorldImagery = undefined
-    MapQuestOpen_OSM = undefined
-    cloudmade = undefined
-    L.Icon.Default.imagePath = @imagePath
+  initWindow: (element, css) ->
     element = element or 'map'
+    css = css or {'height': window.innerHeight} 
+    $(window).resize ->
+      $('#'+element).css css        
+    $(window).resize()      
+  initLeaflet: (element, view, baseLayers) ->
+    L.Icon.Default.imagePath = @imagePath
+    # sensible defaults if nothing specified
+    element = element or 'grits-map'
     view = view or {}
     view.zoom = view.zoom or 5
-    view.latlong = view.latlong or [
+    view.latlong = view.latlng or [
       37.8
       -92
     ]
-    Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {})
-    cloudmade = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    OpenStreetMap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       key: '1234'
+      layerName: 'OpenStreetMap'
       styleId: 22677)
-    MapQuestOpen_OSM = L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/{type}/{z}/{x}/{y}.{ext}',
-      type: 'map'
-      ext: 'jpg'
-      subdomains: '1234')
+    baseLayers = baseLayers or [OpenStreetMap]       
     @map = L.map(element,
       zoomControl: false
-      worldCopyJump: true
-      layers: [ MapQuestOpen_OSM ]).setView(view.latlong, view.zoom)
-    @baseLayers =
-      'Esri WorldImagery': Esri_WorldImagery
-      'MapQuestOpen_OSM': MapQuestOpen_OSM
-    L.control.layers(@baseLayers).addTo @map
+      layers: [ baseLayers[0] ]).setView(view.latlong, view.zoom)
+    tempBaseLayers = {}
+    for baseLayer in baseLayers        
+      tempBaseLayers[baseLayer.options.layerName] = baseLayer
+    @baseLayers = tempBaseLayers
+    if baseLayers.length>1        
+      L.control.layers(@baseLayers).addTo @map
     @addControls()
   populateMap: (flights) ->
-    flight = undefined
-    i = undefined
-    len = undefined
-    results = undefined
-    results = []
-    i = 0
-    len = flights.length
-    while i < len
-      flight = flights[i]
-      results.push new (L.mapPath)(flight, window.LUtil.map)
-      i++
-    results
+    new L.mapPath(flight, Meteor.gritsUtil.map) for flight in flights      
   addControls: ->
-    moduleSelector = undefined
     moduleSelector = L.control(position: 'topleft')
     moduleSelector.onAdd = @onAddHandler('info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
     moduleSelector.addTo @map
@@ -67,13 +53,41 @@ window.LUtil =
 
 Template.body.helpers template_name: ->
   Session.get 'module'
+
+Template.map.onCreated () ->
+
+Template.map.onRendered () ->
+
+  Meteor.gritsUtil.initWindow('grits-map', {'height': window.innerHeight})
   
-Template.map.onRendered ->
-  window.LUtil.initMap()
-  @autorun ->
+  OpenStreetMap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    key: '1234'
+    layerName: 'OpenStreetMap'
+    styleId: 22677)
+  MapQuestOpen_OSM = L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/{type}/{z}/{x}/{y}.{ext}',
+    type: 'map'
+    layerName: 'MapQuestOpen_OSM'
+    ext: 'jpg'
+    subdomains: '1234')
+  Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', 
+    layerName: 'Esri_WorldImagery')
+  
+  baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
+  
+  Meteor.gritsUtil.initLeaflet('grits-map', {'zoom':5,'latlng':[37.8, -92]}, baseLayers)
+  
+  #Meteor.gritsUtil.map.addLayer(L.MapNodes.getLayerGroup())
+  
+  #Meteor.gritsUtil.map.addLayer(L.MapPaths.getLayerGroup())
+  
+  L.layerGroup(L.MapPaths.mapPaths).addTo(Meteor.gritsUtil.map)
+  
+  L.layerGroup(L.MapNodes.mapNodes).addTo(Meteor.gritsUtil.map)
+  
+  this.autorun () ->
     initializing = true
     if Session.get('flightsReady')
-      window.LUtil.populateMap Flights.find().fetch()
+      Meteor.gritsUtil.populateMap Flights.find().fetch()
       # we may listen for changes now the the collection has been fetched from
       # the server and populated, conversely we could not call the initial
       # window.Lutil.populateMap, remove the check on initializing, and let
@@ -81,8 +95,6 @@ Template.map.onRendered ->
       Flights.find().observeChanges(
         added: (id, fields) ->
           if not initializing
-            console.log 'id: ', id
-            console.log 'fields: ', fields
             new (L.MapPath)(fields)
         changed: (id, fields) ->
           L.MapPaths.updatePath fields
