@@ -12,7 +12,7 @@ window.LUtil =
     $(window).resize()
     # trigger resize event
     return
-  initMap: (element, view) ->    
+  initMap: (element, view) ->
     L.Icon.Default.imagePath = @imagePath
     # sensible defaults if nothing specified
     element = element or 'map'
@@ -41,7 +41,7 @@ window.LUtil =
     L.control.layers(@baseLayers).addTo @map
     @addControls()
     return
-  addControls: ->    
+  addControls: ->
     moduleSelector = L.control(position: 'topleft')
     moduleSelector.onAdd = @onAddHandler('info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
     moduleSelector.addTo @map
@@ -62,7 +62,13 @@ window.LUtil =
   getRandomInRange: (from, to, fixed) ->
     (Math.random() * (to - from) + from).toFixed(fixed) * 1
 
+Tracker.autorun ->
+    console.log 'flightsReady', Session.get('flightsReady')
+    # is the flights collection ready?
+    if Session.get('flightsReady') == true
+        flights = Flights.find().fetch()
+        Meteor.buildFlight.build(flight) for flight in flights;
+
 Template.map.created = ->
 Template.map.rendered = ->
   window.LUtil.initMap()
-  Meteor.buildFlight.build(flight) for flight in Meteor.flights
