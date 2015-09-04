@@ -4,13 +4,13 @@ Meteor.dummyFlight3 = { "_id" : { "$oid" : "55e0a2c72070b47daed4347b"} , "Allian
 
 Template.body.events
   'click .a': ->
-    new L.mapPath(Meteor.dummyFlight1, window.LUtil.map)
+    new L.mapPath(Meteor.dummyFlight1, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map)
   'click .b': ->
-    new L.mapPath(Meteor.dummyFlight2, window.LUtil.map)
+    new L.mapPath(Meteor.dummyFlight2, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map)
   'click .c': ->
-    new L.mapPath(Meteor.dummyFlight3, window.LUtil.map)
+    new L.mapPath(Meteor.dummyFlight3, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map)
   'click .d': ->
     Session.set 'module', 'd'
-    new L.marker(new L.LatLng(39.721201, -225.428235)).addTo(window.LUtil.map);    
+    new L.marker(new L.LatLng(39.721201, -225.428235)).addTo(Meteor.gritsUtil.map);    
   'click .e': ->
     Session.set 'module', 'e'
