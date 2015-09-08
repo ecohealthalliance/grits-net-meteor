@@ -37,7 +37,7 @@ Meteor.gritsUtil =
       L.control.layers(@baseLayers).addTo @map
     @addControls()
   populateMap: (flights) ->
-    new L.mapPath(flight, Meteor.gritsUtil.map) for flight in flights      
+    new L.mapPath(flight, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map) for flight in flights      
   addControls: ->
     moduleSelector = L.control(position: 'topleft')
     moduleSelector.onAdd = @onAddHandler('info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
@@ -80,13 +80,12 @@ Template.map.onRendered () ->
   
   #Meteor.gritsUtil.map.addLayer(L.MapPaths.getLayerGroup())
   
-  L.layerGroup(L.MapPaths.mapPaths).addTo(Meteor.gritsUtil.map)
+  #L.layerGroup(L.MapPaths.mapPaths).addTo(Meteor.gritsUtil.map)
   
-  L.layerGroup(L.MapNodes.mapNodes).addTo(Meteor.gritsUtil.map)
+  #L.layerGroup(L.MapNodes.mapNodes).addTo(Meteor.gritsUtil.map)
   
   this.autorun () ->
-    if Session.get('flightsReady')
-      #Meteor.gritsUtil.populateMap Flights.find().fetch()
+    if Session.get('flightsReady')      
       # we may listen for changes now the the collection has been fetched from
       # the server and is ready
       Flights.find().observeChanges(
@@ -100,4 +99,5 @@ Template.map.onRendered () ->
         removed: (id) ->
           console.log 'remove id: ', id
           L.MapPaths.removePath id
-      )
+      )     
+      
