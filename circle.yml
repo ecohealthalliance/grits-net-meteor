@@ -1,0 +1,7 @@
+checkout:
+  post:
+    - curl https://install.meteor.com/ | sh
+test:
+  override:
+    - chmod +x continuous_integration.sh
+    - ./continuous_integration.sh
