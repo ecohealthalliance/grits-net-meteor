@@ -28,6 +28,9 @@ Meteor.gritsUtil =
     baseLayers = baseLayers or [OpenStreetMap]       
     @map = L.map(element,
       zoomControl: false
+      noWrap: true
+      maxZoom: 18
+      minZoom: 0
       layers: [ baseLayers[0] ]).setView(view.latlong, view.zoom)
     tempBaseLayers = {}
     for baseLayer in baseLayers        
@@ -39,10 +42,15 @@ Meteor.gritsUtil =
   populateMap: (flights) ->
     new L.mapPath(flight, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map) for flight in flights      
   addControls: ->
-    moduleSelector = L.control(position: 'topleft')
+    moduleSelector = L.control(position: 'topleft')     
     moduleSelector.onAdd = @onAddHandler('info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
     moduleSelector.addTo @map
     $('#moduleSelector').appendTo('#moduleSelectorDiv').show()
+    filterSelector = L.control(position: 'bottomleft')
+    filterdiv = L.DomUtil.create("div","")       
+    Blaze.renderWithData(Template.filter, this, filterdiv);
+    filterSelector.onAdd = @onAddHandler('info', filterdiv.innerHTML)    
+    filterSelector.addTo @map
   onAddHandler: (selector, html) ->
     ->
       @_div = L.DomUtil.create('div', selector)
@@ -85,19 +93,19 @@ Template.map.onRendered () ->
   #L.layerGroup(L.MapNodes.mapNodes).addTo(Meteor.gritsUtil.map)
   
   this.autorun () ->
-    if Session.get('flightsReady')      
+    if Session.get('flightsReady')
       # we may listen for changes now the the collection has been fetched from
       # the server and is ready
       Flights.find().observeChanges(
         added: (id, fields) ->
           console.log 'added id: ', id
           console.log 'added fields: ', fields
-          L.MapPaths.addPath id, fields, Meteor.gritsUtil.map
+          L.MapPaths.addFactor id, fields, Meteor.gritsUtil.map
         changed: (id, fields) ->
           console.log 'changed fields: ', fields
-          L.MapPaths.updatePath id, fields, Meteor.gritsUtil.map
+          L.MapPaths.updateFactor id, fields, Meteor.gritsUtil.map
         removed: (id) ->
           console.log 'remove id: ', id
-          L.MapPaths.removePath id
+          L.MapPaths.removeFactor id
       )     
       
