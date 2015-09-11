@@ -8,6 +8,6 @@ meteor-platform
 insecure
 coffeescript
 fuatsengul:leaflet
-treyyoder:grits-net-mapper
+grits:grits-net-mapper
 grits-net-meteor:models
 yauh:turfjs

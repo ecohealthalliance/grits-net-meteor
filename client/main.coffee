@@ -6,9 +6,9 @@ Template.body.events
   'click .a': ->
     new L.mapPath(Meteor.dummyFlight1, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map)
   'click .b': ->    
-    L.MapPaths.addPath 'asdfdewsss', Meteor.dummyFlight2, Meteor.gritsUtil.map
+    L.MapPaths.addFactor 'asdfdewsss', Meteor.dummyFlight2, Meteor.gritsUtil.map
   'click .c': ->
-    L.MapPaths.addPath 'asdfdewsss', Meteor.dummyFlight3, Meteor.gritsUtil.map
+    L.MapPaths.addFactor 'asdfdewsss', Meteor.dummyFlight3, Meteor.gritsUtil.map
   'click .d': ->
     Session.set 'module', 'd'
     new L.marker(new L.LatLng(39.721201, -225.428235)).addTo(Meteor.gritsUtil.map);    

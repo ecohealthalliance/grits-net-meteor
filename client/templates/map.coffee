@@ -40,7 +40,18 @@ Meteor.gritsUtil =
       L.control.layers(@baseLayers).addTo @map
     @addControls()
   populateMap: (flights) ->
-    new L.mapPath(flight, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map) for flight in flights      
+    new L.mapPath(flight, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map) for flight in flights
+  styleMapPath: (path) ->
+    path.hide()
+    mid = (100 - Math.floor((path.seats)/100)).toString()
+    if mid < 10
+      mid = "0"+ mid  
+    if mid > 99
+      mid = "99"      
+    color = '#99'+ mid + "00"
+    weight = path.seats / 250  + 2
+    path.setStyle(color, weight)   
+    path.show()   
   addControls: ->
     moduleSelector = L.control(position: 'topleft')     
     moduleSelector.onAdd = @onAddHandler('info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
@@ -91,7 +102,7 @@ Template.map.onRendered () ->
   #L.layerGroup(L.MapPaths.mapPaths).addTo(Meteor.gritsUtil.map)
   
   #L.layerGroup(L.MapNodes.mapNodes).addTo(Meteor.gritsUtil.map)
-  
+
   this.autorun () ->
     if Session.get('flightsReady')
       # we may listen for changes now the the collection has been fetched from
@@ -100,12 +111,15 @@ Template.map.onRendered () ->
         added: (id, fields) ->
           console.log 'added id: ', id
           console.log 'added fields: ', fields
-          L.MapPaths.addFactor id, fields, Meteor.gritsUtil.map
+          path = L.MapPaths.addFactor id, fields, Meteor.gritsUtil.map
+          Meteor.gritsUtil.styleMapPath(path)
         changed: (id, fields) ->
           console.log 'changed fields: ', fields
           L.MapPaths.updateFactor id, fields, Meteor.gritsUtil.map
         removed: (id) ->
           console.log 'remove id: ', id
-          L.MapPaths.removeFactor id
+          pathAndFactor = L.MapPaths.removeFactor id          
+          if pathAndFactor isnt false
+            Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
       )     
       

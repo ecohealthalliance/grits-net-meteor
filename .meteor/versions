@@ -14,6 +14,7 @@ fastclick@1.0.3
 fuatsengul:leaflet@1.0.1
 geojson-utils@1.0.3
 grits-net-meteor:models@0.0.1
+grits:grits-net-mapper@0.0.1
 html-tools@1.0.4
 htmljs@1.0.4
 http@1.1.0
@@ -46,7 +47,6 @@ spacebars@1.0.6
 spacebars-compiler@1.0.6
 templating@1.1.1
 tracker@1.0.7
-treyyoder:grits-net-mapper@0.0.1
 ui@1.0.6
 underscore@1.0.3
 url@1.0.4
