@@ -1,0 +1,27 @@
+<template name="pathDetails">
+  <div class="pathDetailsHeader">
+    <div>
+      <a href="#" id="detMinMax" class="pull-left">
+        <span id="detMinMaxSpan" class="glyphicon glyphicon-minus"></span>
+      </a>
+    </div>
+    <div><h3> Path Details </h3></div>
+  </div>
+  <br>
+  <div id="pathDetails">
+    <div><b>ID : </b> {{this.id}} </div>
+    <div><b>Flights : </b> {{this.flights}} </div>
+    <div><b>Weight : </b> {{this.weight}} </div>
+    <div><b>Origin : </b> {{this.origin.code}} </div>
+    <div><b>Origin WAC: </b> {{this.origWAC}} </div>
+    <div><b>Destination : </b> {{this.destination.code}} </div>
+    <div><b>Destination WAC: </b> {{this.destWAC}} </div>
+    <div><b>Color : </b> {{this.color}} </div>    
+    <div><b>Miles : </b> {{this.miles}} </div>
+    <div><b>Ops/Day : </b> {{this.ops_day}} </div>
+    <div><b>Ops/Week : </b> {{this.ops_week}} </div>
+    <div><b>Stops : </b> {{this.stops}} </div>
+    <div><b>Seats : </b> {{this.seats}} </div> 
+    <div><b>Arch Position : </b> {{this.archPosition}} </div>   
+  </div>
+</template>
