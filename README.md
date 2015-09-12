@@ -4,8 +4,11 @@
 A Meteor package for filtering grits transportation data and displaying on 
 a Leaflet map.
 
-## install
+# An example Meteor application
 
+The following instructions provide an example of how to use the grits-net-meteor package.
+
+## install
 1. setup a meteor app, change dir, and remove starter files
 
   ```
