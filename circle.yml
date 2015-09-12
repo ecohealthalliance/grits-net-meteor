@@ -1,5 +1,7 @@
 checkout:
   post:
+    - git submodule init
+    - git submodule update
     - curl https://install.meteor.com/ | sh
     - ln -s ../private/grits-net-mapper/lib ./packages/grits-net-mapper
 test:
