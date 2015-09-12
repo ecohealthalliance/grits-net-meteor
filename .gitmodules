@@ -1,0 +1,3 @@
+[submodule "private/grits-net-mapper"]
+	path = private/grits-net-mapper
+	url = git@github.com:ecohealthalliance/grits-net-mapper.git

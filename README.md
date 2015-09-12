@@ -1,4 +1,6 @@
 # grits-net-meteor
+![Build Status](https://circleci.com/gh/ecohealthalliance/grits-net-meteor.svg?style=shield&circle-token=0bb5a68a6c2ff8aea6f0ae0c324a738362198f10)
+
 A Meteor application initializing a Leaflet map and demonstrating 
 
 ## install
