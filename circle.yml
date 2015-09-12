@@ -1,6 +1,7 @@
 checkout:
   post:
     - curl https://install.meteor.com/ | sh
+    - ln -s ./private/grits-net-mapper/lib ./packages/grits-net-mapper
 test:
   override:
     - chmod +x continuous_integration.sh
