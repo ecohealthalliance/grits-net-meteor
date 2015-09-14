@@ -7,3 +7,5 @@ test:
   override:
     - chmod +x continuous_integration.sh
     - ./continuous_integration.sh
+    - cd example
+    - meteor run --test
