@@ -3,8 +3,6 @@ checkout:
     - git submodule init
     - git submodule update
     - curl https://install.meteor.com/ | sh
-    - mkdir packages
-    - ln -s ../private/grits-net-mapper/lib ./packages/grits-net-mapper
 test:
   override:
     - chmod +x continuous_integration.sh

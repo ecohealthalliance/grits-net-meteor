@@ -8,7 +8,7 @@ rm -fr throw-away
 
 echo "Unit Tests *******************************************************************************"
 type spacejam || npm install -g spacejam
-spacejam test-packages packages/* || touch FAILURE
+spacejam test-packages ./* || touch FAILURE
 
 
 echo "Integration Tests ************************************************************************"
