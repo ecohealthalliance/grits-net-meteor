@@ -40,15 +40,15 @@ Meteor.gritsUtil =
     new L.mapPath(flight, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map) for flight in flights
   styleMapPath: (path) ->
     path.hide()
-    mid = (100 - Math.floor((path.seats)/100)).toString()
+    mid = (100 - Math.floor((path.totalSeats)/100)).toString()
     if mid < 10
       mid = "0"+ mid  
     if mid > 99
       mid = "99"      
     color = '#99'+ mid + "00"
-    weight = path.seats / 250  + 2
+    weight = path.totalSeats / 250  + 2
     path.setStyle(color, weight)   
-    path.show()   
+    path.refresh()   
   addControls: ->
     moduleSelector = L.control(position: 'topleft')     
     moduleSelector.onAdd = @onAddHandler('info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
@@ -88,10 +88,10 @@ Template.map.events
     Session.set 'module', 'e'
   'click #stopsCB': ->
     Session.set 'query',
-      'Stops': {$eq: parseInt($("#stopsInput").val())}
+      'stops': {$eq: parseInt($("#stopsInput").val())}
   'click #seatsCB': ->
     Session.set 'query',
-      'Seats': {$gt: parseInt($("#seatsInput").val())}
+      'totalSeats': {$gt: parseInt($("#seatsInput").val())}
 
 Template.map.helpers () ->
   Session.get('module')
@@ -114,7 +114,7 @@ Template.map.onRendered () ->
   
   baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
   
-  Meteor.gritsUtil.initLeaflet('grits-map', {'zoom':5,'latlng':[37.8, -92]}, baseLayers)
+  Meteor.gritsUtil.initLeaflet('grits-map', {'zoom':2,'latlng':[37.8, -92]}, baseLayers)
   
   #Meteor.gritsUtil.map.addLayer(L.MapNodes.getLayerGroup())
   
@@ -123,6 +123,10 @@ Template.map.onRendered () ->
   #L.layerGroup(L.MapPaths.mapPaths).addTo(Meteor.gritsUtil.map)
   
   #L.layerGroup(L.MapNodes.mapNodes).addTo(Meteor.gritsUtil.map)
+  
+  Session.set 'query',
+    #'departureAirport._id': 'JFK'
+    'totalSeats': {$gt: 515}
 
   this.autorun () ->
         
