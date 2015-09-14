@@ -11,7 +11,8 @@ Package.on_use(function(api){
     'coffeescript',
     'mongo',
     'jagi:astronomy@0.12.0',
-    'jagi:astronomy-validators@0.10.8'
+    'jagi:astronomy-validators@0.10.8',
+    'grits:grits-net-mapper'
   ]);
   api.use([
     'underscore',
@@ -21,10 +22,10 @@ Package.on_use(function(api){
     'tracker'
   ], 'client');
   api.add_files([
-    'client/stylesheets/main.css', 
-    'client/templates/filter.html', 
-    'client/templates/map.html', 
-    'client/templates/nodeDetails.html', 
+    'client/stylesheets/main.css',
+    'client/templates/filter.html',
+    'client/templates/map.html',
+    'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
     'client/templates/map.coffee',
     'client/subscriptions.coffee'
