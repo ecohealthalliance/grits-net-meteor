@@ -1,3 +1,8 @@
+Meteor.startup () ->
+  # default query
+  Session.set 'query',
+    'totalSeats': {$gt: 200}
+
 Meteor.gritsUtil =
   map: null
   baseLayers: null
@@ -85,15 +90,65 @@ Template.map.events
     Session.set 'module', 'e'
   'click #stopsCB': ->
     Session.set 'query',
-      'stops': {$eq: parseInt($("#stopsInput").val())}
+      'stops': parseInt($("#stopsInput").val())
   'click #seatsCB': ->
     Session.set 'query',
       'totalSeats': {$gt: parseInt($("#seatsInput").val())}
 
 Template.map.helpers () ->
-  Session.get('module')
+
+Template.map.onCreated () ->
+  template = this
+  @previousFlights = null
+  @autorun () ->
+    q = Session.get('query')
+    if !_.isUndefined(q) or !_.isEmpty(q)
+      template.subscribe 'flightsByQuery', Session.get('query'),
+        onError: ->
+          console.log 'subscription.flightsByQuery.onError:', this
+        onStop: ->
+          console.log 'subscription.flightsByQuery.onStop:', this
+        onReady: ->
+          console.log 'subscription.flightsByQuery.onReady', this
+
+  @updateExistingFlights = ->
+    # TODO: show loading
+    template = this
+    newFlights = Flights.find(Session.get('query')).fetch()
+    if template.previousFlights != null
+      newFlightIds = _.pluck(newFlights, '_id')
+      previousFlightIds = _.pluck(template.previousFlights, '_id')
+      remove = _.difference(previousFlightIds, newFlightIds);
+      add = _.difference(newFlightIds, previousFlightIds);
+      update = _.intersection(previousFlightIds, newFlightIds);
+
+      for id in remove
+        flight = _.find(template.previousFlights, (f) -> return f._id == id)
+        console.log 'remove flight: ', flight
+        pathAndFactor = L.MapPaths.removeFactor id, flight
+        if pathAndFactor isnt false
+          Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
+      for id in add
+        flight = _.find(newFlights, (f) -> return f._id == id)
+        console.log 'add flight: ', flight
+        if !_.isEmpty(flight)
+          path = L.MapPaths.addFactor id, flight, Meteor.gritsUtil.map
+          Meteor.gritsUtil.styleMapPath(path)
+      for id in update
+        flight = _.find(newFlights, (f) -> return f._id == id)
+        console.log 'update flight: ', flight
+        if !_.isEmpty(flight)
+          L.MapPaths.updatePath id, flight, Meteor.gritsUtil.map
+    else
+      newFlights = Flights.find(Session.get('query')).fetch()
+      for flight in newFlights
+        path = L.MapPaths.addFactor flight._id, flight, Meteor.gritsUtil.map
+        Meteor.gritsUtil.styleMapPath(path)
+    template.previousFlights = newFlights
+
 
 Template.map.onRendered () ->
+  template = this
 
   Meteor.gritsUtil.initWindow('grits-map', {'height': window.innerHeight})
 
@@ -121,27 +176,8 @@ Template.map.onRendered () ->
 
   #L.layerGroup(L.MapNodes.mapNodes).addTo(Meteor.gritsUtil.map)
 
-  # default query
-  Session.set 'query',
-    'totalSeats': {$gt: 200}
-
-  this.autorun () ->
-
-    if Session.get('flightsReady')
-      # we may listen for changes now the the subscription has been marked as
+  @autorun () ->
+    if template.subscriptionsReady()
+      # we may update the map now that the subscription has been marked as
       # ready by the server
-      Flights.find().observeChanges(
-        added: (id, fields) ->
-          console.log 'added id: ', id
-          console.log 'added fields: ', fields
-          path = L.MapPaths.addFactor id, fields, Meteor.gritsUtil.map
-          Meteor.gritsUtil.styleMapPath(path)
-        changed: (id, fields) ->
-          console.log 'changed fields: ', fields
-          L.MapPaths.updateFactor id, fields, Meteor.gritsUtil.map
-        removed: (id) ->
-          console.log 'remove id: ', id
-          pathAndFactor = L.MapPaths.removeFactor id
-          if pathAndFactor isnt false
-            Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
-      )
+      template.updateExistingFlights()
