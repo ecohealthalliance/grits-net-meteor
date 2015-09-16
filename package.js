@@ -27,8 +27,7 @@ Package.on_use(function(api){
     'client/templates/map.html',
     'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
-    'client/templates/map.coffee',
-    'client/subscriptions.coffee'
+    'client/templates/map.coffee'
   ], 'client');
   api.add_files([
     'models/airports.coffee',
