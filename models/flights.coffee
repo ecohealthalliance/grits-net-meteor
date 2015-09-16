@@ -61,7 +61,7 @@ Flight = Astro.Class(
     #'recordId' : 'number'
     #'daysOfOperation' : 'string'
     #'totalFrequency' : 'number'
-    #'weeklyFrequency' : 'number'
+    'weeklyFrequency' : 'number'
     #'availSeatMi' : 'number'
     #'availSeatKm' : 'number'
     #'intStopArrivaltime' : 'array'
