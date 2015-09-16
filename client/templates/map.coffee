@@ -55,11 +55,9 @@ Meteor.gritsUtil =
     weight = path.totalSeats / 250  + 2
     path.setStyle(color, weight)
     path.refresh()
-  getQueryCriteria: ->
-    critJSON = []
+  getQueryCriteria: ->    
     jsoo = {}
-    for crit in @queryCrit
-      critJSON.push crit.crit
+    for crit in @queryCrit      
       jsoo[crit.key] = crit.value      
     return jsoo
   removeQueryCriteria:(critId)->
