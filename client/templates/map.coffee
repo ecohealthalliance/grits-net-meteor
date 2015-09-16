@@ -6,6 +6,7 @@ Meteor.startup () ->
 Meteor.gritsUtil =
   map: null
   baseLayers: null
+  queryCrit: []
   imagePath: 'packages/fuatsengul_leaflet/images'
   initWindow: (element, css) ->
     element = element or 'map'
@@ -54,6 +55,25 @@ Meteor.gritsUtil =
     weight = path.totalSeats / 250  + 2
     path.setStyle(color, weight)
     path.refresh()
+  getQueryCriteria: ->
+    critJSON = []
+    jsoo = {}
+    for crit in @queryCrit
+      critJSON.push crit.crit
+      jsoo[crit.key] = crit.value      
+    return jsoo
+  removeQueryCriteria:(critId)->
+    for crit in @queryCrit
+      if crit.critId is critId
+        @queryCrit.splice(@queryCrit.indexOf(crit), 1)
+  addQueryCriteria: (newQueryCrit) ->
+    for crit in @queryCrit
+      if crit.critId is newQueryCrit.critId
+        @queryCrit.splice(@queryCrit.indexOf(crit), 1)
+        @queryCrit.push(newQueryCrit)
+        return false #updated
+    @queryCrit.push(newQueryCrit)
+    return true #added      
   addControls: ->
     moduleSelector = L.control(position: 'topleft')
     moduleSelector.onAdd = @onAddHandler('info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
@@ -89,11 +109,62 @@ Template.map.events
   'click .e': ->
     Session.set 'module', 'e'
   'click #stopsCB': ->
+    Meteor.gritsUtil.addQueryCriteria({'critId' : 1, 'key' : 'stops', 'value' : {$eq: parseInt($("#stopsInput").val())}})
     Session.set 'query',
-      'stops': parseInt($("#stopsInput").val())
+      Meteor.gritsUtil.getQueryCriteria()    
   'click #seatsCB': ->
+    Meteor.gritsUtil.addQueryCriteria({'critId' : 2, 'key' : 'totalSeats', 'value' : {$gt: parseInt($("#seatsInput").val())}})
     Session.set 'query',
-      'totalSeats': {$gt: parseInt($("#seatsInput").val())}
+      Meteor.gritsUtil.getQueryCriteria()
+  'click #dowSUN': ->
+    if $('#dowSUN').is(':checked')
+      Meteor.gritsUtil.addQueryCriteria({'critId' : 3, 'key' : 'day1', 'value' : true})
+    else if !$('#dowSUN').is(':checked')
+      Meteor.gritsUtil.removeQueryCriteria(3)
+    Session.set 'query',
+     Meteor.gritsUtil.getQueryCriteria()
+  'click #dowMON': ->
+    if $('#dowMON').is(':checked')
+      Meteor.gritsUtil.addQueryCriteria({'critId' : 4, 'key' : 'day2', 'value' : true})
+    else if !$('#dowMON').is(':checked')
+      Meteor.gritsUtil.removeQueryCriteria(4)
+    Session.set 'query',
+     Meteor.gritsUtil.getQueryCriteria()
+  'click #dowTUE': ->
+    if $('#dowTUE').is(':checked')
+      Meteor.gritsUtil.addQueryCriteria({'critId' : 5, 'key' : 'day3', 'value' : true})
+    else if !$('#dowTUE').is(':checked')
+      Meteor.gritsUtil.removeQueryCriteria(5)
+    Session.set 'query',
+     Meteor.gritsUtil.getQueryCriteria()
+  'click #dowWED': ->
+    if $('#dowWED').is(':checked')
+      Meteor.gritsUtil.addQueryCriteria({'critId' : 6, 'key' : 'day4', 'value' : true})
+    else if !$('#dowWED').is(':checked')
+      Meteor.gritsUtil.removeQueryCriteria(6)
+    Session.set 'query',
+     Meteor.gritsUtil.getQueryCriteria()
+  'click #dowTHU': ->
+    if $('#dowTHU').is(':checked')
+      Meteor.gritsUtil.addQueryCriteria({'critId' : 7, 'key' : 'day5', 'value' : true})
+    else if !$('#dowTHU').is(':checked')
+      Meteor.gritsUtil.removeQueryCriteria(7)
+    Session.set 'query',
+     Meteor.gritsUtil.getQueryCriteria()
+  'click #dowFRI': ->
+    if $('#dowFRI').is(':checked')
+      Meteor.gritsUtil.addQueryCriteria({'critId' : 8, 'key' : 'day6', 'value' : true})
+    else if !$('#dowFRI').is(':checked')
+      Meteor.gritsUtil.removeQueryCriteria(8)
+    Session.set 'query',
+     Meteor.gritsUtil.getQueryCriteria()
+  'click #dowSAT': ->
+    if $('#dowSAT').is(':checked')
+      Meteor.gritsUtil.addQueryCriteria({'critId' : 9, 'key' : 'day7', 'value' : true})
+    else if !$('#dowSAT').is(':checked')
+      Meteor.gritsUtil.removeQueryCriteria(9)
+    Session.set 'query',
+     Meteor.gritsUtil.getQueryCriteria()
 
 Template.map.helpers () ->
 
