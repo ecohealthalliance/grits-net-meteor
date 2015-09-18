@@ -1,8 +1,3 @@
-###*
-* Flights that are expired, past Discontinued Date, do not include in map
-* Flights that are not yet active, before Effective Date, do not include in map
-###
-
 Meteor.publish 'flightsByQuery', (query) ->
   if _.isUndefined(query) or _.isEmpty(query)
     return []
@@ -21,4 +16,9 @@ Meteor.publish 'flightsByQuery', (query) ->
   console.log 'query: ', query
   console.log 'count: ', count
 
-  return Flights.find(query);
+  return Flights.find(query)
+
+Meteor.publish 'autoCompleteAirports', (selector, options) ->
+  console.log 'selector', selector
+  Autocomplete.publishCursor(Airports.find(selector, options), this)
+  this.ready()
