@@ -5,13 +5,13 @@ Package.describe({
   git: '',
 });
 Package.on_use(function(api){
-  api.use();
-    api.use();
   api.use([
     'coffeescript',
     'mongo',
     'jagi:astronomy@0.12.0',
     'jagi:astronomy-validators@0.10.8',
+    'mizzao:autocomplete@0.5.1',
+    'peerlibrary:async@0.9.2_1',
     'grits:grits-net-mapper'
   ]);
   api.use([
@@ -23,11 +23,10 @@ Package.on_use(function(api){
   ], 'client');
   api.add_files([
     'client/stylesheets/main.css',
-    'client/templates/filter.html',
     'client/templates/map.html',
+    'client/templates/map.coffee',
     'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
-    'client/templates/map.coffee'
   ], 'client');
   api.add_files([
     'models/airports.coffee',
