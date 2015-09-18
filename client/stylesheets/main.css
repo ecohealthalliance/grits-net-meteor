@@ -7,6 +7,21 @@ body {
 	font-family: Arial;
 }
 
+#filterContainer {
+  position: absolute;
+	bottom: 0;
+	left: 0;
+	z-index: 500;
+	background-color: white;
+	padding: 15px;
+	border-radius: 5px;
+}
+
+.airportPill {
+	font-size: small;
+	color: #343434
+}
+
 .leaflet-control-layers-toggle {
 	background-image: url(packages/fuatsengul_leaflet/images/layers.png);
 	width: 36px;
