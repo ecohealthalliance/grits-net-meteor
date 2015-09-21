@@ -172,6 +172,12 @@ Template.map.events
     else if !$('#dowSAT').is(':checked')
       Meteor.gritsUtil.removeQueryCriteria(9)
 
+  'click #diwCB': ->
+    if $('#diwCB').is(':checked')
+      Meteor.gritsUtil.addQueryCriteria({'critId' : 10, 'key' : 'weeklyFrequency', 'value' : parseInt($("#weeklyFrequencyInput").val())})
+    else if !$('#diwCB').is(':checked')
+      Meteor.gritsUtil.removeQueryCriteria(10)
+
   'click #applyFilter': (e, template) ->
     e.preventDefault()
     e.stopPropagation()
