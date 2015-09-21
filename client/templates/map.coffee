@@ -177,7 +177,10 @@ Template.map.events
       Meteor.gritsUtil.addQueryCriteria({'critId' : 10, 'key' : 'weeklyFrequency', 'value' : parseInt($("#weeklyFrequencyInput").val())})
     else if !$('#diwCB').is(':checked')
       Meteor.gritsUtil.removeQueryCriteria(10)
-
+  
+  'click .markerClick': ->
+    alert L.MapNodes.selectedNode
+  
   'click #applyFilter': (e, template) ->
     e.preventDefault()
     e.stopPropagation()
@@ -212,7 +215,13 @@ Template.map.events
               Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
         ###
 
-Template.map.helpers({
+Template.map.nodeEvent = (node)->
+  $("#departureSearch").val('!'+node.id+' ')
+  $("#departureSearch").blur()
+  #$("#arrivalSearch").val('!'+node.id)
+  $('#applyFilter').click()
+
+Template.map.helpers({  
   departureAirports: () ->
     return {
       position: "top",
@@ -354,8 +363,6 @@ Template.map.onCreated () ->
       if _.isEmpty(codes)
         Meteor.gritsUtil.removeQueryCriteria(11)
       Meteor.gritsUtil.addQueryCriteria({'critId' : 11, 'key' : 'arrivalAirport._id', 'value' : {$in: Object.keys(codes)}})
-
-
 
 Template.map.onRendered () ->
   template = this
