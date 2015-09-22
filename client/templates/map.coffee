@@ -112,7 +112,7 @@ Template.map.events
     tokens = _.map(this.settings.rules, (r) -> r.token)
     template.applyAirportFilter(this.name, tokens)
 
-  'blur input[name="departureSearch"]': (e, template) ->
+  'blur input[name="arrivalSearch"]': (e, template) ->
     tokens = _.map(this.settings.rules, (r) -> r.token)
     template.applyAirportFilter(this.name, tokens)
 
