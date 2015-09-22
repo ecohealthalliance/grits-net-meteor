@@ -178,9 +178,6 @@ Template.map.events
     else if !$('#diwCB').is(':checked')
       Meteor.gritsUtil.removeQueryCriteria(10)
   
-  'click .markerClick': ->
-    alert L.MapNodes.selectedNode
-  
   'click #applyFilter': (e, template) ->
     e.preventDefault()
     e.stopPropagation()
