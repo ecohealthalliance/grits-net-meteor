@@ -112,6 +112,10 @@ Template.map.events
     tokens = _.map(this.settings.rules, (r) -> r.token)
     template.applyAirportFilter(this.name, tokens)
 
+  'blur input[name="arrivalSearch"]': (e, template) ->
+    tokens = _.map(this.settings.rules, (r) -> r.token)
+    template.applyAirportFilter(this.name, tokens)
+
   'autocompleteselect input': (event, template, doc) ->
     tokens = _.map(this.settings.rules, (r) -> r.token)
     template.applyAirportFilter(this.name, tokens)
@@ -353,7 +357,8 @@ Template.map.onCreated () ->
       codes = this.parseAirportCodes(val, tokens)
       if _.isEmpty(codes)
         Meteor.gritsUtil.removeQueryCriteria(11)
-      Meteor.gritsUtil.addQueryCriteria({'critId' : 11, 'key' : 'arrivalAirport._id', 'value' : {$in: Object.keys(codes)}})
+      else
+        Meteor.gritsUtil.addQueryCriteria({'critId' : 11, 'key' : 'arrivalAirport._id', 'value' : {$in: Object.keys(codes)}})
 
 
 
