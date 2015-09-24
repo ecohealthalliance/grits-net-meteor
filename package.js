@@ -8,11 +8,12 @@ Package.on_use(function(api){
   api.use([
     'coffeescript',
     'mongo',
+    'fuatsengul:leaflet@1.0.1',
     'jagi:astronomy@0.12.0',
     'jagi:astronomy-validators@0.10.8',
     'mizzao:autocomplete@0.5.1',
     'peerlibrary:async@0.9.2_1',
-    'grits:grits-net-mapper'
+    'grits:grits-net-mapper@0.2.2'
   ]);
   api.use([
     'underscore',
