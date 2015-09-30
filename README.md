@@ -1,7 +1,7 @@
 # grits-net-meteor
 ![Build Status](https://circleci.com/gh/ecohealthalliance/grits-net-meteor.svg?style=shield&circle-token=0bb5a68a6c2ff8aea6f0ae0c324a738362198f10)
 
-A Meteor package for filtering grits transportation data and displaying on 
+A Meteor package for filtering grits transportation data and displaying on
 a Leaflet map.
 
 # An example Meteor application
@@ -19,7 +19,7 @@ The following instructions provide an example of how to use the grits-net-meteor
 
 2. create packages folder and change dir
 
-  ``` 
+  ```
   mkdir packages
   cd packages/
   ```
@@ -38,7 +38,7 @@ The following instructions provide an example of how to use the grits-net-meteor
   meteor add grits:grits-net-mapper
   meteor remove autopublish
   ```
-  
+
 5. setup MONGO_URL environment variable
 
   ```
@@ -50,7 +50,7 @@ The following instructions provide an example of how to use the grits-net-meteor
   ```
   <head>
     <title>Leaflet</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" /> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   </head>
   <body>
     	{{> map }}    
@@ -62,7 +62,18 @@ The following instructions provide an example of how to use the grits-net-meteor
 NOTE: mongodb will need to be populated by the grits-net-consume script.  Please view the [README.md](https://github.com/ecohealthalliance/grits-net-consume/blob/master/README.md)
 
 ## run
-  
-  ``` 
+
+  ```
   meteor
   ```
+
+## run docker
+ 1. (Optional) Set up a Mongo container
+
+  ``` docker run --name mongo -d mongo ```
+
+  (Note: you will need to populate it with grits-net-consume's data)
+
+ 2. Run the following Docker command, making substitutions to the environmental variables as needed:
+
+ ``` docker run -e MONGO_URL='mongodb://mongo:27017/test' -e ROOT_URL='http://localhost' -e PORT=8080 --link mongo:mongo -d -p 8080:8080 grits/grits-net-meteor ```
