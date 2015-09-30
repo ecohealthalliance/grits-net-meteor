@@ -35,10 +35,12 @@ deployment:
             example
       - cp ./example/Dockerfile /tmp/gritsbuild/bundle/
       - docker build -t grits/grits-net-meteor /tmp/gritsbuild/bundle/
+      - docker save grits/grits-net-meteor | gzip -9 > grits-net-meteor.docker.tgz
 
 general:
   artifacts:
     - "example/.meteor/local/log/cucumber.log"
+    - "grits-net-meteor.docker.tgz"
   branches:
     ignore:
       - gh-pages
