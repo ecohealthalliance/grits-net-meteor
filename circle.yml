@@ -1,9 +1,19 @@
 checkout:
   post:
-    - git submodule init
-    - git submodule update
+    - mkdir example/packages
+    - git clone git@github.com:ecohealthalliance/grits-net-meteor.git && cd grits-net-meteor && git checkout test:
+        pwd:
+          example/packages
+    - git clone git@github.com:ecohealthalliance/grits-net-mapper.git && cd grits-net-mapper && git checkout ci-fix:
+        pwd:
+          example/packages
+dependencies:
+  override:
     - curl https://install.meteor.com/ | sh
 test:
   override:
     - chmod +x continuous_integration.sh
     - ./continuous_integration.sh
+    - meteor run --test:
+        pwd:
+          example

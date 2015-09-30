@@ -31,25 +31,7 @@ The following instructions provide an example of how to use the grits-net-meteor
   git clone git@github.com:ecohealthalliance/grits-net-mapper.git
   ```
 
-4. switch to 'Initialize-meteor-app' branch
-
-  ```
-  cd grits-net-meteor/
-  git fetch origin
-  git checkout -b Initialize-meteor-app origin/Initialize-meteor-app
-  cd ..
-  ```
-  
-5. switch to 'mapper-package-initialization' branch
-  
-  ```
-  cd grits-net-mapper/
-  git fetch origin
-  git checkout -b mapper-package-initialization origin/mapper-package-initialization
-  cd ..
-  ```
-
-6. add packages
+4. add packages
 
   ```
   meteor add grits:grits-net-meteor
@@ -57,13 +39,13 @@ The following instructions provide an example of how to use the grits-net-meteor
   meteor remove autopublish
   ```
   
-7. setup MONGO_URL environment variable
+5. setup MONGO_URL environment variable
 
   ```
   export MONGO_URL=mongodb://localhost/grits
   ```
 
-8. create main.html
+6. create main.html
 
   ```
   <head>
@@ -77,7 +59,7 @@ The following instructions provide an example of how to use the grits-net-meteor
 
 ## mongodb
 
-NOTE: mongodb will need to be populated by the grits-net-consume script
+NOTE: mongodb will need to be populated by the grits-net-consume script.  Please view the [README.md](https://github.com/ecohealthalliance/grits-net-consume/blob/master/README.md)
 
 ## run
   
