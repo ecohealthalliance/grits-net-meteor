@@ -4,7 +4,7 @@ checkout:
     - git clone git@github.com:ecohealthalliance/grits-net-meteor.git && cd grits-net-meteor && git checkout test:
         pwd:
           example/packages
-    - git clone git@github.com:ecohealthalliance/grits-net-mapper.git:
+    - git clone git@github.com:ecohealthalliance/grits-net-mapper.git && cd grits-net-mapper && git checkout ci-fix:
         pwd:
           example/packages
 dependencies:
