@@ -1,19 +1,40 @@
+machine:
+  services:
+    - docker
+  java:
+    version: oraclejdk8
+
 checkout:
   post:
     - mkdir example/packages
-    - git clone git@github.com:ecohealthalliance/grits-net-meteor.git && cd grits-net-meteor:
+    - git clone git@github.com:ecohealthalliance/grits-net-meteor.git && cd grits-net-meteor && git checkout pseudo-master:
         pwd:
           example/packages
-    - git clone git@github.com:ecohealthalliance/grits-net-mapper.git && cd grits-net-mapper:
+    - git clone git@github.com:ecohealthalliance/grits-net-mapper.git && cd grits-net-mapper && git checkout ci-fix:
         pwd:
           example/packages
+
 dependencies:
   override:
     - curl https://install.meteor.com/ | sh
+
 test:
   override:
     - chmod +x continuous_integration.sh
     - ./continuous_integration.sh
-    - meteor run --test:
+    - CHIMP_OPTIONS='--browser=phantomjs' VELOCITY_CI=1 DEBUG=1 meteor run --test:
         pwd:
           example
+
+deployment:
+  master:
+    branch: continuous_deployment
+    commands:
+      - docker build -t grits/grits-net-meteor .
+
+general:
+  artifacts:
+    - "example/.meteor/local/log/cucumber.log"
+  branches:
+    ignore:
+      - gh-pages
