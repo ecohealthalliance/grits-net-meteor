@@ -33,12 +33,8 @@ deployment:
       - meteor build /tmp/gritsbuild --directory:
           pwd:
             example
-      - cp Dockerfile /tmp/gritsbuild/bundle/:
-          pwd:
-            example
-      - docker build -t grits/grits-net-meteor .:
-          pwd:
-            /tmp/gritsbuild/bundle/
+      - cp ./example/Dockerfile /tmp/gritsbuild/bundle/
+      - docker build -t grits/grits-net-meteor /tmp/gritsbuild/bundle/
 
 general:
   artifacts:
