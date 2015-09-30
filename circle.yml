@@ -30,7 +30,9 @@ deployment:
   master:
     branch: continuous_deployment
     commands:
-      - docker build -t grits/grits-net-meteor .
+      - docker build -t grits/grits-net-meteor .:
+          pwd:
+            example
 
 general:
   artifacts:
