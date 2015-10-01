@@ -36,10 +36,10 @@
         Seats: <input type="number" id="seatsInput" value="">
       </div>
       <div>
-        Departure: {{> inputAutocomplete name="departureSearch" settings=departureAirports }}
+        Departure: {{> inputAutocomplete id="departureSearch" name="departureSearch" settings=departureAirports }}
       </div>
       <div>
-        Arrival: {{> inputAutocomplete name="arrivalSearch" settings=arrivalAirports }}
+        Arrival: {{> inputAutocomplete id="arrivalSearch" name="arrivalSearch" settings=arrivalAirports }}
       </div>
       <button id="applyFilter">
         Apply
