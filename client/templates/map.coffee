@@ -217,8 +217,18 @@ Template.map.events
         ###
 @nodeHandler =
   click:(node)->
-    $("#departureSearch").val('!'+node.id).blur()    
+    $("#departureSearch").val('!'+node.id).blur()
     $("#applyFilter").click()
+
+@popupBuilder =
+  buildNodePopup:(node)->
+    div = L.DomUtil.create('div', '')
+    Blaze.renderWithData Template.nodeDetails, node, div
+    return div
+  buildPathPopup:(path)->
+    div = L.DomUtil.create('div', '')
+    Blaze.renderWithData Template.pathDetails, path, div
+    return div
 
 Template.map.helpers({
   departureAirports: () ->
