@@ -88,19 +88,17 @@ Meteor.gritsUtil =
     moduleSelector = L.control(position: 'topleft')
     moduleSelector.onAdd = @onAddHandler('info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
     moduleSelector.addTo @map
-    $('#moduleSelector').appendTo('#moduleSelectorDiv').show()
-    $("#moduleSelectorDiv").hide()
-    moduleSelector.hide()
+    $('#moduleSelector').appendTo('#moduleSelectorDiv').show()    
 
     pathDetails = L.control(position: 'bottomright')
     pathDetails.onAdd = @onAddHandler('info path-detail', '')
     pathDetails.addTo @map
-    $('.path-detail').hide();
+    $('.path-detail').hide()
 
     nodeDetails = L.control(position: 'bottomright')
     nodeDetails.onAdd = @onAddHandler('info node-detail', '')
     nodeDetails.addTo @map
-    $('.node-detail').hide();
+    $('.node-detail').hide()
     #filterSelector = L.control(position: 'bottomleft')
     #filterdiv = L.DomUtil.create("div","")
     #Blaze.renderWithData(Template.filter, this, filterdiv);
