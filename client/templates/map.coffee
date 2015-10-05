@@ -215,6 +215,10 @@ Template.map.events
             if pathAndFactor isnt false
               Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
         ###
+@nodeHandler =
+  click:(node)->
+    $("#departureSearch").val('!'+node.id).blur()    
+    $("#applyFilter").click()
 
 Template.map.helpers({
   departureAirports: () ->
