@@ -84,26 +84,19 @@ Meteor.gritsUtil =
     div = $('.path-detail')[0]
     Blaze.renderWithData Template.pathDetails, path, div
     $('.path-detail').show()
+  addControl: (position, selector, content) ->
+    control = L.control(position: position)
+    control.onAdd = @onAddHandler(selector, content)
+    control.addTo @map
   addControls: ->
-    moduleSelector = L.control(position: 'topleft')
-    moduleSelector.onAdd = @onAddHandler('info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
-    moduleSelector.addTo @map
-    $('#moduleSelector').appendTo('#moduleSelectorDiv').show()    
-
     pathDetails = L.control(position: 'bottomright')
     pathDetails.onAdd = @onAddHandler('info path-detail', '')
     pathDetails.addTo @map
     $('.path-detail').hide()
-
     nodeDetails = L.control(position: 'bottomright')
     nodeDetails.onAdd = @onAddHandler('info node-detail', '')
     nodeDetails.addTo @map
     $('.node-detail').hide()
-    #filterSelector = L.control(position: 'bottomleft')
-    #filterdiv = L.DomUtil.create("div","")
-    #Blaze.renderWithData(Template.filter, this, filterdiv);
-    #filterSelector.onAdd = @onAddHandler('info', $('#filterContainer').html())
-    #filterSelector.addTo @map
   onAddHandler: (selector, html) ->
     ->
       @_div = L.DomUtil.create('div', selector)
@@ -112,23 +105,7 @@ Meteor.gritsUtil =
       L.DomEvent.disableScrollPropagation @_div
       @_div
 
-Meteor.dummyFlight1 = { "_id" : "95586793f1519e7ce3e6649c3c6fa8d77" , "carrier" : "AA" , "flightNumber" : 5020 , "serviceType" : "J" , "effectiveDate" : { "$date" : 1446681600000} , "discontinuedDate" : { "$date" : 1457740800000} , "day1" : true , "day2" : true , "day3" : true , "day4" : true , "day5" : true , "day6" : true , "day7" : true , "departureAirport" : { "city" : "Charlotte-Douglas" , "name" : "Charlotte-Douglas International Airport" , "loc" : { "type" : "Point" , "coordinates" : [ -120.664635, 35.803367]} , "country" :  null  , "notes" :  null  , "stateName" : "North Carolina" , "WAC" : 36 , "countryName" : "United States" , "state" : "NC" , "globalRegion" : "North America" , "_id" : "CLT"} , "departureCity" : "CLT" , "departureState" : "NC" , "departureCountry" : "US" , "departureTimePub" : { "$date" : -2208947100000} , "departureUTCVariance" : -500 , "arrivalAirport" : { "city" : "Nashville" , "name" : "Nashville Metro" , "loc" : { "type" : "Point" , "coordinates" : [ 111.893956, 26.493962 ]} , "country" :  null  , "notes" :  null  , "stateName" : "Tennessee" , "WAC" : 54 , "countryName" : "United States" , "state" : "TN" , "globalRegion" : "North America" , "_id" : "BNA"} , "arrivalCity" : "BNA" , "arrivalState" : "TN" , "arrivalCountry" : "US" , "arrivalTimePub" : { "$date" : -2208945660000} , "arrivalUTCVariance" : -600 , "flightArrivalDayIndicator" : "0" , "stops" : 0 , "stopCodes" : [ ] , "totalSeats" : 84}
-Meteor.dummyFlight2 = { "_id" : "95586793f1519e7ce3e6649c3c6fa8d78" , "carrier" : "AA" , "flightNumber" : 5020 , "serviceType" : "J" , "effectiveDate" : { "$date" : 1446681600000} , "discontinuedDate" : { "$date" : 1457740800000} , "day1" : true , "day2" : true , "day3" : true , "day4" : true , "day5" : true , "day6" : true , "day7" : true , "departureAirport" : { "city" : "Charlotte-Douglas" , "name" : "Charlotte-Douglas International Airport" , "loc" : { "type" : "Point" , "coordinates" : [ 116.288488, -23.338438]} , "country" :  null  , "notes" :  null  , "stateName" : "North Carolina" , "WAC" : 36 , "countryName" : "United States" , "state" : "NC" , "globalRegion" : "North America" , "_id" : "CLT2"} , "departureCity" : "CLT" , "departureState" : "NC" , "departureCountry" : "US" , "departureTimePub" : { "$date" : -2208947100000} , "departureUTCVariance" : -500 , "arrivalAirport" : { "city" : "Nashville" , "name" : "Nashville Metro" , "loc" : { "type" : "Point" , "coordinates" : [ 133.163487, 66.330354 ]} , "country" :  null  , "notes" :  null  , "stateName" : "Tennessee" , "WAC" : 54 , "countryName" : "United States" , "state" : "TN" , "globalRegion" : "North America" , "_id" : "BNA2"} , "arrivalCity" : "BNA" , "arrivalState" : "TN" , "arrivalCountry" : "US" , "arrivalTimePub" : { "$date" : -2208945660000} , "arrivalUTCVariance" : -600 , "flightArrivalDayIndicator" : "0" , "stops" : 0 , "stopCodes" : [ ] , "totalSeats" : 84}
-Meteor.dummyFlight3 = { "_id" : { "$oid" : "55e0a2c72070b47daed4347b"} , "Alliance" : "None" , "Arr Flag" : true , "Arr Term" : "E " , "Arr Time" : 1700.0 , "Block Mins" : 480.0 , "Date" : { "$date" : 1391212800000} , "Dep Term" :  null  , "Dep Time" : 1300.0 , "Dest" : { "City" : "Boston" , "Global Region" : "North America" , "Code" : "BOS" , "Name" : "Logan International" , "loc" : { "type" : "Point" , "coordinates" : [ -115.428235, 17.022733]} , "Country" :  null  , "Notes" :  null  , "WAC" : 13 , "State Name" : "Massachusetts" , "State" : "MA" , "Country Name" : "United States" , "key" : "BOS" , "_id" : { "$oid" : "55e0a2862070b47daed4104f"}} , "Dest WAC" : 13 , "Equip" : "752" , "Flight" : 690 , "Miles" :  null  , "Mktg Al" : "VR" , "Op Al" : "VR" , "Op Days" : "...4..." , "Ops/Week" : 1 , "Orig" : { "City" : "Praia" , "Global Region" : "Africa" , "Code" : "RAI" , "Name" : "Praia International" , "loc" : { "type" : "Point" , "coordinates" : [ 129.576109, 57.749264 ]} , "Country" :  null  , "Notes" :  null  , "WAC" : 507 , "State Name" :  null  , "State" :  null  , "Country Name" : "Cape Verde" , "key" : "RAI" , "_id" : { "$oid" : "55e0a2a62070b47daed42c34"}} , "Orig WAC" : 507 , "Seats" : 210 , "Seats/Week" : 210 , "Stops" : 0 , "key" : "04108e946db07b47ad21875e61c43b8e702b877688962343b8610b65d62555a7"}
-
 Template.map.events
-  'click .a': ->
-    Meteor.gritsUtil.styleMapPath(new L.mapPath(Meteor.dummyFlight1, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map))
-  'click .b': ->
-    Meteor.gritsUtil.styleMapPath(new L.mapPath(Meteor.dummyFlight2, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map))
-  'click .c': ->
-    L.MapPaths.addFactor 'asdfdewsss', Meteor.dummyFlight3, Meteor.gritsUtil.map
-  'click .d': ->
-    Session.set 'module', 'd'
-    new L.marker(new L.LatLng(39.721201, -225.428235)).addTo(Meteor.gritsUtil.map);
-  'click .e': ->
-    Session.set 'module', 'e'
-
   'blur input[name="departureSearch"]': (e, template) ->
     tokens = _.map(this.settings.rules, (r) -> r.token)
     template.applyAirportFilter(this.name, tokens)
@@ -389,8 +366,6 @@ Template.map.onCreated () ->
         Meteor.gritsUtil.removeQueryCriteria(11)
       else
         Meteor.gritsUtil.addQueryCriteria({'critId' : 11, 'key' : 'arrivalAirport._id', 'value' : {$in: Object.keys(codes)}})
-
-
 
 Template.map.onRendered () ->
   template = this
