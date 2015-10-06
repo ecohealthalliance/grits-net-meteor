@@ -72,12 +72,33 @@ Meteor.gritsUtil =
         return false #updated
     @queryCrit.push(newQueryCrit)
     return true #added
+  showNodeDetails:(node) ->
+    $('.node-detail').empty()
+    $('.node-detail').hide()
+    div = $('.node-detail')[0]
+    Blaze.renderWithData Template.nodeDetails, node, div
+    $('.node-detail').show()
+  showPathDetails:(path) ->
+    $('.path-detail').empty()
+    $('.path-detail').hide()
+    div = $('.path-detail')[0]
+    Blaze.renderWithData Template.pathDetails, path, div
+    $('.path-detail').show()
   addControls: ->
     moduleSelector = L.control(position: 'topleft')
     moduleSelector.onAdd = @onAddHandler('info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
     moduleSelector.addTo @map
-    $('#moduleSelector').appendTo('#moduleSelectorDiv').show()
+    $('#moduleSelector').appendTo('#moduleSelectorDiv').show()    
 
+    pathDetails = L.control(position: 'bottomright')
+    pathDetails.onAdd = @onAddHandler('info path-detail', '')
+    pathDetails.addTo @map
+    $('.path-detail').hide()
+
+    nodeDetails = L.control(position: 'bottomright')
+    nodeDetails.onAdd = @onAddHandler('info node-detail', '')
+    nodeDetails.addTo @map
+    $('.node-detail').hide()
     #filterSelector = L.control(position: 'bottomleft')
     #filterdiv = L.DomUtil.create("div","")
     #Blaze.renderWithData(Template.filter, this, filterdiv);
@@ -217,8 +238,13 @@ Template.map.events
         ###
 @nodeHandler =
   click:(node)->
-    $("#departureSearch").val('!'+node.id).blur()    
+    Meteor.gritsUtil.showNodeDetails(node)
+    $("#departureSearch").val('!'+node.id).blur()
     $("#applyFilter").click()
+
+@pathHandler =
+  click:(path)->
+    Meteor.gritsUtil.showPathDetails(path)
 
 Template.map.helpers({
   departureAirports: () ->
