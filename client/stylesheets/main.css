@@ -17,6 +17,16 @@ body {
 	border-radius: 5px;
 }
 
+#filterLoading {
+	position: relative;
+	display: none;
+	vertical-align: middle;
+}
+
+#applyFilter {
+	padding: 5px;
+}
+
 .airportPill {
 	font-size: small;
 	color: #343434

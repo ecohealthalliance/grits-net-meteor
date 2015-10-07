@@ -3,6 +3,15 @@ Meteor.startup () ->
   Session.set 'previousArrivalAirports', []
   Session.set 'previousFlights', []
   Session.set 'query', {}
+  Session.set 'isUpdatingExistingFlights', false
+
+  Tracker.autorun( () ->
+    isUpdatingExistingFlights = Session.get 'isUpdatingExistingFlights'
+    if isUpdatingExistingFlights
+      $('#filterLoading').show()
+    else
+      $('#filterLoading').hide()
+  )
 
 Meteor.gritsUtil =
   map: null
@@ -142,10 +151,12 @@ Meteor.gritsUtil =
     if _.isUndefined(newFlights) or _.isEmpty(newFlights)
       return
 
-    # TODO: show loading
     self = this
+
+    Session.set('isUpdatingExistingFlights',true)
     previousFlights = Session.get('previousFlights')
 
+    addQueueDrained = new ReactiveVar(false)
     addQueue = async.queue(((flight, callback) ->
       console.log 'add flight: ', flight
       path = L.MapPaths.addFactor flight._id, flight, Meteor.gritsUtil.map
@@ -155,7 +166,9 @@ Meteor.gritsUtil =
     ), 1)
     addQueue.drain = ->
       console.log 'addQueue is done.'
+      addQueueDrained.set true
 
+    removeQueueDrained = new ReactiveVar(false)
     removeQueue = async.queue(((flight, callback) ->
       console.log 'remove flight: ', flight
       pathAndFactor = L.MapPaths.removeFactor flight._id, flight
@@ -166,7 +179,9 @@ Meteor.gritsUtil =
     ), 1)
     removeQueue.drain = ->
       console.log 'removeQueue is done.'
+      removeQueueDrained.set true
 
+    updateQueueDrained = new ReactiveVar(false)
     updateQueue = async.queue(((flight, callback) ->
       console.log 'update flight: ', flight
       if !_.isEmpty(flight)
@@ -176,6 +191,12 @@ Meteor.gritsUtil =
     ), 1)
     updateQueue.drain = ->
       console.log 'updateQueue is done.'
+      updateQueueDrained.set true
+
+    Tracker.autorun( () ->
+      if addQueueDrained.get() and removeQueueDrained.get() and updateQueueDrained.get()
+        Session.set 'isUpdatingExistingFlights', false
+    )
 
     if !_.isUndefined(previousFlights) and previousFlights.length > 0
       newFlightIds = _.pluck(newFlights, '_id')
@@ -193,9 +214,12 @@ Meteor.gritsUtil =
         return addIds.indexOf(flight._id) >= 0
       )
       removeQueue.push toRemove
-      addQueue.push toAdd
       updateQueue.push toUpdate
+      addQueue.push toAdd
     else
+      # no previousFlights, only performing add
+      removeQueue.push [] # push an empty array so that removeQueueDrained is set true
+      updateQueue.push [] # push an empty array so that updateQueueDrained is set true
       addQueue.push newFlights
 
     Session.set('previousFlights', newFlights)
@@ -281,7 +305,9 @@ Template.map.events
       Meteor.gritsUtil.removeQueryCriteria(10)
 
   'click #applyFilter': (e, template) ->
+    $('#filterLoading').show();
     Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
+
 
 @nodeHandler =
   click:(node)->
