@@ -3,15 +3,7 @@ Meteor.startup () ->
   Session.set 'previousArrivalAirports', []
   Session.set 'previousFlights', []
   Session.set 'query', {}
-  Session.set 'isUpdatingExistingFlights', false
-
-  Tracker.autorun( () ->
-    isUpdatingExistingFlights = Session.get 'isUpdatingExistingFlights'
-    if isUpdatingExistingFlights
-      $('#filterLoading').show()
-    else
-      $('#filterLoading').hide()
-  )
+  Session.set 'isUpdating', false
 
 Meteor.gritsUtil =
   map: null
@@ -149,11 +141,10 @@ Meteor.gritsUtil =
     Session.set('previousArrivalAirports', Object.keys(arrivalAirports))
   updateExistingFlights: (newFlights) ->
     if _.isUndefined(newFlights) or _.isEmpty(newFlights)
+      Session.set('isUpdating',false)
       return
 
     self = this
-
-    Session.set('isUpdatingExistingFlights',true)
     previousFlights = Session.get('previousFlights')
 
     addQueueDrained = new ReactiveVar(false)
@@ -195,7 +186,7 @@ Meteor.gritsUtil =
 
     Tracker.autorun( () ->
       if addQueueDrained.get() and removeQueueDrained.get() and updateQueueDrained.get()
-        Session.set 'isUpdatingExistingFlights', false
+        Session.set 'isUpdating', false
     )
 
     if !_.isUndefined(previousFlights) and previousFlights.length > 0
@@ -305,8 +296,12 @@ Template.map.events
       Meteor.gritsUtil.removeQueryCriteria(10)
 
   'click #applyFilter': (e, template) ->
-    $('#filterLoading').show();
-    Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
+    query = Meteor.gritsUtil.getQueryCriteria()
+    if _.isUndefined(query) or _.isEmpty(query)
+      return
+    else
+      Session.set 'isUpdating', true
+      Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
 
 
 @nodeHandler =
@@ -389,3 +384,13 @@ Template.map.onRendered () ->
     layerName: 'Esri_WorldImagery')
   baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
   Meteor.gritsUtil.initLeaflet('grits-map', {'zoom':2,'latlng':[37.8, -92]}, baseLayers)
+
+  this.autorun( () ->
+    isUpdating = Session.get 'isUpdating'
+    if isUpdating
+      $('#applyFilter').prop('disabled', true);
+      $('#filterLoading').show()
+    else
+      $('#applyFilter').prop('disabled', false);
+      $('#filterLoading').hide()
+  )
