@@ -208,15 +208,15 @@ Meteor.gritsUtil =
 Template.map.events
   'blur input[name="departureSearch"]': (e, template) ->
     tokens = _.map(this.settings.rules, (r) -> r.token)
-    template.applyAirportFilter(this.name, tokens)
+    Meteor.gritsUtil.applyAirportFilter(this.name, tokens)
 
   'blur input[name="arrivalSearch"]': (e, template) ->
     tokens = _.map(this.settings.rules, (r) -> r.token)
-    template.applyAirportFilter(this.name, tokens)
+    Meteor.gritsUtil.applyAirportFilter(this.name, tokens)
 
   'autocompleteselect input': (event, template, doc) ->
     tokens = _.map(this.settings.rules, (r) -> r.token)
-    template.applyAirportFilter(this.name, tokens)
+    Meteor.gritsUtil.applyAirportFilter(this.name, tokens)
 
   'change #stopsInput': ->
     val = parseInt($("#stopsInput").val())
