@@ -233,7 +233,7 @@ Template.map.events
             Meteor.gritsUtil.styleMapPath(path)
           changed: (id, fields) ->
             console.log 'update path: ', id
-            L.MapPaths.updatePath id, fields, Meteor.gritsUtil.map
+            L.MapPaths.updateFactor id, fields, Meteor.gritsUtil.map
           removed: (id) ->
             console.log 'remove path: ', id
             pathAndFactor = L.MapPaths.removeFactor id, flight
@@ -317,7 +317,7 @@ Template.map.onCreated () ->
     Session.set('previousArrivalAirports', Object.keys(arrivalAirports))
 
   @updateExistingFlights = (query) ->
-    # TODO: show loading  
+    # TODO: show loading
     template = this
     previousFlights = Session.get('previousFlights')
     newFlights = Flights.find(query).fetch()
@@ -350,7 +350,7 @@ Template.map.onCreated () ->
         flight = _.find(newFlights, (f) -> return f._id == id)
         console.log 'update flight: ', flight
         if !_.isEmpty(flight)
-          L.MapPaths.updatePath id, flight, Meteor.gritsUtil.map
+          L.MapPaths.updateFactor id, flight, Meteor.gritsUtil.map
         cb()
       )
 
@@ -374,7 +374,7 @@ Template.map.onCreated () ->
       i++
     i = 0
     while i < L.MapPaths.mapPaths.length
-      if L.MapPaths.mapPaths[i].visible
+      if L.MapPaths.mapPaths[i].flights > 0
         Meteor.gritsUtil.styleMapPath L.MapPaths.mapPaths[i]
       i++
 
