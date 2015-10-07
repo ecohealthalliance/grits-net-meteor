@@ -2,6 +2,7 @@ Meteor.startup () ->
   Session.set 'previousDepartureAirports', []
   Session.set 'previousArrivalAirports', []
   Session.set 'previousFlights', []
+  Session.set 'query', {}
 
 Meteor.gritsUtil =
   normalizedCI: 0
@@ -108,6 +109,105 @@ Meteor.gritsUtil =
       L.DomEvent.disableClickPropagation @_div
       L.DomEvent.disableScrollPropagation @_div
       @_div
+  parseAirportCodes: (str, tokens) ->
+    codes = {}
+    parts = str.split(' ');
+    _.each(parts, (part) ->
+      if _.isEmpty(part)
+        return
+      code = part.replace(new RegExp(tokens.join('|'), 'g'), '')
+      codes[code] = code;
+    )
+    return codes
+  applyAirportFilter: (name, tokens) ->
+    if name == 'departureSearch'
+      val = $('input[name="departureSearch"]').val()
+      codes = this.parseAirportCodes(val, tokens)
+      if _.isEmpty(codes)
+        Meteor.gritsUtil.removeQueryCriteria(10)
+      else
+        Meteor.gritsUtil.addQueryCriteria({'critId' : 10, 'key' : 'departureAirport._id', 'value' : {$in: Object.keys(codes)}})
+    else if name == 'arrivalSearch'
+      val = $('input[name="arrivalSearch"]').val()
+      codes = this.parseAirportCodes(val, tokens)
+      if _.isEmpty(codes)
+        Meteor.gritsUtil.removeQueryCriteria(11)
+      else
+        Meteor.gritsUtil.addQueryCriteria({'critId' : 11, 'key' : 'arrivalAirport._id', 'value' : {$in: Object.keys(codes)}})
+  updateExistingAirports: (flights) ->
+    departureAirports = {}
+    arrivalAirports = {}
+    for flight in flights
+      departureAirports[flight.departureAirport._id] = flight.departureAirport._id
+      arrivalAirports[flight.arrivalAirport._id] = flight.arrivalAirport._id
+    Session.set('previousDepartureAirports', Object.keys(departureAirports))
+    Session.set('previousArrivalAirports', Object.keys(arrivalAirports))
+  updateExistingFlights: (newFlights) ->
+    if _.isUndefined(newFlights) or _.isEmpty(newFlights)
+      return
+
+    # TODO: show loading
+    self = this
+    previousFlights = Session.get('previousFlights')
+
+    addQueue = async.queue(((flight, callback) ->
+      console.log 'add flight: ', flight
+      path = L.MapPaths.addFactor flight._id, flight, Meteor.gritsUtil.map
+      Meteor.gritsUtil.styleMapPath(path)
+      async.nextTick () ->
+        callback()
+    ), 1)
+    addQueue.drain = ->
+      console.log 'addQueue is done.'
+
+    removeQueue = async.queue(((flight, callback) ->
+      console.log 'remove flight: ', flight
+      pathAndFactor = L.MapPaths.removeFactor flight._id, flight
+      if pathAndFactor isnt false
+        Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
+      async.nextTick () ->
+        callback()
+    ), 1)
+    removeQueue.drain = ->
+      console.log 'removeQueue is done.'
+
+    updateQueue = async.queue(((flight, callback) ->
+      console.log 'update flight: ', flight
+      if !_.isEmpty(flight)
+        L.MapPaths.updatePath flight._id, flight, Meteor.gritsUtil.map
+      async.nextTick () ->
+        callback()
+    ), 1)
+    updateQueue.drain = ->
+      console.log 'updateQueue is done.'
+
+    if !_.isUndefined(previousFlights) and previousFlights.length > 0
+      newFlightIds = _.pluck(newFlights, '_id')
+      previousFlightIds = _.pluck(previousFlights, '_id')
+      removeIds = _.difference(previousFlightIds, newFlightIds)
+      addIds = _.difference(newFlightIds, previousFlightIds)
+      updateIds = _.intersection(previousFlightIds, newFlightIds);
+      toRemove = _.filter(previousFlights, (flight) ->
+        return removeIds.indexOf(flight._id) >= 0
+      )
+      toAdd = _.filter(newFlights, (flight) ->
+        return addIds.indexOf(flight._id) >= 0
+      )
+      toUpdate = _.filter(newFlights, (flight) ->
+        return addIds.indexOf(flight._id) >= 0
+      )
+      removeQueue.push toRemove
+      addQueue.push toAdd
+      updateQueue.push toUpdate
+    else
+      addQueue.push newFlights
+
+    Session.set('previousFlights', newFlights)
+  onSubscriptionReady: () ->
+    query = Session.get 'query'
+    flights = Flights.find(query).fetch()
+    @updateExistingAirports(flights) # needed for the Departure and Arrival searches
+    @updateExistingFlights(flights)
 
 Template.map.events
   'blur input[name="departureSearch"]': (e, template) ->
@@ -185,38 +285,8 @@ Template.map.events
       Meteor.gritsUtil.removeQueryCriteria(10)
 
   'click #applyFilter': (e, template) ->
-    e.preventDefault()
-    e.stopPropagation()
-    query = Meteor.gritsUtil.getQueryCriteria()
-    template.subscribe 'flightsByQuery', query,
-      onError: ->
-        console.log 'subscription.flightsByQuery.onError:', this
-      onStop: ->
-        console.log 'subscription.flightsByQuery.onStop:', this
-      onReady: ->
-        console.log 'subscription.flightsByQuery.onReady:', this
-        console.log 'query: ', query
+    Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
 
-        flights = Flights.find(query).fetch()
-        template.updateExistingAirports(flights) # needed for the Departure,
-                                                 # and Arrival searches
-        template.updateExistingFlights(query) # alternative to observeChanges
-
-        ###
-        Flights.find().observeChanges
-          added: (id, fields) ->
-            console.log 'add path: ', id
-            path = L.MapPaths.addFactor id, fields, Meteor.gritsUtil.map
-            Meteor.gritsUtil.styleMapPath(path)
-          changed: (id, fields) ->
-            console.log 'update path: ', id
-            L.MapPaths.updateFactor id, fields, Meteor.gritsUtil.map
-          removed: (id) ->
-            console.log 'remove path: ', id
-            pathAndFactor = L.MapPaths.removeFactor id, flight
-            if pathAndFactor isnt false
-              Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
-        ###
 @nodeHandler =
   click:(node)->
     Meteor.gritsUtil.showNodeDetails(node)
@@ -282,112 +352,8 @@ Template.map.helpers({
     }
 })
 
-Template.map.onCreated () ->
-  template = this
-  @updateExistingAirports = (flights) ->
-    departureAirports = {}
-    arrivalAirports = {}
-    for flight in flights
-      departureAirports[flight.departureAirport._id] = flight.departureAirport._id
-      arrivalAirports[flight.arrivalAirport._id] = flight.arrivalAirport._id
-    Session.set('previousDepartureAirports', Object.keys(departureAirports))
-    Session.set('previousArrivalAirports', Object.keys(arrivalAirports))
-
-  @updateExistingFlights = (query) ->
-    # TODO: show loading
-    template = this
-    previousFlights = Session.get('previousFlights')
-    newFlights = Flights.find(query).fetch()
-
-    if previousFlights.length > 0
-      newFlightIds = _.pluck(newFlights, '_id')
-      previousFlightIds = _.pluck(previousFlights, '_id')
-      remove = _.difference(previousFlightIds, newFlightIds);
-      add = _.difference(newFlightIds, previousFlightIds);
-      update = _.intersection(previousFlightIds, newFlightIds);
-
-      async.each(remove, (id, cb) ->
-        flight = _.find(template.previousFlights, (f) -> return f._id == id)
-        console.log 'remove flight: ', flight
-
-        pathAndFactor = L.MapPaths.removeFactor id, flight
-        cb()
-      )
-
-      async.each(add, (id, cb) ->
-        flight = _.find(newFlights, (f) -> return f._id == id)
-        console.log 'add flight: ', flight
-        if !_.isEmpty(flight)
-          path = L.MapPaths.addFactor id, flight, Meteor.gritsUtil.map
-          #Meteor.gritsUtil.styleMapPath(path)
-        cb()
-      )
-
-      async.each(update, (id, cb) ->
-        flight = _.find(newFlights, (f) -> return f._id == id)
-        console.log 'update flight: ', flight
-        if !_.isEmpty(flight)
-          L.MapPaths.updateFactor id, flight, Meteor.gritsUtil.map
-        cb()
-      )
-
-    else
-      async.each(newFlights, (flight, cb) ->
-        console.log 'add flight: ', flight
-        path = L.MapPaths.addFactor flight._id, flight, Meteor.gritsUtil.map
-        #Meteor.gritsUtil.styleMapPath(path)
-        cb()
-      )
-
-    template.updateExistingAirports(newFlights)
-    Session.set('previousFlights', newFlights)
-
-    Meteor.gritsUtil.normalizedCI = 0
-    i = 0
-    while i < L.MapPaths.mapPaths.length
-      tpath = L.MapPaths.mapPaths[i]
-      if tpath.totalSeats > Meteor.gritsUtil.normalizedCI
-        Meteor.gritsUtil.normalizedCI = tpath.totalSeats
-      i++
-    i = 0
-    while i < L.MapPaths.mapPaths.length
-      if L.MapPaths.mapPaths[i].flights > 0
-        Meteor.gritsUtil.styleMapPath L.MapPaths.mapPaths[i]
-      i++
-
-
-  @parseAirportCodes = (str, tokens) ->
-    codes = {}
-    parts = str.split(' ');
-    _.each(parts, (part) ->
-      if _.isEmpty(part)
-        return
-      code = part.replace(new RegExp(tokens.join('|'), 'g'), '')
-      codes[code] = code;
-    )
-    return codes
-
-  @applyAirportFilter = (name, tokens) ->
-    if name == 'departureSearch'
-      val = $('input[name="departureSearch"]').val()
-      codes = this.parseAirportCodes(val, tokens)
-      if _.isEmpty(codes)
-        Meteor.gritsUtil.removeQueryCriteria(10)
-      else
-        Meteor.gritsUtil.addQueryCriteria({'critId' : 10, 'key' : 'departureAirport._id', 'value' : {$in: Object.keys(codes)}})
-    else if name == 'arrivalSearch'
-      val = $('input[name="arrivalSearch"]').val()
-      codes = this.parseAirportCodes(val, tokens)
-      if _.isEmpty(codes)
-        Meteor.gritsUtil.removeQueryCriteria(11)
-      else
-        Meteor.gritsUtil.addQueryCriteria({'critId' : 11, 'key' : 'arrivalAirport._id', 'value' : {$in: Object.keys(codes)}})
-
 Template.map.onRendered () ->
-  template = this
-
   Meteor.gritsUtil.initWindow('grits-map', {'height': window.innerHeight})
-
   OpenStreetMap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     key: '1234'
     layerName: 'OpenStreetMap'
@@ -399,15 +365,5 @@ Template.map.onRendered () ->
     subdomains: '1234')
   Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     layerName: 'Esri_WorldImagery')
-
   baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
-
   Meteor.gritsUtil.initLeaflet('grits-map', {'zoom':2,'latlng':[37.8, -92]}, baseLayers)
-
-  #Meteor.gritsUtil.map.addLayer(L.MapNodes.getLayerGroup())
-
-  #Meteor.gritsUtil.map.addLayer(L.MapPaths.getLayerGroup())
-
-  #L.layerGroup(L.MapPaths.mapPaths).addTo(Meteor.gritsUtil.map)
-
-  #L.layerGroup(L.MapNodes.mapNodes).addTo(Meteor.gritsUtil.map)
