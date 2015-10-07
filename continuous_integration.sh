@@ -6,4 +6,4 @@
 
 echo "Unit Tests *******************************************************************************"
 type spacejam || npm install -g spacejam
-spacejam test-packages ./ || touch FAILURE
+spacejam test-packages ./

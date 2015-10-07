@@ -4,6 +4,7 @@ Meteor.startup () ->
   Session.set 'previousFlights', []
 
 Meteor.gritsUtil =
+  normalizedCI: 0
   map: null
   baseLayers: null
   queryCrit: []
@@ -45,16 +46,19 @@ Meteor.gritsUtil =
   populateMap: (flights) ->
     new L.mapPath(flight, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map) for flight in flights
   styleMapPath: (path) ->
-    path.hide()
-    mid = (100 - Math.floor((path.totalSeats)/100)).toString()
-    if mid < 10
-      mid = "0"+ mid
-    if mid > 99
-      mid = "99"
-    color = '#99'+ mid + "00"
+    x = (path.totalSeats/@normalizedCI)
+    np = parseFloat(1 - x)
+    path.normalizedPercent = np
+    if np < .25
+      color = '#ffffff'
+    else if np < .50
+      color = '#0000ff'
+    else if np < .75
+      color = '#666666'
+    else if np <= 1
+      color = '#000000'
     weight = path.totalSeats / 250  + 2
     path.setStyle(color, weight)
-    path.refresh()
   getQueryCriteria: ->
     jsoo = {}
     for crit in @queryCrit
@@ -72,12 +76,33 @@ Meteor.gritsUtil =
         return false #updated
     @queryCrit.push(newQueryCrit)
     return true #added
+  showNodeDetails:(node) ->
+    $('.node-detail').empty()
+    $('.node-detail').hide()
+    div = $('.node-detail')[0]
+    Blaze.renderWithData Template.nodeDetails, node, div
+    $('.node-detail').show()
+  showPathDetails:(path) ->
+    $('.path-detail').empty()
+    $('.path-detail').hide()
+    div = $('.path-detail')[0]
+    Blaze.renderWithData Template.pathDetails, path, div
+    $('.path-detail').show()
   addControls: ->
     moduleSelector = L.control(position: 'topleft')
     moduleSelector.onAdd = @onAddHandler('info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
     moduleSelector.addTo @map
     $('#moduleSelector').appendTo('#moduleSelectorDiv').show()
 
+    pathDetails = L.control(position: 'bottomright')
+    pathDetails.onAdd = @onAddHandler('info path-detail', '')
+    pathDetails.addTo @map
+    $('.path-detail').hide()
+
+    nodeDetails = L.control(position: 'bottomright')
+    nodeDetails.onAdd = @onAddHandler('info node-detail', '')
+    nodeDetails.addTo @map
+    $('.node-detail').hide()
     #filterSelector = L.control(position: 'bottomleft')
     #filterdiv = L.DomUtil.create("div","")
     #Blaze.renderWithData(Template.filter, this, filterdiv);
@@ -215,6 +240,15 @@ Template.map.events
             if pathAndFactor isnt false
               Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
         ###
+@nodeHandler =
+  click:(node)->
+    Meteor.gritsUtil.showNodeDetails(node)
+    $("#departureSearch").val('!'+node.id).blur()
+    $("#applyFilter").click()
+
+@pathHandler =
+  click:(path)->
+    Meteor.gritsUtil.showPathDetails(path)
 
 Template.map.helpers({
   departureAirports: () ->
@@ -273,7 +307,6 @@ Template.map.helpers({
 
 Template.map.onCreated () ->
   template = this
-
   @updateExistingAirports = (flights) ->
     departureAirports = {}
     arrivalAirports = {}
@@ -284,7 +317,7 @@ Template.map.onCreated () ->
     Session.set('previousArrivalAirports', Object.keys(arrivalAirports))
 
   @updateExistingFlights = (query) ->
-    # TODO: show loading
+    # TODO: show loading  
     template = this
     previousFlights = Session.get('previousFlights')
     newFlights = Flights.find(query).fetch()
@@ -299,9 +332,8 @@ Template.map.onCreated () ->
       async.each(remove, (id, cb) ->
         flight = _.find(template.previousFlights, (f) -> return f._id == id)
         console.log 'remove flight: ', flight
+
         pathAndFactor = L.MapPaths.removeFactor id, flight
-        if pathAndFactor isnt false
-          Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
         cb()
       )
 
@@ -310,7 +342,7 @@ Template.map.onCreated () ->
         console.log 'add flight: ', flight
         if !_.isEmpty(flight)
           path = L.MapPaths.addFactor id, flight, Meteor.gritsUtil.map
-          Meteor.gritsUtil.styleMapPath(path)
+          #Meteor.gritsUtil.styleMapPath(path)
         cb()
       )
 
@@ -326,12 +358,26 @@ Template.map.onCreated () ->
       async.each(newFlights, (flight, cb) ->
         console.log 'add flight: ', flight
         path = L.MapPaths.addFactor flight._id, flight, Meteor.gritsUtil.map
-        Meteor.gritsUtil.styleMapPath(path)
+        #Meteor.gritsUtil.styleMapPath(path)
         cb()
       )
 
     template.updateExistingAirports(newFlights)
     Session.set('previousFlights', newFlights)
+
+    Meteor.gritsUtil.normalizedCI = 0
+    i = 0
+    while i < L.MapPaths.mapPaths.length
+      tpath = L.MapPaths.mapPaths[i]
+      if tpath.totalSeats > Meteor.gritsUtil.normalizedCI
+        Meteor.gritsUtil.normalizedCI = tpath.totalSeats
+      i++
+    i = 0
+    while i < L.MapPaths.mapPaths.length
+      if L.MapPaths.mapPaths[i].visible
+        Meteor.gritsUtil.styleMapPath L.MapPaths.mapPaths[i]
+      i++
+
 
   @parseAirportCodes = (str, tokens) ->
     codes = {}
