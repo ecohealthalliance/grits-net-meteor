@@ -1,0 +1,107 @@
+<template name="filter">
+  <div class="filter-header">
+    <i id="toggleFilter" class="fa fa-minus"></i>
+    <span class="filter-title"> Filter Paths </span>
+  </div>
+  <div id="filter">
+    <div class="row filter-row">
+      <div class="col-xs-12">
+        <span class="filter-label">Flight days of week:</span>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-12">
+        <div class="filter-group">
+          <input type="checkbox" id="dowSUN"> Sun
+          <input type="checkbox" id="dowMON"> Mon
+          <input type="checkbox" id="dowTUE"> Tue
+          <input type="checkbox" id="dowWED"> Wed
+          <input type="checkbox" id="dowTHU"> Thu
+          <input type="checkbox" id="dowFRI"> Fri
+          <input type="checkbox" id="dowSAT"> Sat
+        </div>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-4">
+        <span class="filter-label">Weekly Frequency:</span>
+      </div>
+      <div class="col-xs-4">
+        <select id="weekly-frequency-operand" class="form-control input-sm">
+          <option value="$gt"><span> &gt; </span></option>
+          <option value="$gte"><span> &gt;= </span></option>
+          <option value="$lt"><span> &lt; </span></option>
+          <option value="$lte"><span> &lt;= </span></option>
+          <option value="$eq"><span> == </span></option>
+          <option value="$neq"><span> != </span></option>
+        </select>
+      </div>
+      <div class="col-xs-4">
+        <input type="number" id="weeklyFrequencyInput" class="form-control input-sm" min="0" max="7">
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-4">
+        <span class="filter-label">Stops:</span>
+      </div>
+      <div class="col-xs-4">
+        <select id="stops-operand" class="form-control input-sm">
+          <option value="$gt"><span> &gt; </span></option>
+          <option value="$gte"><span> &gt;= </span></option>
+          <option value="$lt"><span> &lt; </span></option>
+          <option value="$lte"><span> &lt;= </span></option>
+          <option value="$eq"><span> == </span></option>
+          <option value="$neq"><span> != </span></option>
+        </select>
+      </div>
+      <div class="col-xs-4">
+        <input type="number" id="stopsInput" class="form-control input-sm" min="0" max="5">
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-4">
+        <span class="filter-label">Seats:</span>
+      </div>
+      <div class="col-xs-4">
+        <select id="seats-operand" class="form-control input-sm">
+          <option value="$gt"><span> &gt; </span></option>
+          <option value="$gte"><span> &gt;= </span></option>
+          <option value="$lt"><span> &lt; </span></option>
+          <option value="$lte"><span> &lt;= </span></option>
+          <option value="$eq"><span> == </span></option>
+          <option value="$neq"><span> != </span></option>
+        </select>
+      </div>
+      <div class="col-xs-4">
+        <input type="number" id="seatsInput" class="form-control input-sm" min="0" max="525">
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-4">
+        <span class="filter-label">Departure:</span>
+      </div>
+      <div class="col-xs-8">
+        <div class="filter-group">
+          {{> inputAutocomplete id="departureSearch" class="form-control input-sm" name="departureSearch" settings=departureAirports }}
+        </div>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-4">
+        <span class="filter-label">Arrival:</span>
+      </div>
+      <div class="col-xs-8">
+        <div class="filter-group">
+          {{> inputAutocomplete id="arrivalSearch" class="form-control input-sm" name="arrivalSearch" settings=arrivalAirports }}
+        </div>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-12">
+        <button id="applyFilter" class="btn btn-xs btn-default">
+          <span>Apply</span> <img src="images/ajax-loader.gif" id="filterLoading"/>
+        </button>
+      </div>
+    </div>
+  </div>
+</template>

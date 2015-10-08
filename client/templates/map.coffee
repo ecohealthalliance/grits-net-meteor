@@ -341,16 +341,6 @@ Meteor.gritsUtil =
     @updateExistingAirports(flights) # needed for the Departure and Arrival searches
     @updateExistingFlights(flights) # updates the map
 
-Template.map.events
-  'click #applyFilter': (e, template) ->
-    # determine the airport departure and arrival filters
-    Meteor.gritsUtil.applyFilters()
-    query = Meteor.gritsUtil.getQueryCriteria()
-    if _.isUndefined(query) or _.isEmpty(query)
-      return
-    else
-      Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
-
 @nodeHandler =
   click: (node) ->
     Meteor.gritsUtil.showNodeDetails(node)
@@ -361,63 +351,6 @@ Template.map.events
 @pathHandler =
   click: (path) ->
     Meteor.gritsUtil.showPathDetails(path)
-
-Template.map.helpers({
-  # departureAirports is the helper for autocompletion module
-  departureAirports: ->
-    return {
-      position: "top",
-      limit: 10,
-      rules: [
-        {
-          token: '!',
-          collection: 'Airports',
-          subscription: 'autoCompleteAirports',
-          field: '_id',
-          template: Template.airportPill,
-          filter: {
-            $and: [
-              {'_id': $in: Session.get('previousDepartureAirports') }
-            ]
-          }
-        },
-        {
-          token: '@',
-          collection: 'Airports',
-          subscription: 'autoCompleteAirports',
-          field: '_id',
-          template: Template.airportPill
-        },
-      ]
-    }
-  # arrivalAirports is the helper for autocompletion module
-  arrivalAirports: ->
-    return {
-      position: "top",
-      limit: 10,
-      rules: [
-        {
-          token: '!',
-          collection: 'Airports',
-          subscription: 'autoCompleteAirports',
-          field: '_id',
-          template: Template.airportPill,
-          filter: {
-            $and: [
-              {'_id': $in: Session.get('previousArrivalAirports') }
-            ]
-          }
-        },
-        {
-          token: '@',
-          collection: 'Airports',
-          subscription: 'autoCompleteAirports',
-          field: '_id',
-          template: Template.airportPill
-        },
-      ]
-    }
-})
 
 Template.map.onRendered ->
   Meteor.gritsUtil.initWindow('grits-map', {'height': window.innerHeight})
@@ -434,6 +367,9 @@ Template.map.onRendered ->
     layerName: 'Esri_WorldImagery')
   baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
   Meteor.gritsUtil.initLeaflet('grits-map', {'zoom': 2,'latlng': [37.8, -92]}, baseLayers)
+
+  Meteor.gritsUtil.addControl('bottomleft', 'info', '<div id="filterContainer">')
+  Blaze.render(Template.filter, $('#filterContainer')[0])
 
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the

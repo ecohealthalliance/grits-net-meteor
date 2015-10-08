@@ -13,6 +13,9 @@ Package.on_use(function(api){
     'jagi:astronomy-validators@0.10.8',
     'mizzao:autocomplete@0.5.1',
     'peerlibrary:async@0.9.2_1',
+    'twbs:bootstrap@3.3.4',
+    'mquandalle:stylus',
+    'fortawesome:fontawesome',
     'grits:grits-net-mapper@0.2.2'
   ]);
   api.use([
@@ -26,6 +29,8 @@ Package.on_use(function(api){
     'client/stylesheets/main.css',
     'client/templates/map.html',
     'client/templates/map.coffee',
+    'client/templates/filter.html',
+    'client/templates/filter.coffee',    
     'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
     'client/subscription.coffee'

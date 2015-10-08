@@ -27,6 +27,38 @@ body {
 	padding: 5px;
 }
 
+#filter {
+	margin-top: 20px;
+}
+
+.filter-row {
+	margin: 2px -15px 2px -15px;
+}
+
+.filter-header {
+	background-color: #eee;
+	margin: -15px;
+	padding: 15px;
+	min-width: initial;
+	border-radius: 5px;
+}
+
+.filter-title {
+	display: inline;
+	vertical-align: middle;
+	font-weight: bold;
+	font-size: large;
+	margin: 0 0 0 5px;
+}
+
+.filter-label {
+	font-weight: bold;
+}
+
+.filter-group {
+	white-space: nowrap;
+	padding: 2px;
+}
 .airportPill {
 	font-size: small;
 	color: #343434
