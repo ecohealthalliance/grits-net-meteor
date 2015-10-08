@@ -6,6 +6,7 @@ Meteor.startup ->
   Session.set 'isUpdating', false
 
 Meteor.gritsUtil =
+  autoCompleteTokens: ['!', '@']
   normalizedCI: 0
   map: null
   baseLayers: null
@@ -68,8 +69,11 @@ Meteor.gritsUtil =
     return jsoo
   removeQueryCriteria: (critId) ->
     for crit in @queryCrit
-      if crit.critId is critId
-        @queryCrit.splice(@queryCrit.indexOf(crit), 1)
+      if _.isEmpty(crit)
+        return
+      else
+        if crit.critId is critId
+          @queryCrit.splice(@queryCrit.indexOf(crit), 1)
   addQueryCriteria: (newQueryCrit) ->
     for crit in @queryCrit
       if crit.critId is newQueryCrit.critId
@@ -110,7 +114,6 @@ Meteor.gritsUtil =
       L.DomEvent.disableClickPropagation @_div
       L.DomEvent.disableScrollPropagation @_div
       @_div
-
   # parseAirportCodes
   #
   # The airport filters are a list of airport codes seperated by spaces.  They
@@ -118,41 +121,102 @@ Meteor.gritsUtil =
   # autocompletion feature.
   #
   # @param [String] str, the airport code
-  # @param [Array] tokens, the autocompletion tokens
-  parseAirportCodes: (str, tokens) ->
+  parseAirportCodes: (str) ->
+    self = this
     codes = {}
     parts = str.split(' ')
     _.each(parts, (part) ->
       if _.isEmpty(part)
         return
-      code = part.replace(new RegExp(tokens.join('|'), 'g'), '')
+      code = part.replace(new RegExp(self.autoCompleteTokens.join('|'), 'g'), '')
       codes[code] = code;
     )
     return codes
-
-  # applyAirportFilter
-  #
-  # The query builder methods (addQueryCriteria, removeQueueCriteria) are
-  # called when the UI detects changes to input[name="departureSearch"] and
-  # input[name="arrivalSearch"] elements.
-  #
-  # @param [String] str, the airport code
-  # @param [Array] tokens, the autocompletion tokens
-  applyAirportFilter: (name, tokens) ->
-    if name == 'departureSearch'
-      val = $('input[name="departureSearch"]').val()
-      codes = this.parseAirportCodes(val, tokens)
-      if _.isEmpty(codes)
-        Meteor.gritsUtil.removeQueryCriteria(10)
+  applyFilters: ->
+    for filterName, filterMethod of @filters
+      filterMethod()
+  filters:
+    # seatsFilter
+    #
+    # apply a filter on number of seats if it is not undefined or NaN
+    seatsFilter: () ->
+      val = parseInt($("#seatsInput").val())
+      if _.isUndefined(val) or isNaN(val)
+        Meteor.gritsUtil.removeQueryCriteria(2)
       else
-        Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: Object.keys(codes)}})
-    else if name == 'arrivalSearch'
-      val = $('input[name="arrivalSearch"]').val()
-      codes = this.parseAirportCodes(val, tokens)
+        Meteor.gritsUtil.addQueryCriteria({'critId': 2, 'key': 'totalSeats', 'value': {$gt: val}})
+    # applyStopsFilter
+    #
+    # apply a filter on number of stops if it is not undefined or NaN
+    stopsFilter: () ->
+      val = parseInt($("#stopsInput").val())
+      if _.isUndefined(val) or isNaN(val)
+        Meteor.gritsUtil.removeQueryCriteria(1)
+      else
+        Meteor.gritsUtil.addQueryCriteria({'critId': 1, 'key': 'stops', 'value': val})
+    # departureSearchFilter
+    #
+    # apply a filter on the parsed airport codes from the departureSearch input
+    # @param [String] str, the airport code
+    departureSearchFilter: () ->
+      val = $('input[name="departureSearch"]').val()
+      codes = Meteor.gritsUtil.parseAirportCodes(val)
       if _.isEmpty(codes)
         Meteor.gritsUtil.removeQueryCriteria(11)
       else
-        Meteor.gritsUtil.addQueryCriteria({'critId': 12, 'key': 'arrivalAirport._id', 'value': {$in: Object.keys(codes)}})
+        Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: Object.keys(codes)}})
+    # arrivalSearchFilter
+    #
+    # apply a filter on the parsed airport codes from the arrivalSearch input
+    # @param [String] str, the airport code
+    arrivalSearchFilter: () ->
+        val = $('input[name="arrivalSearch"]').val()
+        codes = Meteor.gritsUtil.parseAirportCodes(val)
+        if _.isEmpty(codes)
+          Meteor.gritsUtil.removeQueryCriteria(12)
+        else
+          Meteor.gritsUtil.addQueryCriteria({'critId': 12, 'key': 'arrivalAirport._id', 'value': {$in: Object.keys(codes)}})
+    daysOfWeekFilter: () ->
+      if $('#dowSUN').is(':checked')
+        Meteor.gritsUtil.addQueryCriteria({'critId': 3, 'key': 'day1', 'value': true})
+      else if !$('#dowSUN').is(':checked')
+        Meteor.gritsUtil.removeQueryCriteria(3)
+
+      if $('#dowMON').is(':checked')
+        Meteor.gritsUtil.addQueryCriteria({'critId': 4, 'key': 'day2', 'value': true})
+      else if !$('#dowMON').is(':checked')
+        Meteor.gritsUtil.removeQueryCriteria(4)
+
+      if $('#dowTUE').is(':checked')
+        Meteor.gritsUtil.addQueryCriteria({'critId': 5, 'key': 'day3', 'value': true})
+      else if !$('#dowTUE').is(':checked')
+        Meteor.gritsUtil.removeQueryCriteria(5)
+
+      if $('#dowWED').is(':checked')
+        Meteor.gritsUtil.addQueryCriteria({'critId': 6, 'key': 'day4', 'value': true})
+      else if !$('#dowWED').is(':checked')
+        Meteor.gritsUtil.removeQueryCriteria(6)
+
+      if $('#dowTHU').is(':checked')
+        Meteor.gritsUtil.addQueryCriteria({'critId': 7, 'key': 'day5', 'value': true})
+      else if !$('#dowTHU').is(':checked')
+        Meteor.gritsUtil.removeQueryCriteria(7)
+
+      if $('#dowFRI').is(':checked')
+        Meteor.gritsUtil.addQueryCriteria({'critId': 8, 'key': 'day6', 'value': true})
+      else if !$('#dowFRI').is(':checked')
+        Meteor.gritsUtil.removeQueryCriteria(8)
+
+      if $('#dowSAT').is(':checked')
+        Meteor.gritsUtil.addQueryCriteria({'critId': 9, 'key': 'day7', 'value': true})
+      else if !$('#dowSAT').is(':checked')
+        Meteor.gritsUtil.removeQueryCriteria(9)
+    weeklyFrequencyFilter: () ->
+      val = parseInt($("#stopsInput").val())
+      if _.isUndefined(val) or isNaN(val)
+        Meteor.gritsUtil.removeQueryCriteria(10)
+      else
+        Meteor.gritsUtil.addQueryCriteria({'critId': 10, 'key': 'weeklyFrequency', 'value': val})
 
   # updateExistingAirports
   #
@@ -180,11 +244,6 @@ Meteor.gritsUtil =
   #
   # @param [Collection] newFlights, collection of MongoDb flight records
   updateExistingFlights: (newFlights) ->
-    if _.isUndefined(newFlights) or _.isEmpty(newFlights)
-      console.log('newFlights is empty');
-      Session.set('isUpdating',false)
-      return
-
     self = this
     previousFlights = Session.get('previousFlights')
 
@@ -283,98 +342,21 @@ Meteor.gritsUtil =
     @updateExistingFlights(flights) # updates the map
 
 Template.map.events
-  'blur input[name="departureSearch"]': (e, template) ->
-    tokens = _.map(this.settings.rules, (r) -> r.token)
-    Meteor.gritsUtil.applyAirportFilter(this.name, tokens)
-
-  'blur input[name="arrivalSearch"]': (e, template) ->
-    tokens = _.map(this.settings.rules, (r) -> r.token)
-    Meteor.gritsUtil.applyAirportFilter(this.name, tokens)
-
-  'autocompleteselect input': (event, template, doc) ->
-    tokens = _.map(this.settings.rules, (r) -> r.token)
-    Meteor.gritsUtil.applyAirportFilter(this.name, tokens)
-
-  'change #stopsInput': ->
-    val = parseInt($("#stopsInput").val())
-    if _.isUndefined(val) or isNaN(val)
-      Meteor.gritsUtil.removeQueryCriteria(1)
-    else
-      Meteor.gritsUtil.addQueryCriteria({'critId': 1, 'key': 'stops', 'value': val})
-
-  'change #seatsInput': ->
-    val = parseInt($("#seatsInput").val())
-    if _.isUndefined(val) or isNaN(val)
-      Meteor.gritsUtil.removeQueryCriteria(2)
-    else
-      Meteor.gritsUtil.addQueryCriteria({'critId': 2, 'key': 'totalSeats', 'value': {$gt: val}})
-
-  'click #dowSUN': ->
-    if $('#dowSUN').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId': 3, 'key': 'day1', 'value': true})
-    else if !$('#dowSUN').is(':checked')
-      Meteor.gritsUtil.removeQueryCriteria(3)
-
-  'click #dowMON': ->
-    if $('#dowMON').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId': 4, 'key': 'day2', 'value': true})
-    else if !$('#dowMON').is(':checked')
-      Meteor.gritsUtil.removeQueryCriteria(4)
-
-  'click #dowTUE': ->
-    if $('#dowTUE').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId': 5, 'key': 'day3', 'value': true})
-    else if !$('#dowTUE').is(':checked')
-      Meteor.gritsUtil.removeQueryCriteria(5)
-
-  'click #dowWED': ->
-    if $('#dowWED').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId': 6, 'key': 'day4', 'value': true})
-    else if !$('#dowWED').is(':checked')
-      Meteor.gritsUtil.removeQueryCriteria(6)
-
-  'click #dowTHU': ->
-    if $('#dowTHU').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId': 7, 'key': 'day5', 'value': true})
-    else if !$('#dowTHU').is(':checked')
-      Meteor.gritsUtil.removeQueryCriteria(7)
-
-  'click #dowFRI': ->
-    if $('#dowFRI').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId': 8, 'key': 'day6', 'value': true})
-    else if !$('#dowFRI').is(':checked')
-      Meteor.gritsUtil.removeQueryCriteria(8)
-
-  'click #dowSAT': ->
-    if $('#dowSAT').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId': 9, 'key': 'day7', 'value': true})
-    else if !$('#dowSAT').is(':checked')
-      Meteor.gritsUtil.removeQueryCriteria(9)
-
-  'click #diwCB': ->
-    if $('#diwCB').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId': 10, 'key': 'weeklyFrequency', 'value': parseInt($("#weeklyFrequencyInput").val())})
-    else if !$('#diwCB').is(':checked')
-      Meteor.gritsUtil.removeQueryCriteria(10)
-
-  # see applyAirportFilter method above:
-  #
-  #  departureSearch is critId 11
-  #  arrivalSearch is critId 12
-
   'click #applyFilter': (e, template) ->
+    # determine the airport departure and arrival filters
+    Meteor.gritsUtil.applyFilters()
     query = Meteor.gritsUtil.getQueryCriteria()
     if _.isUndefined(query) or _.isEmpty(query)
       return
     else
       Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
 
-
 @nodeHandler =
   click: (node) ->
     Meteor.gritsUtil.showNodeDetails(node)
-    $("#departureSearch").val('!' + node.id).blur()
-    $("#applyFilter").click()
+    if not Session.get('isUpdating')
+      $("#departureSearch").val('!' + node.id);
+      $("#applyFilter").click()
 
 @pathHandler =
   click: (path) ->
