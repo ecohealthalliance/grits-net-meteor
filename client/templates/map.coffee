@@ -212,7 +212,7 @@ Meteor.gritsUtil =
       else if !$('#dowSAT').is(':checked')
         Meteor.gritsUtil.removeQueryCriteria(9)
     weeklyFrequencyFilter: () ->
-      val = parseInt($("#stopsInput").val())
+      val = parseInt($("#weeklyFrequencyInput").val())
       if _.isUndefined(val) or isNaN(val)
         Meteor.gritsUtil.removeQueryCriteria(10)
       else
