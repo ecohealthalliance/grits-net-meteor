@@ -1,4 +1,4 @@
-Meteor.startup () ->
+Meteor.startup ->
   Session.set 'previousDepartureAirports', []
   Session.set 'previousArrivalAirports', []
   Session.set 'previousFlights', []
@@ -15,7 +15,7 @@ Meteor.gritsUtil =
     element = element or 'map'
     css = css or {'height': window.innerHeight}
     $(window).resize ->
-      $('#'+element).css css
+      $('#' + element).css css
     $(window).resize()
   initLeaflet: (element, view, baseLayers) ->
     L.Icon.Default.imagePath = @imagePath
@@ -42,13 +42,13 @@ Meteor.gritsUtil =
     for baseLayer in baseLayers
       tempBaseLayers[baseLayer.options.layerName] = baseLayer
     @baseLayers = tempBaseLayers
-    if baseLayers.length>1
+    if baseLayers.length > 1
       L.control.layers(@baseLayers).addTo @map
     @addControls()
   populateMap: (flights) ->
     new L.mapPath(flight, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map) for flight in flights
   styleMapPath: (path) ->
-    x = (path.totalSeats/@normalizedCI)
+    x = path.totalSeats / @normalizedCI
     np = parseFloat(1 - x)
     path.normalizedPercent = np
     if np < .25
@@ -66,7 +66,7 @@ Meteor.gritsUtil =
     for crit in @queryCrit
       jsoo[crit.key] = crit.value
     return jsoo
-  removeQueryCriteria:(critId)->
+  removeQueryCriteria: (critId) ->
     for crit in @queryCrit
       if crit.critId is critId
         @queryCrit.splice(@queryCrit.indexOf(crit), 1)
@@ -78,13 +78,13 @@ Meteor.gritsUtil =
         return false #updated
     @queryCrit.push(newQueryCrit)
     return true #added
-  showNodeDetails:(node) ->
+  showNodeDetails: (node) ->
     $('.node-detail').empty()
     $('.node-detail').hide()
     div = $('.node-detail')[0]
     Blaze.renderWithData Template.nodeDetails, node, div
     $('.node-detail').show()
-  showPathDetails:(path) ->
+  showPathDetails: (path) ->
     $('.path-detail').empty()
     $('.path-detail').hide()
     div = $('.path-detail')[0]
@@ -112,7 +112,7 @@ Meteor.gritsUtil =
       @_div
   parseAirportCodes: (str, tokens) ->
     codes = {}
-    parts = str.split(' ');
+    parts = str.split(' ')
     _.each(parts, (part) ->
       if _.isEmpty(part)
         return
@@ -127,14 +127,14 @@ Meteor.gritsUtil =
       if _.isEmpty(codes)
         Meteor.gritsUtil.removeQueryCriteria(10)
       else
-        Meteor.gritsUtil.addQueryCriteria({'critId' : 10, 'key' : 'departureAirport._id', 'value' : {$in: Object.keys(codes)}})
+        Meteor.gritsUtil.addQueryCriteria({'critId': 10, 'key': 'departureAirport._id', 'value': {$in: Object.keys(codes)}})
     else if name == 'arrivalSearch'
       val = $('input[name="arrivalSearch"]').val()
       codes = this.parseAirportCodes(val, tokens)
       if _.isEmpty(codes)
         Meteor.gritsUtil.removeQueryCriteria(11)
       else
-        Meteor.gritsUtil.addQueryCriteria({'critId' : 11, 'key' : 'arrivalAirport._id', 'value' : {$in: Object.keys(codes)}})
+        Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'arrivalAirport._id', 'value': {$in: Object.keys(codes)}})
   updateExistingAirports: (flights) ->
     departureAirports = {}
     arrivalAirports = {}
@@ -156,7 +156,7 @@ Meteor.gritsUtil =
       console.log 'add flight: ', flight
       path = L.MapPaths.addFactor flight._id, flight, Meteor.gritsUtil.map
       Meteor.gritsUtil.styleMapPath(path)
-      async.nextTick () ->
+      async.nextTick ->
         callback()
     ), 1)
     addQueue.drain = ->
@@ -169,7 +169,7 @@ Meteor.gritsUtil =
       pathAndFactor = L.MapPaths.removeFactor flight._id, flight
       if pathAndFactor isnt false
         Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
-      async.nextTick () ->
+      async.nextTick ->
         callback()
     ), 1)
     removeQueue.drain = ->
@@ -181,24 +181,23 @@ Meteor.gritsUtil =
       console.log 'update flight: ', flight
       if !_.isEmpty(flight)
         L.MapPaths.updatePath flight._id, flight, Meteor.gritsUtil.map
-      async.nextTick () ->
+      async.nextTick ->
         callback()
     ), 1)
     updateQueue.drain = ->
       console.log 'updateQueue is done.'
       updateQueueDrained.set true
 
-    Tracker.autorun( () ->
+    Tracker.autorun ->
       if addQueueDrained.get() and removeQueueDrained.get() and updateQueueDrained.get()
         Session.set 'isUpdating', false
-    )
 
     if !_.isUndefined(previousFlights) and previousFlights.length > 0
       newFlightIds = _.pluck(newFlights, '_id')
       previousFlightIds = _.pluck(previousFlights, '_id')
       removeIds = _.difference(previousFlightIds, newFlightIds)
       addIds = _.difference(newFlightIds, previousFlightIds)
-      updateIds = _.intersection(previousFlightIds, newFlightIds);
+      updateIds = _.intersection(previousFlightIds, newFlightIds)
       toRemove = _.filter(previousFlights, (flight) ->
         return removeIds.indexOf(flight._id) >= 0
       )
@@ -218,7 +217,7 @@ Meteor.gritsUtil =
       addQueue.push newFlights
 
     Session.set('previousFlights', newFlights)
-  onSubscriptionReady: () ->
+  onSubscriptionReady: ->
     query = Session.get 'query'
     flights = Flights.find(query).fetch()
     @updateExistingAirports(flights) # needed for the Departure and Arrival searches
@@ -242,60 +241,60 @@ Template.map.events
     if _.isUndefined(val) or isNaN(val)
       Meteor.gritsUtil.removeQueryCriteria(1)
     else
-      Meteor.gritsUtil.addQueryCriteria({'critId' : 1, 'key' : 'stops', 'value' : val})
+      Meteor.gritsUtil.addQueryCriteria({'critId': 1, 'key': 'stops', 'value': val})
 
   'change #seatsInput': ->
     val = parseInt($("#seatsInput").val())
     if _.isUndefined(val) or isNaN(val)
       Meteor.gritsUtil.removeQueryCriteria(2)
     else
-      Meteor.gritsUtil.addQueryCriteria({'critId' : 2, 'key' : 'totalSeats', 'value' : {$gt: val}})
+      Meteor.gritsUtil.addQueryCriteria({'critId': 2, 'key': 'totalSeats', 'value': {$gt: val}})
 
   'click #dowSUN': ->
     if $('#dowSUN').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId' : 3, 'key' : 'day1', 'value' : true})
+      Meteor.gritsUtil.addQueryCriteria({'critId': 3, 'key': 'day1', 'value': true})
     else if !$('#dowSUN').is(':checked')
       Meteor.gritsUtil.removeQueryCriteria(3)
 
   'click #dowMON': ->
     if $('#dowMON').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId' : 4, 'key' : 'day2', 'value' : true})
+      Meteor.gritsUtil.addQueryCriteria({'critId': 4, 'key': 'day2', 'value': true})
     else if !$('#dowMON').is(':checked')
       Meteor.gritsUtil.removeQueryCriteria(4)
 
   'click #dowTUE': ->
     if $('#dowTUE').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId' : 5, 'key' : 'day3', 'value' : true})
+      Meteor.gritsUtil.addQueryCriteria({'critId': 5, 'key': 'day3', 'value': true})
     else if !$('#dowTUE').is(':checked')
       Meteor.gritsUtil.removeQueryCriteria(5)
 
   'click #dowWED': ->
     if $('#dowWED').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId' : 6, 'key' : 'day4', 'value' : true})
+      Meteor.gritsUtil.addQueryCriteria({'critId': 6, 'key': 'day4', 'value': true})
     else if !$('#dowWED').is(':checked')
       Meteor.gritsUtil.removeQueryCriteria(6)
 
   'click #dowTHU': ->
     if $('#dowTHU').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId' : 7, 'key' : 'day5', 'value' : true})
+      Meteor.gritsUtil.addQueryCriteria({'critId': 7, 'key': 'day5', 'value': true})
     else if !$('#dowTHU').is(':checked')
       Meteor.gritsUtil.removeQueryCriteria(7)
 
   'click #dowFRI': ->
     if $('#dowFRI').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId' : 8, 'key' : 'day6', 'value' : true})
+      Meteor.gritsUtil.addQueryCriteria({'critId': 8, 'key': 'day6', 'value': true})
     else if !$('#dowFRI').is(':checked')
       Meteor.gritsUtil.removeQueryCriteria(8)
 
   'click #dowSAT': ->
     if $('#dowSAT').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId' : 9, 'key' : 'day7', 'value' : true})
+      Meteor.gritsUtil.addQueryCriteria({'critId': 9, 'key': 'day7', 'value': true})
     else if !$('#dowSAT').is(':checked')
       Meteor.gritsUtil.removeQueryCriteria(9)
 
   'click #diwCB': ->
     if $('#diwCB').is(':checked')
-      Meteor.gritsUtil.addQueryCriteria({'critId' : 10, 'key' : 'weeklyFrequency', 'value' : parseInt($("#weeklyFrequencyInput").val())})
+      Meteor.gritsUtil.addQueryCriteria({'critId': 10, 'key': 'weeklyFrequency', 'value': parseInt($("#weeklyFrequencyInput").val())})
     else if !$('#diwCB').is(':checked')
       Meteor.gritsUtil.removeQueryCriteria(10)
 
@@ -309,17 +308,17 @@ Template.map.events
 
 
 @nodeHandler =
-  click:(node)->
+  click: (node) ->
     Meteor.gritsUtil.showNodeDetails(node)
-    $("#departureSearch").val('!'+node.id).blur()
+    $("#departureSearch").val('!' + node.id).blur()
     $("#applyFilter").click()
 
 @pathHandler =
-  click:(path)->
+  click: (path) ->
     Meteor.gritsUtil.showPathDetails(path)
 
 Template.map.helpers({
-  departureAirports: () ->
+  departureAirports: ->
     return {
       position: "top",
       limit: 10,
@@ -345,7 +344,7 @@ Template.map.helpers({
         },
       ]
     }
-  arrivalAirports: () ->
+  arrivalAirports: ->
     return {
       position: "top",
       limit: 10,
@@ -373,7 +372,7 @@ Template.map.helpers({
     }
 })
 
-Template.map.onRendered () ->
+Template.map.onRendered ->
   Meteor.gritsUtil.initWindow('grits-map', {'height': window.innerHeight})
   OpenStreetMap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     key: '1234'
@@ -387,14 +386,13 @@ Template.map.onRendered () ->
   Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     layerName: 'Esri_WorldImagery')
   baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
-  Meteor.gritsUtil.initLeaflet('grits-map', {'zoom':2,'latlng':[37.8, -92]}, baseLayers)
+  Meteor.gritsUtil.initLeaflet('grits-map', {'zoom': 2,'latlng': [37.8, -92]}, baseLayers)
 
-  this.autorun( () ->
+  this.autorun ->
     isUpdating = Session.get 'isUpdating'
     if isUpdating
-      $('#applyFilter').prop('disabled', true);
+      $('#applyFilter').prop('disabled', true)
       $('#filterLoading').show()
     else
-      $('#applyFilter').prop('disabled', false);
+      $('#applyFilter').prop('disabled', false)
       $('#filterLoading').hide()
-  )
