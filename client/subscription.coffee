@@ -1,5 +1,6 @@
 Tracker.autorun ->
   query = Session.get('query')
+  Session.set 'isUpdating', true
   Meteor.subscribe 'flightsByQuery', query,
     onError: ->
       console.log 'subscription.flightsByQuery.onError: ', this

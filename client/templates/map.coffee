@@ -181,6 +181,7 @@ Meteor.gritsUtil =
   # @param [Collection] newFlights, collection of MongoDb flight records
   updateExistingFlights: (newFlights) ->
     if _.isUndefined(newFlights) or _.isEmpty(newFlights)
+      console.log('newFlights is empty');
       Session.set('isUpdating',false)
       return
 
@@ -225,7 +226,7 @@ Meteor.gritsUtil =
     updateQueue = async.queue(((flight, callback) ->
       console.log 'update flight: ', flight
       if !_.isEmpty(flight)
-        L.MapPaths.updatePath flight._id, flight, Meteor.gritsUtil.map
+        L.MapPaths.updateFactor flight._id, flight, Meteor.gritsUtil.map
       async.nextTick ->
         callback()
     ), 1)
@@ -366,7 +367,6 @@ Template.map.events
     if _.isUndefined(query) or _.isEmpty(query)
       return
     else
-      Session.set 'isUpdating', true
       Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
 
 
