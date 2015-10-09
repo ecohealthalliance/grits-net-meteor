@@ -70,3 +70,16 @@ Template.filter.helpers({
       ]
     }
 })
+
+Template.filter.onRendered ->
+  # When the template is rendered, setup a Tracker autorun to listen to changes
+  # on isUpdating.  This session reactive var enables/disables, shows/hides the
+  # applyFilter button and filterLoading indicator.
+  this.autorun ->
+    isUpdating = Session.get 'isUpdating'
+    if isUpdating
+      $('#applyFilter').prop('disabled', true)
+      $('#filterLoading').show()
+    else
+      $('#applyFilter').prop('disabled', false)
+      $('#filterLoading').hide()

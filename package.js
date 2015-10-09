@@ -27,6 +27,7 @@ Package.on_use(function(api){
   ], 'client');
   api.add_files([
     'client/stylesheets/main.styl',
+    'client/grits_util.coffee',
     'client/templates/map.html',
     'client/templates/map.coffee',
     'client/templates/filter.html',
