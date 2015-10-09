@@ -1,11 +1,13 @@
 Template.filter.events
   'click #toggleFilter': () ->
     self = this
-    if $("#filter").length
-      $(self).removeClass("fa-minus")
-      $(self).addClass("fa-plus")
-
-    $("#filter").toggle("slow")
+    $("#filter").toggle("slow", () ->
+      console.log 'filter :visible ', $("#filter :visible").length
+      if $("#filter :visible").length == 0
+        $('#toggleFilter').removeClass('fa-minus').addClass("fa-plus")
+      else
+        $('#toggleFilter').removeClass('fa-plus').addClass("fa-minus")
+    )
   'click #applyFilter': () ->
     Meteor.gritsUtil.applyFilters()
     query = Meteor.gritsUtil.getQueryCriteria()
