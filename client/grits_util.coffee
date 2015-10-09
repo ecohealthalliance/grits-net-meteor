@@ -1,3 +1,10 @@
+Meteor.startup ->
+  Session.set 'previousDepartureAirports', []
+  Session.set 'previousArrivalAirports', []
+  Session.set 'previousFlights', []
+  Session.set 'query', {}
+  Session.set 'isUpdating', false
+
 Meteor.gritsUtil =
   autoCompleteTokens: ['!', '@']
   normalizedCI: 0

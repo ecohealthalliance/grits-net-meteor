@@ -1,10 +1,4 @@
-Meteor.startup ->
-  Session.set 'previousDepartureAirports', []
-  Session.set 'previousArrivalAirports', []
-  Session.set 'previousFlights', []
-  Session.set 'query', {}
-  Session.set 'isUpdating', false
-
+#Global event handlers for node and path click events.
 @nodeHandler =
   click: (node) ->
     Meteor.gritsUtil.showNodeDetails(node)
@@ -35,15 +29,3 @@ Template.map.onRendered ->
   # Add the filter to the map's controls.
   Meteor.gritsUtil.addControl('bottomleft', 'info', '<div id="filterContainer">')
   Blaze.render(Template.filter, $('#filterContainer')[0])
-
-  # When the template is rendered, setup a Tracker autorun to listen to changes
-  # on isUpdating.  This session reactive var enables/disables, shows/hides the
-  # applyFilter button and filterLoading indicator.
-  this.autorun ->
-    isUpdating = Session.get 'isUpdating'
-    if isUpdating
-      $('#applyFilter').prop('disabled', true)
-      $('#filterLoading').show()
-    else
-      $('#applyFilter').prop('disabled', false)
-      $('#filterLoading').hide()
