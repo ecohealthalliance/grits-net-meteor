@@ -26,11 +26,11 @@ Package.on_use(function(api){
     'tracker'
   ], 'client');
   api.add_files([
-    'client/stylesheets/main.css',
+    'client/stylesheets/main.styl',
     'client/templates/map.html',
     'client/templates/map.coffee',
     'client/templates/filter.html',
-    'client/templates/filter.coffee',    
+    'client/templates/filter.coffee',
     'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
     'client/subscription.coffee'

@@ -94,6 +94,9 @@ Meteor.gritsUtil =
     div = $('.path-detail')[0]
     Blaze.renderWithData Template.pathDetails, path, div
     $('.path-detail').show()
+  # addControl
+  #
+  # Add a single control to the map.
   addControl: (position, selector, content) ->
     control = L.control(position: position)
     control.onAdd = @onAddHandler(selector, content)
@@ -132,6 +135,9 @@ Meteor.gritsUtil =
       codes[code] = code;
     )
     return codes
+  # applyFilters
+  #
+  # Iterate over the filters object an invoke its values.
   applyFilters: ->
     for filterName, filterMethod of @filters
       filterMethod()
@@ -368,6 +374,7 @@ Template.map.onRendered ->
   baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
   Meteor.gritsUtil.initLeaflet('grits-map', {'zoom': 2,'latlng': [37.8, -92]}, baseLayers)
 
+  # Add the filter to the map's controls.
   Meteor.gritsUtil.addControl('bottomleft', 'info', '<div id="filterContainer">')
   Blaze.render(Template.filter, $('#filterContainer')[0])
 
