@@ -10,7 +10,7 @@ Meteor.publish 'flightsByQuery', (query) ->
       effectiveDate: {$lt: now}, # effectiveDate is less than now
       discontinuedDate: {$gte: now} # discontinuedDate is greater-equal than now
     ]
-  _.extend(query, activeFilter);
+  _.extend(query, activeFilter)
 
   count = Flights.find(query).count()
   console.log 'query: ', query

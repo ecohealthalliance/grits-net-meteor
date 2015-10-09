@@ -13,6 +13,9 @@ Package.on_use(function(api){
     'jagi:astronomy-validators@0.10.8',
     'mizzao:autocomplete@0.5.1',
     'peerlibrary:async@0.9.2_1',
+    'twbs:bootstrap@3.3.4',
+    'mquandalle:stylus',
+    'fortawesome:fontawesome',
     'grits:grits-net-mapper@0.2.2'
   ]);
   api.use([
@@ -23,11 +26,15 @@ Package.on_use(function(api){
     'tracker'
   ], 'client');
   api.add_files([
-    'client/stylesheets/main.css',
+    'client/stylesheets/main.styl',
+    'client/grits_util.coffee',
     'client/templates/map.html',
     'client/templates/map.coffee',
+    'client/templates/filter.html',
+    'client/templates/filter.coffee',
     'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
+    'client/subscription.coffee'
   ], 'client');
   api.add_files([
     'models/airports.coffee',
@@ -38,9 +45,7 @@ Package.on_use(function(api){
   ], 'server');
   api.export([
     'Airport',
-    'Airports'
-  ], ['client', 'server']);
-  api.export([
+    'Airports',
     'Flight',
     'Flights'
   ], ['client', 'server']);
