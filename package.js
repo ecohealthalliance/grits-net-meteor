@@ -16,7 +16,8 @@ Package.on_use(function(api){
     'twbs:bootstrap@3.3.4',
     'mquandalle:stylus',
     'fortawesome:fontawesome',
-    'grits:grits-net-mapper@0.2.2'
+    'grits:grits-net-mapper@0.2.2',
+    'reactive-var'
   ]);
   api.use([
     'underscore',
