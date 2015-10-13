@@ -1,12 +1,32 @@
 Meteor.startup ->
   Session.set 'previousDepartureAirports', []
   Session.set 'previousArrivalAirports', []
-  Session.set 'previousFlights', []
-  Session.set 'query', {}
+  #Session.set 'previousFlights', []
+  Session.set 'query', null
   Session.set 'isUpdating', false
+  Session.set 'loadedRecords', 0
+  Session.set 'totalRecords', 0
 
 Meteor.gritsUtil =
+  debug: true
   autoCompleteTokens: ['!', '@']
+  lastId: null # stores the lastId from the collection, used in limit/offset
+  getLastFlightId: () ->
+    @lastId
+  setLastFlightId: () ->
+    lastFlight = null
+    if @localFlights.find().count() > 0
+      options =
+        sort:
+          _id: -1
+      lastFlight = @localFlights.find({}, options).fetch()[0];
+    if lastFlight
+      @lastId = lastFlight._id
+  localFlights: new Mongo.Collection(null)
+  loadedRecords: null
+  addQueueDrained: new ReactiveVar(false)
+  updateQueueDrained: new ReactiveVar(false)
+  removeQueueDrained: new ReactiveVar(false)
   normalizedCI: 0
   map: null
   baseLayers: null
@@ -137,7 +157,7 @@ Meteor.gritsUtil =
     return codes
   # applyFilters
   #
-  # Iterate over the filters object an invoke its values.
+  # Iterate over the filters object then invoke its values.
   applyFilters: ->
     for filterName, filterMethod of @filters
       filterMethod()
@@ -146,20 +166,36 @@ Meteor.gritsUtil =
     #
     # apply a filter on number of seats if it is not undefined or NaN
     seatsFilter: () ->
+      value = {}
       val = parseInt($("#seatsInput").val())
+      op = $('#seats-operand').val();
+      if _.isUndefined(op)
+        return
       if _.isUndefined(val) or isNaN(val)
         Meteor.gritsUtil.removeQueryCriteria(2)
       else
-        Meteor.gritsUtil.addQueryCriteria({'critId': 2, 'key': 'totalSeats', 'value': {$gt: val}})
+        if op == '$eq'
+          value = val
+        else
+          value[op] = val
+        Meteor.gritsUtil.addQueryCriteria({'critId': 2, 'key': 'totalSeats', 'value': value})
     # applyStopsFilter
     #
     # apply a filter on number of stops if it is not undefined or NaN
     stopsFilter: () ->
+      value = {}
       val = parseInt($("#stopsInput").val())
+      op = $('#stops-operand').val();
+      if _.isUndefined(op)
+        return
       if _.isUndefined(val) or isNaN(val)
         Meteor.gritsUtil.removeQueryCriteria(1)
       else
-        Meteor.gritsUtil.addQueryCriteria({'critId': 1, 'key': 'stops', 'value': val})
+        if op == '$eq'
+          value = val
+        else
+          value[op] = val
+        Meteor.gritsUtil.addQueryCriteria({'critId': 1, 'key': 'stops', 'value': value})
     # departureSearchFilter
     #
     # apply a filter on the parsed airport codes from the departureSearch input
@@ -176,12 +212,12 @@ Meteor.gritsUtil =
     # apply a filter on the parsed airport codes from the arrivalSearch input
     # @param [String] str, the airport code
     arrivalSearchFilter: () ->
-        val = $('input[name="arrivalSearch"]').val()
-        codes = Meteor.gritsUtil.parseAirportCodes(val)
-        if _.isEmpty(codes)
-          Meteor.gritsUtil.removeQueryCriteria(12)
-        else
-          Meteor.gritsUtil.addQueryCriteria({'critId': 12, 'key': 'arrivalAirport._id', 'value': {$in: Object.keys(codes)}})
+      val = $('input[name="arrivalSearch"]').val()
+      codes = Meteor.gritsUtil.parseAirportCodes(val)
+      if _.isEmpty(codes)
+        Meteor.gritsUtil.removeQueryCriteria(12)
+      else
+        Meteor.gritsUtil.addQueryCriteria({'critId': 12, 'key': 'arrivalAirport._id', 'value': {$in: Object.keys(codes)}})
     daysOfWeekFilter: () ->
       if $('#dowSUN').is(':checked')
         Meteor.gritsUtil.addQueryCriteria({'critId': 3, 'key': 'day1', 'value': true})
@@ -218,11 +254,56 @@ Meteor.gritsUtil =
       else if !$('#dowSAT').is(':checked')
         Meteor.gritsUtil.removeQueryCriteria(9)
     weeklyFrequencyFilter: () ->
+      value = {}
       val = parseInt($("#weeklyFrequencyInput").val())
+      op = $('#weekly-frequency-operand').val();
+      if _.isUndefined(op)
+        return
       if _.isUndefined(val) or isNaN(val)
         Meteor.gritsUtil.removeQueryCriteria(10)
       else
-        Meteor.gritsUtil.addQueryCriteria({'critId': 10, 'key': 'weeklyFrequency', 'value': val})
+        if op == '$eq'
+          value = val
+        else
+          value[op] = val
+        Meteor.gritsUtil.addQueryCriteria({'critId': 10, 'key': 'weeklyFrequency', 'value': value})
+
+  # clearLocalFlights
+  #
+  # remove all the flight paths from the collection
+  clearLocalFlights: () ->
+    @localFlights.remove({})
+
+  appendExistingAirports: (flights) ->
+    departureAirports = Session.get('previousDepartureAirports')
+    arrivalAirports = Session.get('previousArrivalAirports')
+    for flight in flights
+      departureAirports[flight.departureAirport._id] = flight.departureAirport._id
+      arrivalAirports[flight.arrivalAirport._id] = flight.arrivalAirport._id
+    Session.set('previousDepartureAirports', Object.keys(departureAirports))
+    Session.set('previousArrivalAirports', Object.keys(arrivalAirports))
+
+  appendExistingFlights: (flights) ->
+    self = this
+    appendQueue = async.queue(((flight, callback) ->
+      if Meteor.gritsUtil.debug
+        console.log 'append flight: ', flight
+      self.localFlights.upsert(flight._id, flight)
+      path = L.MapPaths.addFactor flight._id, flight, self.map
+      Meteor.gritsUtil.styleMapPath(path)
+      async.nextTick ->
+        callback()
+    ), 1)
+    # callback method for when all items within the queue are processed
+    # sets the reactive var isUpdating to false.
+    appendQueue.drain = ->
+      if Meteor.gritsUtil.debug
+        console.log 'appendQueue is done.'
+      # update Session
+      Session.set 'isUpdating', false
+      # set lastId
+      Meteor.gritsUtil.setLastFlightId()
+    appendQueue.push flights
 
   # updateExistingAirports
   #
@@ -251,60 +332,79 @@ Meteor.gritsUtil =
   # @param [Collection] newFlights, collection of MongoDb flight records
   updateExistingFlights: (newFlights) ->
     self = this
-    previousFlights = Session.get('previousFlights')
+    self.isUpdateExistingFlights = true
+    previousFlights = self.localFlights.find({}).fetch();
+    #self.clearLocalFlights()
+    if Meteor.gritsUtil.debug
+      console.log 'previousFlights: ', previousFlights
 
     # The following queues will update the map 'asynchronously' based on its
     # previous state.  By pausing execution of each next iteration through
     # nextTick() is it possible to allow the UI to perform work on the current
     # interpreter event loop in order to update the map.
     # https://github.com/caolan/async
-    addQueueDrained = new ReactiveVar(false)
+    self.addQueueDrained.set false
     addQueue = async.queue(((flight, callback) ->
-      console.log 'add flight: ', flight
-      path = L.MapPaths.addFactor flight._id, flight, Meteor.gritsUtil.map
-      Meteor.gritsUtil.styleMapPath(path)
+      if Meteor.gritsUtil.debug
+        console.log 'add flight: ', flight
+      self.localFlights.upsert(flight._id, flight)
+      path = L.MapPaths.addFactor flight._id, flight, self.map
+      self.styleMapPath(path)
       async.nextTick ->
         callback()
     ), 1)
     # callback method for when all items within the queue are processed
     # sets the reactive var to true.
     addQueue.drain = ->
-      console.log 'addQueue is done.'
-      addQueueDrained.set true
+      if Meteor.gritsUtil.debug
+        console.log 'addQueue is done.'
+      self.addQueueDrained.set true
 
-    removeQueueDrained = new ReactiveVar(false)
+    self.removeQueueDrained.set false
     removeQueue = async.queue(((flight, callback) ->
-      console.log 'remove flight: ', flight
+      if Meteor.gritsUtil.debug
+        console.log 'remove flight: ', flight
+      self.localFlights.remove flight._id
       pathAndFactor = L.MapPaths.removeFactor flight._id, flight
       if pathAndFactor isnt false
-        Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
+        self.styleMapPath(pathAndFactor.path)
       async.nextTick ->
         callback()
     ), 1)
     # callback method for when all items within the queue are processed
     # sets the reactive var to true.
     removeQueue.drain = ->
-      console.log 'removeQueue is done.'
-      removeQueueDrained.set true
+      if Meteor.gritsUtil.debug
+        console.log 'removeQueue is done.'
+      self.removeQueueDrained.set true
 
-    updateQueueDrained = new ReactiveVar(false)
+    self.updateQueueDrained.set(false)
     updateQueue = async.queue(((flight, callback) ->
-      console.log 'update flight: ', flight
+      if Meteor.gritsUtil.debug
+        console.log 'update flight: ', flight
       if !_.isEmpty(flight)
-        L.MapPaths.updateFactor flight._id, flight, Meteor.gritsUtil.map
+        try
+          L.MapPaths.updateFactor flight._id, flight, self.map
+          self.localFlights.upsert(flight._id, flight)
+        catch
       async.nextTick ->
         callback()
     ), 1)
     # callback method for when all items within the queue are processed
     # sets the reactive var to true.
     updateQueue.drain = ->
-      console.log 'updateQueue is done.'
-      updateQueueDrained.set true
+      if Meteor.gritsUtil.debug
+        console.log 'updateQueue is done.'
+      self.updateQueueDrained.set true
 
     # hide the ajax-loader and re-enable the applyFilter button
     Tracker.autorun ->
-      if addQueueDrained.get() and removeQueueDrained.get() and updateQueueDrained.get()
-        Session.set 'isUpdating', false
+      if self.isUpdateExistingFlights
+        if self.addQueueDrained.get() and self.removeQueueDrained.get() and self.updateQueueDrained.get()
+          self.isUpdateExistingFlights = false
+          Session.set 'isUpdating', false
+          # set lastFlightId
+          self.setLastFlightId()
 
     if !_.isUndefined(previousFlights) and previousFlights.length > 0
       # these computations will currently give a slight pause to the UI, less
@@ -333,8 +433,6 @@ Meteor.gritsUtil =
       removeQueue.push [] # push an empty array so that removeQueueDrained is set true
       updateQueue.push [] # push an empty array so that updateQueueDrained is set true
       addQueue.push newFlights
-    #newFlights becomes previousFlights to maintain state
-    Session.set('previousFlights', newFlights)
 
   # onSubscriptionReady
   #
@@ -344,5 +442,15 @@ Meteor.gritsUtil =
   onSubscriptionReady: ->
     query = Session.get 'query'
     flights = Flights.find(query).fetch()
+    if Meteor.gritsUtil.debug
+      console.log 'flights: ', flights
+    @updateExistingFlights(flights) # updates the map from the previous state
     @updateExistingAirports(flights) # needed for the Departure and Arrival searches
-    @updateExistingFlights(flights) # updates the map
+
+  onMoreSubscriptionsReady: ->
+    query = Session.get 'query'
+    flights = Flights.find(query).fetch()
+    if Meteor.gritsUtil.debug
+      console.log 'flights: ', flights
+    @appendExistingAirports(flights) # appends to the Departure and Arrival searches
+    @appendExistingFlights(flights) # appends the map

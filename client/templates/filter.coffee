@@ -1,22 +1,39 @@
 Template.filter.events
-  'click #toggleFilter': () ->
-    self = this
+  'click #toggleFilter': (e) ->
+    $self = $(e.currentTarget)
     $("#filter").toggle("slow", () ->
-      console.log 'filter :visible ', $("#filter :visible").length
       if $("#filter :visible").length == 0
-        $('#toggleFilter').removeClass('fa-minus').addClass("fa-plus")
+        $self.removeClass('fa-minus').addClass("fa-plus")
       else
-        $('#toggleFilter').removeClass('fa-plus').addClass("fa-minus")
+        $self.removeClass('fa-plus').addClass("fa-minus")
     )
   'click #applyFilter': () ->
     Meteor.gritsUtil.applyFilters()
+
     query = Meteor.gritsUtil.getQueryCriteria()
     if _.isUndefined(query) or _.isEmpty(query)
       return
+
+    # re-enable the loadMore button when a new filter is applied
+    $('#loadMore').prop('disabled', false)
+
+    limit = parseInt($('#limit').val(), 10)
+    if !_.isNaN(limit)
+      Session.set 'limit', limit
     else
-      Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
+      Session.set 'limit', null
+    Session.set 'lastId', null
+    Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
+
+  'click #loadMore': () ->
+    Session.set 'lastId',  Meteor.gritsUtil.getLastFlightId()
+
 
 Template.filter.helpers({
+  loadedRecords: () ->
+    return Session.get 'loadedRecords'
+  totalRecords: () ->
+    return Session.get 'totalRecords'
   # departureAirports is the helper for autocompletion module
   departureAirports: ->
     return {
@@ -78,6 +95,18 @@ Template.filter.onRendered ->
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
   # applyFilter button and filterLoading indicator.
   this.autorun ->
+    # update the filter loaded record count
+    loadedRecords = Meteor.gritsUtil.localFlights.find({}).count()
+    totalRecords = Session.get 'totalRecords'
+    if loadedRecords < totalRecords
+      # disable the [More] button
+      $('#loadMore').prop('disabled', false)
+    else
+      # enable the [More] button
+      $('#loadMore').prop('disabled', true)
+    Session.set 'loadedRecords', loadedRecords
+
+    # update the ajax-loader
     isUpdating = Session.get 'isUpdating'
     if isUpdating
       $('#applyFilter').prop('disabled', true)

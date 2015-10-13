@@ -1,17 +1,33 @@
 Tracker.autorun ->
   query = Session.get('query')
+  if _.isUndefined(query) or _.isEmpty(query)
+    return
+
+  limit = Session.get('limit')
+  lastId = Session.get('lastId')
   Session.set 'isUpdating', true
-  Meteor.subscribe 'flightsByQuery', query,
+
+  Meteor.subscribe 'flightsByQuery', query, limit, lastId,
     onError: ->
-      console.log 'subscription.flightsByQuery.onError: ', this
+      if Meteor.gritsUtil.debug
+        console.log 'subscription.flightsByQuery.onError: ', this
       Session.set('isUpdating',false)
       return
     onStop: ->
-      console.log 'subscription.flightsByQuery.onStop: ', this
+      if Meteor.gritsUtil.debug
+        console.log 'subscription.flightsByQuery.onStop: ', this
       return
     onReady: ->
-      console.log 'subscription.flightsByQuery.onReady: ', this
-      console.log 'subscription.query: ', query
-      Meteor.gritsUtil.onSubscriptionReady()
+      if Meteor.gritsUtil.debug
+        console.log 'subscription.flightsByQuery.onReady: ', this
+        console.log 'subscription.query: ', query
+      totalRecords = Meteor.call 'countFlightsByQuery', query, (err, res) ->
+        if Meteor.gritsUtil.debug
+          console.log 'totalRecords: ', res
+        Session.set 'totalRecords', res
+        if lastId == null
+          Meteor.gritsUtil.onSubscriptionReady()
+        else
+          Meteor.gritsUtil.onMoreSubscriptionsReady()
       return
   return

@@ -28,12 +28,12 @@
       </div>
       <div class="col-xs-4">
         <select id="weekly-frequency-operand" class="form-control input-sm">
-          <option value="$gt"><span> &gt; </span></option>
           <option value="$gte"><span> &gt;= </span></option>
-          <option value="$lt"><span> &lt; </span></option>
+          <option value="$gt"><span> &gt; </span></option>
           <option value="$lte"><span> &lt;= </span></option>
+          <option value="$lt"><span> &lt; </span></option>
           <option value="$eq"><span> == </span></option>
-          <option value="$neq"><span> != </span></option>
+          <option value="$ne"><span> != </span></option>
         </select>
       </div>
       <div class="col-xs-4">
@@ -46,12 +46,12 @@
       </div>
       <div class="col-xs-4">
         <select id="stops-operand" class="form-control input-sm">
-          <option value="$gt"><span> &gt; </span></option>
           <option value="$gte"><span> &gt;= </span></option>
-          <option value="$lt"><span> &lt; </span></option>
+          <option value="$gt"><span> &gt; </span></option>
           <option value="$lte"><span> &lt;= </span></option>
+          <option value="$lt"><span> &lt; </span></option>
           <option value="$eq"><span> == </span></option>
-          <option value="$neq"><span> != </span></option>
+          <option value="$ne"><span> != </span></option>
         </select>
       </div>
       <div class="col-xs-4">
@@ -64,12 +64,12 @@
       </div>
       <div class="col-xs-4">
         <select id="seats-operand" class="form-control input-sm">
-          <option value="$gt"><span> &gt; </span></option>
           <option value="$gte"><span> &gt;= </span></option>
-          <option value="$lt"><span> &lt; </span></option>
+          <option value="$gt"><span> &gt; </span></option>
           <option value="$lte"><span> &lt;= </span></option>
+          <option value="$lt"><span> &lt; </span></option>
           <option value="$eq"><span> == </span></option>
-          <option value="$neq"><span> != </span></option>
+          <option value="$ne"><span> != </span></option>
         </select>
       </div>
       <div class="col-xs-4">
@@ -97,11 +97,25 @@
       </div>
     </div>
     <div class="row filter-row">
-      <div class="col-xs-12">
-        <button id="applyFilter" class="btn btn-xs btn-default">
-          <span>Apply</span> <img src="images/ajax-loader.gif" id="filterLoading"/>
+      <div class="col-xs-4">
+        <span class="filter-label">Limit:</span>
+      </div>
+      <div class="col-xs-4">
+        <input type="number" id="limit" class="form-control input-sm">
+      </div>
+      <div class="col-xs-4">
+        <button id="loadMore" class="btn btn-sm btn-default pull-right" disabled="true">
+          <span class="filter-label">More...</span> <img src="images/ajax-loader.gif" id="moreLoading" style="display: none;"/>
         </button>
       </div>
+    </div>
+    <div class="row filter-row">
+      <button id="applyFilter" class="btn btn-sm btn-default">
+        <span class="filter-label">Apply</span> <img src="images/ajax-loader.gif" id="filterLoading"/>
+      </button>
+      <hr class="clearfix"/>
+      <span class="pull-left" style="margin-left:10px;"><span class="filter-label">Loaded Records:</span><span>{{ loadedRecords }}</span></span>
+      <span class="pull-right" style="margin-right:10px;"><span class="filter-label">Total Records:</span><span>{{ totalRecords }}</span></span>
     </div>
   </div>
 </template>
