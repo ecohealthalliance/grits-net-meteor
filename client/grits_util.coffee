@@ -10,14 +10,24 @@ Meteor.gritsUtil =
   normalizedCI: 0
   map: null
   baseLayers: null
+  # @poroperty [Array<JSON>] containing current query criteria
   queryCrit: []
   imagePath: 'packages/fuatsengul_leaflet/images'
+  # Initialize the window the map will be rendered
+  #
+  # @param [String] element - id of the containing div
+  # @param [JSON] css - CSS to be applied to the containing div
   initWindow: (element, css) ->
     element = element or 'map'
     css = css or {'height': window.innerHeight}
     $(window).resize ->
       $('#' + element).css css
     $(window).resize()
+  # Initialize leaflet map
+  #
+  # @param [String] element - id of the containing div
+  # @param [JSON] view - map view options
+  # @param [Array<L.tileLayer>] baseLayers - map layers
   initLeaflet: (element, view, baseLayers) ->
     L.Icon.Default.imagePath = @imagePath
     # sensible defaults if nothing specified
@@ -48,6 +58,9 @@ Meteor.gritsUtil =
     @addControls()
   populateMap: (flights) ->
     new L.mapPath(flight, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map) for flight in flights
+  # Style the MapPath polyline (set the color and weight)
+  #
+  # @param [L.MapPath] path - L.MapPath instance to be styled
   styleMapPath: (path) ->
     x = path.totalSeats / Meteor.gritsUtil.normalizedCI
     np = parseFloat(1 - x)
@@ -62,11 +75,18 @@ Meteor.gritsUtil =
       color = '#45034f'
     weight = path.totalSeats / 250  + 2
     path.setStyle(color, weight)
+  # Get the JSON formatted Meteor.gritsUtil.queryCrit
+  #
+  # @return [JSON] JSON formatted Meteor.gritsUtil.queryCrit
   getQueryCriteria: ->
     jsoo = {}
     for crit in @queryCrit
       jsoo[crit.key] = crit.value
     return jsoo
+  # Remove query criteria from Meteor.gritsUtil.queryCrit
+  #
+  # @param [int] critId - Id of queryCrit to be removed
+  # @return [JSON] JSON formatted Meteor.gritsUtil.queryCrit
   removeQueryCriteria: (critId) ->
     for crit in @queryCrit
       if _.isEmpty(crit)
@@ -74,6 +94,10 @@ Meteor.gritsUtil =
       else
         if crit.critId is critId
           @queryCrit.splice(@queryCrit.indexOf(crit), 1)
+  # Add query criteria to Meteor.gritsUtil.queryCrit
+  #
+  # @param [JSON] newQueryCrit - queryCrit to be added to Meteor.gritsUtil.queryCrit
+  # @return [JSON] JSON formatted Meteor.gritsUtil.queryCrit
   addQueryCriteria: (newQueryCrit) ->
     for crit in @queryCrit
       if crit.critId is newQueryCrit.critId
@@ -82,12 +106,18 @@ Meteor.gritsUtil =
         return false #updated
     @queryCrit.push(newQueryCrit)
     return true #added
+  # Clears the current node details and renders the current node's details
+  #
+  # @param [L.MapNode] node - node for which details will be displayed
   showNodeDetails: (node) ->
     $('.node-detail').empty()
     $('.node-detail').hide()
     div = $('.node-detail')[0]
     Blaze.renderWithData Template.nodeDetails, node, div
     $('.node-detail').show()
+  # Clears the current path details and renders the current path's details
+  #
+  # @param [L.MapPath] path - path for which details will be displayed
   showPathDetails: (path) ->
     $('.path-detail').empty()
     $('.path-detail').hide()
@@ -101,6 +131,10 @@ Meteor.gritsUtil =
     control = L.control(position: position)
     control.onAdd = @onAddHandler(selector, content)
     control.addTo @map
+  # Adds control overlays to the map
+  # -Module Selector
+  # -Path details
+  # -Node details
   addControls: ->
     pathDetails = L.control(position: 'bottomright')
     pathDetails.onAdd = @onAddHandler('info path-detail', '')
@@ -110,6 +144,7 @@ Meteor.gritsUtil =
     nodeDetails.onAdd = @onAddHandler('info node-detail', '')
     nodeDetails.addTo @map
     $('.node-detail').hide()
+  # @note This method is used for initializing dialog boxes created via addControls
   onAddHandler: (selector, html) ->
     ->
       @_div = L.DomUtil.create('div', selector)
