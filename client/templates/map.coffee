@@ -29,3 +29,7 @@ Template.map.onRendered ->
   # Add the filter to the map's controls.
   Meteor.gritsUtil.addControl('bottomleft', 'info', '<div id="filterContainer">')
   Blaze.render(Template.filter, $('#filterContainer')[0])
+
+  # Add the legend to the map's controls.
+  Meteor.gritsUtil.addControl('topleft', 'info', '<div id="legendContainer">')
+  Blaze.render(Template.legend, $('#legendContainer')[0])

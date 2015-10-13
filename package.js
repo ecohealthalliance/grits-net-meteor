@@ -30,6 +30,7 @@ Package.on_use(function(api){
     'client/grits_util.coffee',
     'client/templates/map.html',
     'client/templates/map.coffee',
+    'client/templates/legend.html',
     'client/templates/filter.html',
     'client/templates/filter.coffee',
     'client/templates/nodeDetails.html',
