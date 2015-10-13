@@ -262,7 +262,6 @@ Meteor.gritsUtil =
     addQueue = async.queue(((flight, callback) ->
       console.log 'add flight: ', flight
       path = L.MapPaths.addFactor flight._id, flight, Meteor.gritsUtil.map
-      #Meteor.gritsUtil.styleMapPath(path)
       async.nextTick ->
         callback()
     ), 1)
@@ -276,8 +275,6 @@ Meteor.gritsUtil =
     removeQueue = async.queue(((flight, callback) ->
       console.log 'remove flight: ', flight
       pathAndFactor = L.MapPaths.removeFactor flight._id, flight
-      #if pathAndFactor isnt false
-      #  Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
       async.nextTick ->
         callback()
     ), 1)
