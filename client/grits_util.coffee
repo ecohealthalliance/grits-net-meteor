@@ -49,17 +49,17 @@ Meteor.gritsUtil =
   populateMap: (flights) ->
     new L.mapPath(flight, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map) for flight in flights
   styleMapPath: (path) ->
-    x = path.totalSeats / @normalizedCI
+    x = path.totalSeats / Meteor.gritsUtil.normalizedCI
     np = parseFloat(1 - x)
     path.normalizedPercent = np
     if np < .25
-      color = '#ffffff'
+      color = '#f9e71d'
     else if np < .50
-      color = '#0000ff'
+      color = '#48c562'
     else if np < .75
-      color = '#666666'
+      color = '#345b89'
     else if np <= 1
-      color = '#000000'
+      color = '#45034f'
     weight = path.totalSeats / 250  + 2
     path.setStyle(color, weight)
   getQueryCriteria: ->
@@ -262,7 +262,7 @@ Meteor.gritsUtil =
     addQueue = async.queue(((flight, callback) ->
       console.log 'add flight: ', flight
       path = L.MapPaths.addFactor flight._id, flight, Meteor.gritsUtil.map
-      Meteor.gritsUtil.styleMapPath(path)
+      #Meteor.gritsUtil.styleMapPath(path)
       async.nextTick ->
         callback()
     ), 1)
@@ -276,16 +276,32 @@ Meteor.gritsUtil =
     removeQueue = async.queue(((flight, callback) ->
       console.log 'remove flight: ', flight
       pathAndFactor = L.MapPaths.removeFactor flight._id, flight
-      if pathAndFactor isnt false
-        Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
+      #if pathAndFactor isnt false
+      #  Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
       async.nextTick ->
         callback()
     ), 1)
+
     # callback method for when all items within the queue are processed
     # sets the reactive var to true.
     removeQueue.drain = ->
       console.log 'removeQueue is done.'
       removeQueueDrained.set true
+
+    styleMapPaths = ->
+      @normalizedCI = 0;
+      i = 0
+      newNCI = 0
+      while i < L.MapPaths.mapPaths.length
+        if L.MapPaths.mapPaths[i].totalSeats > newNCI
+          newNCI = L.MapPaths.mapPaths[i].totalSeats
+        i++
+      Meteor.gritsUtil.normalizedCI = newNCI
+      i = 0
+      while i < L.MapPaths.mapPaths.length
+        if L.MapPaths.mapPaths[i].flights >= 1
+          Meteor.gritsUtil.styleMapPath(L.MapPaths.mapPaths[i])
+        i++
 
     updateQueueDrained = new ReactiveVar(false)
     updateQueue = async.queue(((flight, callback) ->
@@ -305,6 +321,7 @@ Meteor.gritsUtil =
     Tracker.autorun ->
       if addQueueDrained.get() and removeQueueDrained.get() and updateQueueDrained.get()
         Session.set 'isUpdating', false
+        styleMapPaths()
 
     if !_.isUndefined(previousFlights) and previousFlights.length > 0
       # these computations will currently give a slight pause to the UI, less
