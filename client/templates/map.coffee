@@ -1,4 +1,5 @@
 #Global event handlers for node and path click events.
+# @note L.MapNode click event handler
 @nodeHandler =
   click: (node) ->
     Meteor.gritsUtil.showNodeDetails(node)
@@ -6,10 +7,12 @@
       $("#departureSearch").val('!' + node.id);
       $("#applyFilter").click()
 
+# @note L.MapPath click event handler
 @pathHandler =
   click: (path) ->
     Meteor.gritsUtil.showPathDetails(path)
 
+# @event builds the leaflet map when the map template is rendered
 Template.map.onRendered ->
   Meteor.gritsUtil.initWindow('grits-map', {'height': window.innerHeight})
   OpenStreetMap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -29,3 +32,7 @@ Template.map.onRendered ->
   # Add the filter to the map's controls.
   Meteor.gritsUtil.addControl('bottomleft', 'info', '<div id="filterContainer">')
   Blaze.render(Template.filter, $('#filterContainer')[0])
+
+  # Add the legend to the map's controls.
+  Meteor.gritsUtil.addControl('topleft', 'info', '<div id="legendContainer">')
+  Blaze.render(Template.legend, $('#legendContainer')[0])

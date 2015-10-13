@@ -28,7 +28,7 @@ test:
 
 deployment:
   master:
-    branch: continuous_deployment
+    branch: master
     commands:
       - meteor build /tmp/gritsbuild --directory:
           pwd:
