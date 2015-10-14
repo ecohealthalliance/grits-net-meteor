@@ -83,16 +83,18 @@ Meteor.gritsUtil =
   # @param [L.MapPath] path - L.MapPath instance to be styled
   styleMapPath: (path) ->
     x = path.totalSeats / Meteor.gritsUtil.normalizedCI
-    np = parseFloat(1 - x)
+    np = parseFloat(1-(1 - x))
     path.normalizedPercent = np
-    if np < .25
-      color = '#f9e71d'
-    else if np < .50
-      color = '#48c562'
-    else if np < .75
-      color = '#345b89'
+    if np < .20
+      color = '#fef0d9'
+    else if np < .40
+      color = '#fdcc8a'
+    else if np < .60
+      color = '#fc8d59'
+    else if np < .80
+      color = '#e34a33'
     else if np <= 1
-      color = '#45034f'
+      color = '#b30000'
     weight = path.totalSeats / 250  + 2
     path.setStyle(color, weight)
   # Get the JSON formatted Meteor.gritsUtil.queryCrit
