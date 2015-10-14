@@ -36,7 +36,8 @@ Package.on_use(function(api){
     'client/templates/filter.coffee',
     'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
-    'client/subscription.coffee'
+    'client/subscription.coffee',
+    'client/images/ajax-loader.gif'
   ], 'client');
   api.add_files([
     'models/airports.coffee',
