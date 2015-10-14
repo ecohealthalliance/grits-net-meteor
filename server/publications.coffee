@@ -1,7 +1,4 @@
-Meteor.publish 'flightsByQuery', (query) ->
-  if _.isUndefined(query) or _.isEmpty(query)
-    return []
-
+extendQuery = (query, lastId) ->
   # all flights are filtered by current date being past the discontinuedDate
   # or before the effectiveDate
   now = new Date()
@@ -10,15 +7,47 @@ Meteor.publish 'flightsByQuery', (query) ->
       effectiveDate: {$lt: now}, # effectiveDate is less than now
       discontinuedDate: {$gte: now} # discontinuedDate is greater-equal than now
     ]
-  _.extend(query, activeFilter)
+  _.extend query, activeFilter
+  # offset
+  if !(_.isUndefined(lastId) or _.isNull(lastId))
+    offsetFilter = _id: $gt: lastId
+    _.extend query, offsetFilter
 
-  count = Flights.find(query).count()
+buildOptions = (limit) ->
+  options =
+    sort:
+      _id: 1
+      #effectiveDate: -1
+
+  # limit
+  if !(_.isUndefined(limit) or _.isNull(limit))
+    limitClause =
+      limit: limit
+    _.extend options, limitClause
+  return options
+
+Meteor.publish 'flightsByQuery', (query, limit, lastId) ->
+  if _.isUndefined(query) or _.isEmpty(query)
+    return []
+
+  extendQuery(query, lastId)
+  options = buildOptions(limit)
+
   console.log 'query: ', query
-  console.log 'count: ', count
+  console.log 'options: ', options
+  
+  return Flights.find(query, options);
 
-  return Flights.find(query)
+Meteor.methods
+  countFlightsByQuery: (query) ->
+    if _.isUndefined(query) or _.isEmpty(query)
+      return 0
 
-Meteor.publish 'autoCompleteAirports', (selector, options) ->
-  console.log 'selector', selector
-  Autocomplete.publishCursor(Airports.find(selector, options), this)
+    extendQuery(query, null)
+    buildOptions(null)
+
+    return Flights.find(query).count()
+
+Meteor.publish 'autoCompleteAirports', (query, options) ->
+  Autocomplete.publishCursor(Airports.find(query, options), this)
   this.ready()

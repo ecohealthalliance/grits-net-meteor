@@ -12,6 +12,7 @@
   click: (path) ->
     Meteor.gritsUtil.showPathDetails(path)
 
+# @event builds the leaflet map when the map template is rendered
 Template.map.onRendered ->
   Meteor.gritsUtil.initWindow('grits-map', {'height': window.innerHeight})
   OpenStreetMap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
