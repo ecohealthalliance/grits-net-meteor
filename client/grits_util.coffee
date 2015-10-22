@@ -11,6 +11,8 @@ Meteor.gritsUtil =
   debug: true
   autoCompleteTokens: ['!', '@']
   lastId: null # stores the lastId from the collection, used in limit/offset
+  origin: null
+  currentLevel: 0 # current level of connectedness depth
   getLastFlightId: () ->
     @lastId
   setLastFlightId: () ->
@@ -199,6 +201,12 @@ Meteor.gritsUtil =
     for filterName, filterMethod of @filters
       filterMethod()
   filters:
+    levelFilter: () ->
+      val = $("#connectednessLevels").val()
+      if _.isEmpty(val)
+        Meteor.gritsUtil.removeQueryCriteria(55)
+      else
+        Meteor.gritsUtil.addQueryCriteria({'critId': 55, 'key': 'day1', 'value': true})        
     # seatsFilter
     #
     # apply a filter on number of seats if it is not undefined or NaN
@@ -454,7 +462,39 @@ Meteor.gritsUtil =
         if self.addQueueDrained.get() and self.removeQueueDrained.get() and self.updateQueueDrained.get()
           self.isUpdateExistingFlights = false
           Session.set 'isUpdating', false
-          styleMapPaths()
+          # Only show active nodes
+          L.MapNodes.hideAllNodes()
+          # add path level logic here
+          if Meteor.gritsUtil.currentLevel is parseInt($("#connectednessLevels").val())
+            styleMapPaths()
+            L.MapNodes.showCurrentPathNodes()
+            Meteor.gritsUtil.currentLevel = 0
+          else if $("#connectednessLevels").val() is ''
+            styleMapPaths()
+            L.MapNodes.showCurrentPathNodes()
+          else
+            styleMapPaths()
+
+            # re-enable the loadMore button when a new filter is applied
+            $('#loadMore').prop('disabled', false)
+
+            limit = parseInt($('#limit').val(), 10)
+            if !_.isNaN(limit)
+              Session.set 'limit', limit
+            else
+              Session.set 'limit', null
+            Session.set 'lastId', null
+
+            L.MapNodes.showCurrentPathNodes()
+
+            Meteor.gritsUtil.currentLevel++
+
+            apCodes = L.MapNodes.getCurrentPathNodes()
+            Meteor.gritsUtil.applyFilters()
+            Meteor.gritsUtil.removeQueryCriteria(11)
+            Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: apCodes}})
+
+            Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
           # set lastFlightId
           self.setLastFlightId()
 
