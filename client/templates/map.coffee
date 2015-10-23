@@ -3,11 +3,9 @@
 @nodeHandler =
   click: (node) ->
     Meteor.gritsUtil.showNodeDetails(node)
-    if not Session.get('isUpdating')
-      if Meteor.gritsUtil.origin isnt null
-        Meteor.gritsUtil.origin.isOrigin = false
+    if not Session.get('isUpdating')      
       Meteor.gritsUtil.origin = node
-      node.isOrigin = true
+      L.MapNodes.setCurrentOrigin(node)
       $("#departureSearch").val('!' + node.id)
       $("#applyFilter").click()
 

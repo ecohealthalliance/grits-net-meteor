@@ -206,7 +206,7 @@ Meteor.gritsUtil =
       if _.isEmpty(val)
         Meteor.gritsUtil.removeQueryCriteria(55)
       else
-        Meteor.gritsUtil.addQueryCriteria({'critId': 55, 'key': 'day1', 'value': true})        
+        Meteor.gritsUtil.addQueryCriteria({'critId': 55, 'key': 'flightNumber', 'value': {$ne:0}})
     # seatsFilter
     #
     # apply a filter on number of seats if it is not undefined or NaN
@@ -474,7 +474,6 @@ Meteor.gritsUtil =
             L.MapNodes.showCurrentPathNodes()
           else
             styleMapPaths()
-
             # re-enable the loadMore button when a new filter is applied
             $('#loadMore').prop('disabled', false)
 
@@ -485,7 +484,7 @@ Meteor.gritsUtil =
               Session.set 'limit', null
             Session.set 'lastId', null
 
-            L.MapNodes.showCurrentPathNodes()
+            #L.MapNodes.showCurrentPathNodes()
 
             Meteor.gritsUtil.currentLevel++
 

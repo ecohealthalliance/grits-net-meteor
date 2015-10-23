@@ -8,8 +8,9 @@ Template.filter.events
         $self.removeClass('fa-plus').addClass("fa-minus")
     )
   'click #applyFilter': () ->
+    L.MapNodes.setCurrentOrigin(false)
     Meteor.gritsUtil.applyFilters()
-    alert("asdf")
+
     query = Meteor.gritsUtil.getQueryCriteria()
     if _.isUndefined(query) or _.isEmpty(query)
       return
