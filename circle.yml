@@ -7,7 +7,7 @@ machine:
 checkout:
   post:
     - mkdir example/packages
-    - ln -s ~/grits-net-meteor .
+    - export PACKAGE_DIRS="/home/ubuntu"
     - git clone git@github.com:ecohealthalliance/grits-net-mapper.git && cd grits-net-mapper:
         pwd:
           example/packages
