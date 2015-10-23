@@ -7,9 +7,7 @@ machine:
 checkout:
   post:
     - mkdir example/packages
-    - git clone git@github.com:ecohealthalliance/grits-net-meteor.git && cd grits-net-meteor:
-        pwd:
-          example/packages
+    - ln -s ~/grits-net-meteor .
     - git clone git@github.com:ecohealthalliance/grits-net-mapper.git && cd grits-net-mapper:
         pwd:
           example/packages
