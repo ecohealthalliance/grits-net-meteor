@@ -5,30 +5,37 @@ Package.describe({
   git: '',
 });
 Package.on_use(function(api){
-  api.use([
-    'coffeescript',
-    'mongo',
-    'fuatsengul:leaflet@1.0.1',
-    'jagi:astronomy@0.12.0',
-    'jagi:astronomy-validators@0.10.8',
-    'mizzao:autocomplete@0.5.1',
-    'peerlibrary:async@0.9.2_1',
-    'twbs:bootstrap@3.3.4',
-    'mquandalle:stylus',
-    'fortawesome:fontawesome',
-    'grits:grits-net-mapper@0.2.2',
-    'reactive-var'
-  ]);
+  // client and server packages
   api.use([
     'underscore',
+    'coffeescript',
+    'mongo',
+    'deps',
+    'reactive-var',
+    'reactive-dict',
+    'fuatsengul:leaflet',
+    'jagi:astronomy',
+    'jagi:astronomy-validators',
+    'mizzao:autocomplete',
+    'peerlibrary:async',
+    'twbs:bootstrap',
+    'mquandalle:stylus',
+    'fortawesome:fontawesome',
+    'jparker:crypto-md5',
+    'grits:grits-net-mapper@0.2.2'
+  ]);
+  // client only packages
+  api.use([
     'templating',
     'minimongo',
     'session',
-    'tracker'
   ], 'client');
+  // client-side only files
   api.add_files([
     'client/stylesheets/main.styl',
+    'client/lib/leaflet-heat.js',
     'client/grits_util.coffee',
+    'client/grits_heatmap.coffee',
     'client/templates/map.html',
     'client/templates/map.coffee',
     'client/templates/legend.html',
@@ -37,19 +44,24 @@ Package.on_use(function(api){
     'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
     'client/subscription.coffee',
-    'client/images/ajax-loader.gif'
   ], 'client');
+  // both client and server files
   api.add_files([
     'models/airports.coffee',
     'models/flights.coffee'
   ],['client', 'server']);
+  //server-side only files
   api.add_files([
     'server/publications.coffee'
   ], 'server');
+  //client static assets
+  api.addAssets('client/images/ajax-loader.gif', 'client');
+  //public API
   api.export([
     'Airport',
     'Airports',
     'Flight',
-    'Flights'
+    'Flights',
+    'GritsHeatmap'
   ], ['client', 'server']);
 });
