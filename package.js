@@ -22,6 +22,7 @@ Package.on_use(function(api){
     'mquandalle:stylus',
     'fortawesome:fontawesome',
     'jparker:crypto-md5',
+    'brylie:leaflet-heat',
     'grits:grits-net-mapper@0.2.2'
   ]);
   // client only packages
@@ -33,7 +34,6 @@ Package.on_use(function(api){
   // client-side only files
   api.add_files([
     'client/stylesheets/main.styl',
-    'client/lib/leaflet-heat.js',
     'client/grits_util.coffee',
     'client/grits_heatmap.coffee',
     'client/templates/map.html',
