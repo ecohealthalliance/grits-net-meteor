@@ -9,6 +9,7 @@ Template.filter.events
     )
   'click #applyFilter': () ->
     L.MapNodes.setCurrentOrigin(false)
+    L.MapPaths.resetLevels()
     Meteor.gritsUtil.applyFilters()
 
     query = Meteor.gritsUtil.getQueryCriteria()

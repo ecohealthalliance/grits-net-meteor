@@ -336,7 +336,7 @@ Meteor.gritsUtil =
       if Meteor.gritsUtil.debug
         console.log 'append flight: ', flight
       self.localFlights.upsert(flight._id, flight)
-      path = L.MapPaths.addFactor flight._id, flight, self.map
+      path = L.MapPaths.addFactor flight._id, flight, self.map, Meteor.gritsUtil.currentLevel
       Meteor.gritsUtil.styleMapPath(path)
       async.nextTick ->
         callback()
@@ -395,7 +395,7 @@ Meteor.gritsUtil =
       if Meteor.gritsUtil.debug
         console.log 'add flight: ', flight
       self.localFlights.upsert(flight._id, flight)
-      path = L.MapPaths.addFactor flight._id, flight, self.map
+      path = L.MapPaths.addFactor flight._id, flight, self.map, Meteor.gritsUtil.currentLevel
       Meteor.gritsUtil.styleMapPath(path)
       async.nextTick ->
         callback()
@@ -447,7 +447,7 @@ Meteor.gritsUtil =
         console.log 'update flight: ', flight
       if !_.isEmpty(flight)
         try
-          path = L.MapPaths.updateFactor flight._id, flight, self.map
+          path = L.MapPaths.updateFactor flight._id, flight, self.map, Meteor.gritsUtil.currentLevel
           Meteor.gritsUtil.styleMapPath(path)
           self.localFlights.upsert(flight._id, flight)
 
