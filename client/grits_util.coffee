@@ -84,6 +84,8 @@ Meteor.gritsUtil =
   #
   # @param [L.MapPath] path - L.MapPath instance to be styled
   styleMapPath: (path) ->
+    if Meteor.gritsUtil.normalizedCI is 0 or path.totalSeats > Meteor.gritsUtil.normalizedCI
+      Meteor.gritsUtil.normalizedCI = path.totalSeats
     x = path.totalSeats / Meteor.gritsUtil.normalizedCI
     np = parseFloat(1-(1 - x))
     path.normalizedPercent = np
@@ -394,7 +396,7 @@ Meteor.gritsUtil =
         console.log 'add flight: ', flight
       self.localFlights.upsert(flight._id, flight)
       path = L.MapPaths.addFactor flight._id, flight, self.map
-
+      Meteor.gritsUtil.styleMapPath(path)
       async.nextTick ->
         callback()
     ), 1)
@@ -411,6 +413,8 @@ Meteor.gritsUtil =
         console.log 'remove flight: ', flight
       self.localFlights.remove flight._id
       pathAndFactor = L.MapPaths.removeFactor flight._id, flight
+      if pathAndFactor isnt false
+        Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
       async.nextTick ->
         callback()
     ), 1)
@@ -443,8 +447,10 @@ Meteor.gritsUtil =
         console.log 'update flight: ', flight
       if !_.isEmpty(flight)
         try
-          L.MapPaths.updateFactor flight._id, flight, self.map
+          path = L.MapPaths.updateFactor flight._id, flight, self.map
+          Meteor.gritsUtil.styleMapPath(path)
           self.localFlights.upsert(flight._id, flight)
+
         catch
       async.nextTick ->
         callback()
@@ -466,14 +472,14 @@ Meteor.gritsUtil =
           L.MapNodes.hideAllNodes()
           # add path level logic here
           if Meteor.gritsUtil.currentLevel is parseInt($("#connectednessLevels").val())
-            styleMapPaths()
+            #styleMapPaths()
             L.MapNodes.showCurrentPathNodes()
             Meteor.gritsUtil.currentLevel = 0
           else if $("#connectednessLevels").val() is ''
-            styleMapPaths()
+            #styleMapPaths()
             L.MapNodes.showCurrentPathNodes()
           else
-            styleMapPaths()
+            #styleMapPaths()
             # re-enable the loadMore button when a new filter is applied
             $('#loadMore').prop('disabled', false)
 
@@ -496,6 +502,7 @@ Meteor.gritsUtil =
             Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
           # set lastFlightId
           self.setLastFlightId()
+          styleMapPaths()
 
     if !_.isUndefined(previousFlights) and previousFlights.length > 0
       # these computations will currently give a slight pause to the UI, less
