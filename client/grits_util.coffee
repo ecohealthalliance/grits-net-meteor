@@ -29,6 +29,8 @@ Meteor.gritsUtil =
   addQueueDrained: new ReactiveVar(false)
   updateQueueDrained: new ReactiveVar(false)
   removeQueueDrained: new ReactiveVar(false)
+  overlays: {}
+  overlayControl: null
   normalizedCI: 0
   map: null
   baseLayers: null
@@ -75,9 +77,30 @@ Meteor.gritsUtil =
     for baseLayer in baseLayers
       tempBaseLayers[baseLayer.options.layerName] = baseLayer
     @baseLayers = tempBaseLayers
-    if baseLayers.length > 1
-      L.control.layers(@baseLayers).addTo @map
+
+    @nodeLayer = new GritsNodeLayer()
+
+    @drawOverlayControls()
     @addControls()
+
+  # Draws the overlay controls within the control box in the upper-right
+  # corner of the map.  It uses @overlayControl to place the reference of
+  # the overlay controls.
+  drawOverlayControls: () ->
+    if @overlayControl == null
+      @overlayControl = L.control.layers(@baseLayers, @overlays).addTo @map
+    else
+      @overlayControl.removeFrom(@map)
+      @overlayControl = L.control.layers(@baseLayers, @overlays).addTo @map
+  # addOverlayControl, adds a new overlay control to the map
+  addOverlayControl: (layerName, layerGroup) ->
+    @overlays[layerName] = layerGroup
+    @drawOverlayControls()
+  # removeOverlayControl, removes overlay control from the map
+  removeOverlayControl: (layerName) ->
+    if @overlays.hasOwnProperty layerName
+      delete @overlays[layerName]
+      @drawOverlayControls()
   populateMap: (flights) ->
     new L.mapPath(flight, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map) for flight in flights
   # Style the MapPath polyline (set the color and weight)
@@ -538,17 +561,28 @@ Meteor.gritsUtil =
   # callback.  It gets the new flights from the collection and updates the
   # existing nodes (airports) and paths (flights).
   onSubscriptionReady: ->
-    query = Session.get 'query'
-    flights = Flights.find(query).fetch()
-    if Meteor.gritsUtil.debug
-      console.log 'flights: ', flights
-    @updateExistingFlights(flights) # updates the map from the previous state
-    @updateExistingAirports(flights) # needed for the Departure and Arrival searches
+    #query = Session.get 'query'
+    #flights = Flights.find(query).fetch()
+    #if Meteor.gritsUtil.debug
+    #  console.log 'flights: ', flights
+    #@updateExistingFlights(flights) # updates the map from the previous state
+    #@updateExistingAirports(flights) # needed for the Departure and Arrival searches
+    self = this
+    self.nodeLayer.clear() #new subscription, clear old data
+    self.nodeLayer.convertFlightToNodes(Flights.find(), (err, res) ->
+      self.nodeLayer.draw()
+      Session.set('isUpdating', false)
+    )
 
   onMoreSubscriptionsReady: ->
-    query = Session.get 'query'
-    flights = Flights.find(query).fetch()
-    if Meteor.gritsUtil.debug
-      console.log 'flights: ', flights
-    @appendExistingAirports(flights) # appends to the Departure and Arrival searches
-    @appendExistingFlights(flights) # appends the map
+    #query = Session.get 'query'
+    #flights = Flights.find(query).fetch()
+    #if Meteor.gritsUtil.debug
+    #  console.log 'flights: ', flights
+    #@appendExistingAirports(flights) # appends to the Departure and Arrival searches
+    #@appendExistingFlights(flights) # appends the map
+    self = this
+    self.nodeLayer.convertFlightToNodes(Flights.find(), (err, res) ->
+      self.nodeLayer.draw()
+      Session.set('isUpdating', false)
+    )
