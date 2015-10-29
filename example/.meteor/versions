@@ -26,6 +26,8 @@ insecure@1.0.3
 jagi:astronomy@0.12.1
 jagi:astronomy-validators@0.10.10
 jagi:reactive-map@0.2.2
+jparker:crypto-core@0.1.0
+jparker:crypto-md5@0.1.1
 jquery@1.11.3_2
 json@1.0.3
 launch-screen@1.0.2

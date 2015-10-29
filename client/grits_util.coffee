@@ -569,7 +569,7 @@ Meteor.gritsUtil =
     #@updateExistingAirports(flights) # needed for the Departure and Arrival searches
     self = this
     self.nodeLayer.clear() #new subscription, clear old data
-    self.nodeLayer.convertFlightToNodes(Flights.find(), (err, res) ->
+    self.nodeLayer.convertFlightToNodes(Flights, (err, res) ->
       self.nodeLayer.draw()
       Session.set('isUpdating', false)
     )
@@ -582,7 +582,7 @@ Meteor.gritsUtil =
     #@appendExistingAirports(flights) # appends to the Departure and Arrival searches
     #@appendExistingFlights(flights) # appends the map
     self = this
-    self.nodeLayer.convertFlightToNodes(Flights.find(), (err, res) ->
+    self.nodeLayer.convertFlightToNodes(Flights, (err, res) ->
       self.nodeLayer.draw()
       Session.set('isUpdating', false)
     )
