@@ -15,7 +15,6 @@ Package.on_use(function(api){
     'twbs:bootstrap',
     'mquandalle:stylus',
     'fortawesome:fontawesome',
-    'jparker:crypto-md5',
     'd3js:d3',
     'bevanhunt:leaflet',
     'reactive-var'
