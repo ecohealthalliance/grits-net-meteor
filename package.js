@@ -30,6 +30,7 @@ Package.on_use(function(api){
     'client/stylesheets/main.styl',
     'client/lib/L.D3SvgOverlay.min.js',
     'client/grits_nodes.coffee',
+    'client/grits_paths.coffee',
     'client/grits_util.coffee',
     'client/templates/map.html',
     'client/templates/map.coffee',
@@ -65,5 +66,8 @@ Package.on_use(function(api){
     'Flights',
     'GritsNode',
     'GritsNodeLayer',
+    'GritsPath',
+    'GritsPaths',
+    'GritsPathLayer',
   ], ['client', 'server']);
 });
