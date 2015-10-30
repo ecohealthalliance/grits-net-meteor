@@ -12,6 +12,8 @@ Meteor.gritsUtil =
   autoCompleteTokens: ['!', '@']
   lastId: null # stores the lastId from the collection, used in limit/offset
   origin: null
+  nodeDetail: null # stores ref to the Blaze Template that shows a nodes detail
+  nodeLayer: null # stores ref to the d3 layer containing the nodes
   currentLevel: 0 # current level of connectedness depth
   getLastFlightId: () ->
     @lastId
@@ -162,8 +164,22 @@ Meteor.gritsUtil =
     $('.node-detail').empty()
     $('.node-detail').hide()
     div = $('.node-detail')[0]
-    Blaze.renderWithData Template.nodeDetails, node, div
+    @nodeDetail = Blaze.renderWithData Template.nodeDetails, node, div
+    console.log 'nodeDetail: ', @nodeDetail
     $('.node-detail').show()
+    $('.node-detail-close').off().on('click', (e) ->
+      $('.node-detail').hide()
+    )
+
+  updateNodeDetails: () ->
+    if typeof @nodeDetail == 'undefined' or @nodeDetail == null
+      return
+    previousNode = @nodeDetail.dataVar.get()
+    newNode = @nodeLayer.Nodes[previousNode._id]
+    if typeof newNode == 'undefined' or newNode == null
+      return
+    @nodeDetail.dataVar.set(newNode)
+
   # Clears the current path details and renders the current path's details
   #
   # @param [L.MapPath] path - path for which details will be displayed
@@ -571,6 +587,7 @@ Meteor.gritsUtil =
     self.nodeLayer.clear() #new subscription, clear old data
     self.nodeLayer.convertFlightToNodes(Flights, (err, res) ->
       self.nodeLayer.draw()
+      self.updateNodeDetails()
       Session.set('isUpdating', false)
     )
 
