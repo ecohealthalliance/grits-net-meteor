@@ -47,7 +47,10 @@ GritsNode = (obj) ->
   return
 
 GritsNode::onClickHandler = (element, selection, projection) ->
-  Meteor.gritsUtil.showNodeDetails(this)
+  if not Session.get('isUpdating')
+    Meteor.gritsUtil.showNodeDetails(this)
+    $("#departureSearch").val('!' + @_id)
+    $("#applyFilter").click()
 
 # GritsNodeLayer
 #
@@ -118,11 +121,12 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
   if nodeCount <= 0
     return
 
+  # since the map may be updated asynchronously the sums of the throughput
+  # counters must be calcuated on every draw and the self.maxValue set
   sums = _.map(nodes, (node) ->
     node.incomingThroughput + node.outgoingThroughput
   )
-  if sums.length > 0
-    self.maxValue = _.max(sums)
+  self.maxValue = _.max(sums)
 
   # select any existing circles and store data onto elements
   markers = selection.selectAll('image').data(nodes, (node) -> node._id)
@@ -166,6 +170,9 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
     .attr('height', (node) ->
       (node.marker.height/2) / projection.scale
     )
+    .attr('class', (node) ->
+      'marker-icon'
+    )
     .on('click', (node) ->
       d3.event.stopPropagation();
       # manual trigger node click handler
@@ -175,13 +182,14 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
   return
 
 GritsNodeLayer::getRelativeThroughput = (node) ->
-  maxAllowed = 0.99
+  maxAllowed = 0.9
   r = 0.0
   if @maxValue > 0
     r = ((node.incomingThroughput + node.outgoingThroughput) / @maxValue)
   if r > maxAllowed
     return maxAllowed
   return +(r).toFixed(1)
+
 GritsNodeLayer::getMarkerHref = (node) ->
   v = node.grayscale[ @getRelativeThroughput(node) * 10]
   if !(typeof v == 'undefined' or v == null)
@@ -204,8 +212,6 @@ GritsNodeLayer::clear = () ->
   @Nodes = {}
   @removeLayer()
   @addLayer()
-
-
 
 # convertFlightsToNodes
 #
@@ -260,9 +266,7 @@ GritsNodeLayer::convertFlightToNodes = (Flights, done) ->
 
   # callback method for when all items within the queue are processed
   processQueue.drain = ->
-    if Meteor.gritsUtil.debug
-      console.log 'processQueue is done'
-    _.extend(self.Nodes, nodes)
+    _.extend(self.Nodes, nodes)    
     done(null, true)
 
   processQueue.push(cursor.fetch())
