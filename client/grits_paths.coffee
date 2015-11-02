@@ -261,6 +261,8 @@ GritsPathLayer::draw = () ->
 # Clears the Paths from collection
 GritsPathLayer::clear = () ->
   @Paths.remove({});
+  @removeLayer()
+  @addLayer()
 GritsPathLayer::addPath = (path) ->
   @Paths.upsert(path._id, path)
 GritsPathLayer::removePath = (path) ->
