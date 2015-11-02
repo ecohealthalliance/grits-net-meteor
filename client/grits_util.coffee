@@ -84,7 +84,7 @@ Meteor.gritsUtil =
     for baseLayer in baseLayers
       tempBaseLayers[baseLayer.options.layerName] = baseLayer
     @baseLayers = tempBaseLayers
-
+    @pathLayer = new GritsPathLayer()
     # create an instance of GritsHeatmap and keep reference within
     # gritsUtil.heatmap
     @heatmap = new GritsHeatmap()
@@ -92,8 +92,6 @@ Meteor.gritsUtil =
 
     # draw overlay controls. Note: the constructor of GritsHeatmap calls the
     # method @addOverlayControl to add itself.
-
-    @pathLayer = new GritsPathLayer()
     @drawOverlayControls()
     @addControls()
 
@@ -204,6 +202,9 @@ Meteor.gritsUtil =
     nodeDetails.onAdd = @onAddHandler('info node-detail', '')
     nodeDetails.addTo @map
     $('.node-detail').hide()
+
+    $(".path-detail-close").on 'click', ->
+      $('.path-detail').hide()
   # @note This method is used for initializing dialog boxes created via addControls
   onAddHandler: (selector, html) ->
     ->
