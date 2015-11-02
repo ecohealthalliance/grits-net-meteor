@@ -85,7 +85,13 @@ Meteor.gritsUtil =
       tempBaseLayers[baseLayer.options.layerName] = baseLayer
     @baseLayers = tempBaseLayers
     @pathLayer = new GritsPathLayer()
+    # create an instance of GritsHeatmap and keep reference within
+    # gritsUtil.heatmap
+    @heatmap = new GritsHeatmap()
     @nodeLayer = new GritsNodeLayer()
+
+    # draw overlay controls. Note: the constructor of GritsHeatmap calls the
+    # method @addOverlayControl to add itself.
     @drawOverlayControls()
     @addControls()
 
@@ -196,6 +202,9 @@ Meteor.gritsUtil =
     nodeDetails.onAdd = @onAddHandler('info node-detail', '')
     nodeDetails.addTo @map
     $('.node-detail').hide()
+
+    $(".path-detail-close").on 'click', ->
+      $('.path-detail').hide()
   # @note This method is used for initializing dialog boxes created via addControls
   onAddHandler: (selector, html) ->
     ->
@@ -543,12 +552,17 @@ Meteor.gritsUtil =
   # callback.  It gets the new flights from the collection and updates the
   # existing nodes (airports) and paths (flights).
   onSubscriptionReady: ->
-    #query = Session.get 'query'
-    #flights = Flights.find(query).fetch()
-    #if Meteor.gritsUtil.debug
-    #  console.log 'flights: ', flights
-    #@updateExistingFlights(flights) # updates the map from the previous state
-    #@updateExistingAirports(flights) # needed for the Departure and Arrival searches
+    self = this
+
+    # sync the heatmap
+    if !(_.isUndefined(Meteor.gritsUtil.heatmap) or _.isNull(Meteor.gritsUtil.heatmap))
+      Meteor.gritsUtil.heatmap.clear()
+      Meteor.gritsUtil.heatmap.convertFlightDestinationsToPoints(Flights.find())
+      try
+        Meteor.gritsUtil.heatmap.draw()
+      catch e
+        console.error e.message
+
     tflights = Flights.find().fetch()
     tlevArray = []
     apCodes = []
@@ -570,11 +584,40 @@ Meteor.gritsUtil =
       Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: apCodes}})
       Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
       return
-    self = this
+
+    # populate the node layer
     self.nodeLayer.clear() #new subscription, clear old data
     self.nodeLayer.convertFlightToNodes(Flights, (err, res) ->
       self.nodeLayer.draw()
       self.updateNodeDetails()
+      Session.set('isUpdating', false)
+    )
+
+    self.pathLayer.clear() #new subscription, clear old data
+    self.pathLayer.convertFlightToPaths(Flights.find(), (err, res) ->
+      self.pathLayer.draw()
+      Session.set('isUpdating', false)
+    )
+    return
+
+  # onMoreSubscriptionsReady
+  #
+  # This method is triggered when the [More..] button is pressed in continuation
+  # of a limit/offset query
+  onMoreSubscriptionsReady: ->
+    self = this
+
+    # sync the heatmap
+    if !(_.isUndefined(Meteor.gritsUtil.heatmap) or _.isNull(Meteor.gritsUtil.heatmap))
+      Meteor.gritsUtil.heatmap.convertFlightDestinationsToPoints(Flights.find())
+      try
+        Meteor.gritsUtil.heatmap.draw()
+      catch e
+        console.error e.message
+
+    # populate the node layer
+    self.nodeLayer.convertFlightToNodes(Flights, (err, res) ->
+      self.nodeLayer.draw()
       Session.set('isUpdating', false)
     )
     self.pathLayer.clear() #new subscription, clear old data
@@ -583,20 +626,3 @@ Meteor.gritsUtil =
       Session.set('isUpdating', false)
     )
     return
-
-  onMoreSubscriptionsReady: ->
-    #query = Session.get 'query'
-    #flights = Flights.find(query).fetch()
-    #if Meteor.gritsUtil.debug
-    #  console.log 'flights: ', flights
-    #@appendExistingAirports(flights) # appends to the Departure and Arrival searches
-    #@appendExistingFlights(flights) # appends the map
-    self = this
-    self.nodeLayer.convertFlightToNodes(Flights, (err, res) ->
-      self.nodeLayer.draw()
-      Session.set('isUpdating', false)
-    )
-    self.pathLayer.convertFlightToPaths(Flights.find(), (err, res) ->
-      self.pathLayer.draw()
-      Session.set('isUpdating', false)
-    )
