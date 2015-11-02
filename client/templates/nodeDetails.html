@@ -1,21 +1,58 @@
 <template name="nodeDetails">
-  <div class="detailsDiv">
-    <div class="nodeDetailsHeader">
-      <div>
-        <h3> Node Details </h3>
-      </div>
+  <div id="nodeDetailsDiv" class="detailsDiv">
+    <div class="node-detail-header">
+        <button type="button" class="close node-detail-close" data-parent-id="nodeDetailsDiv" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <span class="filter-title"> Node Details </span>
     </div>
-    <div id="nodeDetails">
-      <div><b>City : </b> {{this.city}} </div>
-      <div><b>Code : </b> {{this.code}} </div>
-      <div><b>Country : </b> {{this.country}} </div>
-      <div><b>Country Name: </b> {{this.countryName}} </div>
-      <div><b>Global Region : </b> {{this.globalRegion}} </div>
-      <div><b>Name: </b> {{this.name}} </div>
-      <div><b>Notes : </b> {{this.notes}} </div>
-      <div><b>State : </b> {{this.state}} </div>
-      <div><b>State Name : </b> {{this.stateName}} </div>
-      <div><b>WAC : </b> {{this.WAC}} </div>
+    <div id="nodeDetails" class="node-detail-container">
+      <div class="row node-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Level:</span>
+          {{this.level}}
+        </div>
+      </div>
+      <div class="row node-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Code:</span>
+          {{this._id}}
+        </div>
+      </div>
+      <div class="row node-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Name:</span>
+          {{this.metadata.name}}
+        </div>
+      </div>
+      <div class="row node-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">City:</span>
+          {{this.metadata.city}}
+        </div>
+      </div>
+      <div class="row node-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Country:</span>
+          {{this.metadata.countryName}}
+        </div>
+      </div>
+      <div class="row node-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Region:</span>
+          {{this.metadata.globalRegion}}
+        </div>
+      </div>
+      <div class="row node-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Incoming:</span>
+          {{this.incomingThroughput}}
+        </div>
+      </div>
+      <div class="row node-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Outgoing:</span>
+          {{this.outgoingThroughput}}
+        </div>
+      </div>
     </div>
   </div>
 </template>
