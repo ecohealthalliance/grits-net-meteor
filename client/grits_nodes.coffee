@@ -116,7 +116,11 @@ GritsNodeLayer::addLayer = () ->
 # properly
 GritsNodeLayer::drawCallback = (selection, projection) ->
   self = this
-  nodes = _.values(@Nodes)
+  # sort by latitude so markers that are lower appear on top
+  nodes = _.sortBy(_.values(@Nodes), (node) ->
+    return node.latLng[0] * -1
+  )
+
   nodeCount = nodes.length
   if nodeCount <= 0
     return
@@ -144,12 +148,13 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
       y = projection.latLngToLayerPoint(node.latLng).y
       return y - ((node.marker.height/2) / projection.scale)
     )
-    .attr("width", (node) ->
+    .attr('width', (node) ->
       (node.marker.width/2) / projection.scale
     )
-    .attr("height", (node) ->
+    .attr('height', (node) ->
       (node.marker.height/2) / projection.scale
     )
+
 
   # add new elements workflow (following https://github.com/mbostock/d3/wiki/Selections#enter )
   markers.enter().append('image')
@@ -180,6 +185,9 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
     )
   markers.exit()
   return
+
+GritsNodeLayer::getRelativeZindex = (node) ->
+
 
 GritsNodeLayer::getRelativeThroughput = (node) ->
   maxAllowed = 0.9
