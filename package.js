@@ -5,32 +5,39 @@ Package.describe({
   git: '',
 });
 Package.on_use(function(api){
+  // client and server packages
   api.use([
+    'underscore',
     'coffeescript',
     'mongo',
+    'reactive-var',
+    'reactive-dict',
     'jagi:astronomy',
     'jagi:astronomy-validators',
     'mizzao:autocomplete',
     'peerlibrary:async',
     'twbs:bootstrap',
     'mquandalle:stylus',
-    'fortawesome:fontawesome',
-    'd3js:d3',
+    'jparker:crypto-md5',
     'bevanhunt:leaflet',
-    'reactive-var'
+    'brylie:leaflet-heat',
+    'fortawesome:fontawesome',
+    'd3js:d3'
   ]);
+  // client only packages
   api.use([
-    'underscore',
     'templating',
     'minimongo',
     'session',
     'tracker'
   ], 'client');
+  // client-side only files
   api.add_files([
     'client/stylesheets/main.styl',
     'client/lib/L.D3SvgOverlay.min.js',
     'client/grits_nodes.coffee',
     'client/grits_util.coffee',
+    'client/grits_heatmap.coffee',
     'client/templates/map.html',
     'client/templates/map.coffee',
     'client/templates/legend.html',
@@ -44,26 +51,30 @@ Package.on_use(function(api){
     'client/images/marker-icon-383838.png',
     'client/images/marker-icon-484848.png',
     'client/images/marker-icon-585858.png',
-    'client/images/marker-icon-686868.png',
     'client/images/marker-icon-787878.png',
+    'client/images/marker-icon-686868.png',
     'client/images/marker-icon-888888.png',
     'client/images/marker-icon-989898.png',
     'client/images/marker-icon-A8A8A8.png',
     'client/images/marker-icon-B8B8B8.png'
   ], 'client');
+  // both client and server files
   api.add_files([
     'models/airports.coffee',
     'models/flights.coffee'
   ],['client', 'server']);
+  //server-side only files
   api.add_files([
     'server/publications.coffee'
   ], 'server');
+  //public API
   api.export([
     'Airport',
     'Airports',
     'Flight',
     'Flights',
+    'GritsHeatmap',
     'GritsNode',
-    'GritsNodeLayer',
+    'GritsNodeLayer'
   ], ['client', 'server']);
 });

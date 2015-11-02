@@ -17,18 +17,23 @@ do ->
 
     @Then /^I should see the title "([^"]*)"$/, (expectedTitle) ->
       # you can use chai-as-promised in step definitions also
-      @client.waitForVisible('body *').getTitle().should.become expectedTitle
+      @client.waitForVisible('body *')
+      title = @client.getTitle()
+      expect(expectedTitle).toEqual(title)
 
     @When /^I click on module ([^"]*)$/, (module) ->
-      @client.waitForVisible('#moduleA').click('#moduleA')
+      @client.waitForExist('.a')
+      @client.click('.a')
 
     @Then /^I should see ([^"]*) map markers$/, (numMarkers) ->
-      @client.waitForVisible('.leaflet-marker-icon').should.become true
-      @client.elements('.leaflet-marker-icon')
-        .should.eventually.have.deep.property 'value.length', parseInt numMarkers
+      @client.waitForVisible('.leaflet-marker-icon')
+      elements = @client.elements('.leaflet-marker-icon')
+      expect(elements.value.length).toEqual(parseInt(numMarkers, 10))
 
     @Then /^I should see paths between them$/, ->
-      @client.waitForVisible('path').should.become true
+      @client.waitForExist('path')
+      elements = @client.elements('path')
+      expect(elements.value.length).toBeGreaterThan(0)
 
     return
 
