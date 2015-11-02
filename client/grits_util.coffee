@@ -11,6 +11,10 @@ Meteor.gritsUtil =
   debug: true
   autoCompleteTokens: ['!', '@']
   lastId: null # stores the lastId from the collection, used in limit/offset
+  origin: null
+  nodeDetail: null # stores ref to the Blaze Template that shows a nodes detail
+  nodeLayer: null # stores ref to the d3 layer containing the nodes
+  currentLevel: 0 # current level of connectedness depth
   getLastFlightId: () ->
     @lastId
   setLastFlightId: () ->
@@ -75,9 +79,12 @@ Meteor.gritsUtil =
     for baseLayer in baseLayers
       tempBaseLayers[baseLayer.options.layerName] = baseLayer
     @baseLayers = tempBaseLayers
+
     # create an instance of GritsHeatmap and keep reference within
     # gritsUtil.heatmap
     @heatmap = new GritsHeatmap()
+    @nodeLayer = new GritsNodeLayer()
+
     # draw overlay controls. Note: the constructor of GritsHeatmap calls the
     # method @addOverlayControl to add itself.
     @drawOverlayControls()
@@ -102,12 +109,12 @@ Meteor.gritsUtil =
       delete @overlays[layerName]
       @drawOverlayControls()
 
-  populateMap: (flights) ->
-    new L.mapPath(flight, Meteor.gritsUtil.map).addTo(Meteor.gritsUtil.map) for flight in flights
   # Style the MapPath polyline (set the color and weight)
   #
   # @param [L.MapPath] path - L.MapPath instance to be styled
   styleMapPath: (path) ->
+    if Meteor.gritsUtil.normalizedCI is 0 or path.totalSeats > Meteor.gritsUtil.normalizedCI
+      Meteor.gritsUtil.normalizedCI = path.totalSeats
     x = path.totalSeats / Meteor.gritsUtil.normalizedCI
     np = parseFloat(1-(1 - x))
     path.normalizedPercent = np
@@ -161,8 +168,22 @@ Meteor.gritsUtil =
     $('.node-detail').empty()
     $('.node-detail').hide()
     div = $('.node-detail')[0]
-    Blaze.renderWithData Template.nodeDetails, node, div
+    @nodeDetail = Blaze.renderWithData Template.nodeDetails, node, div
+    console.log 'nodeDetail: ', @nodeDetail
     $('.node-detail').show()
+    $('.node-detail-close').off().on('click', (e) ->
+      $('.node-detail').hide()
+    )
+
+  updateNodeDetails: () ->
+    if typeof @nodeDetail == 'undefined' or @nodeDetail == null
+      return
+    previousNode = @nodeDetail.dataVar.get()
+    newNode = @nodeLayer.Nodes[previousNode._id]
+    if typeof newNode == 'undefined' or newNode == null
+      return
+    @nodeDetail.dataVar.set(newNode)
+
   # Clears the current path details and renders the current path's details
   #
   # @param [L.MapPath] path - path for which details will be displayed
@@ -225,6 +246,12 @@ Meteor.gritsUtil =
     for filterName, filterMethod of @filters
       filterMethod()
   filters:
+    levelFilter: () ->
+      val = $("#connectednessLevels").val()
+      if _.isEmpty(val)
+        Meteor.gritsUtil.removeQueryCriteria(55)
+      else
+        Meteor.gritsUtil.addQueryCriteria({'critId': 55, 'key': 'flightNumber', 'value': {$ne:0}})
     # seatsFilter
     #
     # apply a filter on number of seats if it is not undefined or NaN
@@ -352,7 +379,7 @@ Meteor.gritsUtil =
       if Meteor.gritsUtil.debug
         console.log 'append flight: ', flight
       self.localFlights.upsert(flight._id, flight)
-      path = L.MapPaths.addFactor flight._id, flight, self.map
+      path = L.MapPaths.addFactor flight._id, flight, self.map, Meteor.gritsUtil.currentLevel
       Meteor.gritsUtil.styleMapPath(path)
       async.nextTick ->
         callback()
@@ -411,8 +438,8 @@ Meteor.gritsUtil =
       if Meteor.gritsUtil.debug
         console.log 'add flight: ', flight
       self.localFlights.upsert(flight._id, flight)
-      path = L.MapPaths.addFactor flight._id, flight, self.map
-
+      path = L.MapPaths.addFactor flight._id, flight, self.map, Meteor.gritsUtil.currentLevel
+      Meteor.gritsUtil.styleMapPath(path)
       async.nextTick ->
         callback()
     ), 1)
@@ -429,6 +456,8 @@ Meteor.gritsUtil =
         console.log 'remove flight: ', flight
       self.localFlights.remove flight._id
       pathAndFactor = L.MapPaths.removeFactor flight._id, flight
+      if pathAndFactor isnt false
+        Meteor.gritsUtil.styleMapPath(pathAndFactor.path)
       async.nextTick ->
         callback()
     ), 1)
@@ -461,8 +490,10 @@ Meteor.gritsUtil =
         console.log 'update flight: ', flight
       if !_.isEmpty(flight)
         try
-          L.MapPaths.updateFactor flight._id, flight, self.map
+          path = L.MapPaths.updateFactor flight._id, flight, self.map, Meteor.gritsUtil.currentLevel
+          Meteor.gritsUtil.styleMapPath(path)
           self.localFlights.upsert(flight._id, flight)
+
         catch
       async.nextTick ->
         callback()
@@ -480,9 +511,41 @@ Meteor.gritsUtil =
         if self.addQueueDrained.get() and self.removeQueueDrained.get() and self.updateQueueDrained.get()
           self.isUpdateExistingFlights = false
           Session.set 'isUpdating', false
-          styleMapPaths()
+          # Only show active nodes
+          L.MapNodes.hideAllNodes()
+          # add path level logic here
+          if Meteor.gritsUtil.currentLevel is parseInt($("#connectednessLevels").val())
+            #styleMapPaths()
+            L.MapNodes.showCurrentPathNodes()
+            Meteor.gritsUtil.currentLevel = 0
+          else if $("#connectednessLevels").val() is ''
+            #styleMapPaths()
+            L.MapNodes.showCurrentPathNodes()
+          else
+            #styleMapPaths()
+            # re-enable the loadMore button when a new filter is applied
+            $('#loadMore').prop('disabled', false)
+
+            limit = parseInt($('#limit').val(), 10)
+            if !_.isNaN(limit)
+              Session.set 'limit', limit
+            else
+              Session.set 'limit', null
+            Session.set 'lastId', null
+
+            #L.MapNodes.showCurrentPathNodes()
+
+            Meteor.gritsUtil.currentLevel++
+
+            apCodes = L.MapNodes.getCurrentPathNodes()
+            Meteor.gritsUtil.applyFilters()
+            Meteor.gritsUtil.removeQueryCriteria(11)
+            Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: apCodes}})
+
+            Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
           # set lastFlightId
           self.setLastFlightId()
+          styleMapPaths()
 
     if !_.isUndefined(previousFlights) and previousFlights.length > 0
       # these computations will currently give a slight pause to the UI, less
@@ -518,6 +581,8 @@ Meteor.gritsUtil =
   # callback.  It gets the new flights from the collection and updates the
   # existing nodes (airports) and paths (flights).
   onSubscriptionReady: ->
+    self = this
+
     # sync the heatmap
     if !(_.isUndefined(Meteor.gritsUtil.heatmap) or _.isNull(Meteor.gritsUtil.heatmap))
       Meteor.gritsUtil.heatmap.clear()
@@ -527,18 +592,28 @@ Meteor.gritsUtil =
       catch e
         console.error e.message
 
-    query = Session.get 'query'
-    flights = Flights.find(query).fetch()
-    if Meteor.gritsUtil.debug
-      console.log 'flights: ', flights
-    @updateExistingFlights(flights) # updates the map from the previous state
-    @updateExistingAirports(flights) # needed for the Departure and Arrival searches
+    # populate the node layer
+    self.nodeLayer.clear() #new subscription, clear old data
+    self.nodeLayer.convertFlightToNodes(Flights, (err, res) ->
+      self.nodeLayer.draw()
+      self.updateNodeDetails()
+      Session.set('isUpdating', false)
+    )
+
+    #query = Session.get 'query'
+    #flights = Flights.find(query).fetch()
+    #if Meteor.gritsUtil.debug
+    #  console.log 'flights: ', flights
+    #@updateExistingFlights(flights) # updates the map from the previous state
+    #@updateExistingAirports(flights) # needed for the Departure and Arrival searches
 
   # onMoreSubscriptionsReady
   #
   # This method is triggered when the [More..] button is pressed in continuation
   # of a limit/offset query
   onMoreSubscriptionsReady: ->
+    self = this
+
     # sync the heatmap
     if !(_.isUndefined(Meteor.gritsUtil.heatmap) or _.isNull(Meteor.gritsUtil.heatmap))
       Meteor.gritsUtil.heatmap.convertFlightDestinationsToPoints(Flights.find())
@@ -547,9 +622,15 @@ Meteor.gritsUtil =
       catch e
         console.error e.message
 
-    query = Session.get 'query'
-    flights = Flights.find(query).fetch()
-    if Meteor.gritsUtil.debug
-      console.log 'flights: ', flights
-    @appendExistingAirports(flights) # appends to the Departure and Arrival searches
-    @appendExistingFlights(flights) # appends the map
+    # populate the node layer
+    self.nodeLayer.convertFlightToNodes(Flights, (err, res) ->
+      self.nodeLayer.draw()
+      Session.set('isUpdating', false)
+    )
+
+    #query = Session.get 'query'
+    #flights = Flights.find(query).fetch()
+    #if Meteor.gritsUtil.debug
+    #  console.log 'flights: ', flights
+    #@appendExistingAirports(flights) # appends to the Departure and Arrival searches
+    #@appendExistingFlights(flights) # appends the map
