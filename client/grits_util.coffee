@@ -15,6 +15,7 @@ Meteor.gritsUtil =
   origin: null
   nodeDetail: null # stores ref to the Blaze Template that shows a nodes detail
   nodeLayer: null # stores ref to the d3 layer containing the nodes
+  pathLayer: null # stores ref to the d3 layer containing the paths
   currentLevel: 1 # current level of connectedness depth
   currentPath: null #currently selected path svg element
   getLastFlightId: () ->
@@ -618,7 +619,6 @@ Meteor.gritsUtil =
       self.nodeLayer.draw()
       Session.set('isUpdating', false)
     )
-    self.pathLayer.clear() #new subscription, clear old data
     self.pathLayer.convertFlightToPaths(Flights.find(), (err, res) ->
       self.pathLayer.draw()
       Session.set('isUpdating', false)
