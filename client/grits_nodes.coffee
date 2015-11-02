@@ -142,7 +142,7 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
     )
     .attr('y', (node) ->
       y = projection.latLngToLayerPoint(node.latLng).y
-      return y - ((node.marker.height/3) / projection.scale)
+      return y - ((node.marker.height/2) / projection.scale)
     )
     .attr("width", (node) ->
       (node.marker.width/2) / projection.scale
@@ -162,7 +162,7 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
     )
     .attr('y', (node) ->
       y = projection.latLngToLayerPoint(node.latLng).y
-      return y - ((node.marker.height/3) / projection.scale)
+      return y - ((node.marker.height/2) / projection.scale)
     )
     .attr('width', (node) ->
       (node.marker.width/2) / projection.scale
@@ -266,7 +266,7 @@ GritsNodeLayer::convertFlightToNodes = (Flights, done) ->
 
   # callback method for when all items within the queue are processed
   processQueue.drain = ->
-    _.extend(self.Nodes, nodes)    
+    _.extend(self.Nodes, nodes)
     done(null, true)
 
   processQueue.push(cursor.fetch())
