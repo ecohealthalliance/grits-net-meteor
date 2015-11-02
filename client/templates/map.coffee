@@ -1,7 +1,17 @@
 # @note L.MapPath click event handler
 @pathHandler =
   click: (path) ->
+    path.clicked = true
     Meteor.gritsUtil.showPathDetails(path)
+    #Meteor.gritsUtil.currentPath = path
+  getCurrentPath: ->
+    return Meteor.gritsUtil.currentPath
+  setCurrentPath: (path) ->
+    Meteor.gritsUtil.currentPath = path
+  unClick: (path) ->
+    path.clicked = false
+    Meteor.gritsUtil.hidePathDetails()
+    @setCurrentPath(null)
 
 # @event builds the leaflet map when the map template is rendered
 Template.map.onRendered ->
