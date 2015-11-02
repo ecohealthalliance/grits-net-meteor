@@ -1,12 +1,3 @@
-#Global event handlers for node and path click events.
-# @note L.MapNode click event handler
-@nodeHandler =
-  click: (node) ->
-    Meteor.gritsUtil.showNodeDetails(node)
-    if not Session.get('isUpdating')
-      $("#departureSearch").val('!' + node.id);
-      $("#applyFilter").click()
-
 # @note L.MapPath click event handler
 @pathHandler =
   click: (path) ->
