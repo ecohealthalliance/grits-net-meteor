@@ -15,7 +15,7 @@ Meteor.gritsUtil =
   origin: null
   nodeDetail: null # stores ref to the Blaze Template that shows a nodes detail
   nodeLayer: null # stores ref to the d3 layer containing the nodes
-  currentLevel: 0 # current level of connectedness depth
+  currentLevel: 1 # current level of connectedness depth
   currentPath: null #currently selected path svg element
   getLastFlightId: () ->
     @lastId
@@ -230,10 +230,10 @@ Meteor.gritsUtil =
   filters:
     levelFilter: () ->
       val = $("#connectednessLevels").val()
-      if _.isEmpty(val)
-        Meteor.gritsUtil.removeQueryCriteria(55)
-      else
-        Meteor.gritsUtil.addQueryCriteria({'critId': 55, 'key': 'flightNumber', 'value': {$ne:0}})
+      Meteor.gritsUtil.removeQueryCriteria(55)
+      if val isnt '' and val isnt '0'
+        Meteor.gritsUtil.addQueryCriteria({'critId': 55, 'key': 'flightNumber', 'value': {$ne:-val}})
+      return
     # seatsFilter
     #
     # apply a filter on number of seats if it is not undefined or NaN
@@ -557,10 +557,10 @@ Meteor.gritsUtil =
       tlevArray.push tflights[flight]._id
     Meteor.gritsUtil.pathLevelIds[Meteor.gritsUtil.currentLevel] = tlevArray
     if Meteor.gritsUtil.currentLevel is parseInt($("#connectednessLevels").val())
-      Meteor.gritsUtil.currentLevel = 0
+      Meteor.gritsUtil.currentLevel = 1
       Meteor.gritsUtil.pathLevelIds = []
-    else if $("#connectednessLevels").val() is ''
-      Meteor.gritsUtil.currentLevel = 0
+    else if $("#connectednessLevels").val() is '' or $("#connectednessLevels").val() is '0'
+      Meteor.gritsUtil.currentLevel = 1
       Meteor.gritsUtil.pathLevelIds = []
     else
       Meteor.gritsUtil.currentLevel++
