@@ -176,6 +176,9 @@ Meteor.gritsUtil =
     div = $('.path-detail')[0]
     Blaze.renderWithData Template.pathDetails, path, div
     $('.path-detail').show()
+    $('.path-detail-close').off().on('click', (e) ->
+      $('.path-detail').hide()
+    )
   # Clears the current path details and renders the current path's details
   #
   # @param [MapPath] path - path for which details will be displayed
