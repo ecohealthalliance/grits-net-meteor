@@ -58,26 +58,25 @@ GritsHeatmap::_frequency = () ->
     point.frequency = (point.count / total) * self._getCellSize() * self._getZoomFactor()
     point.data = [point.latitude, point.longitude, point.frequency]
     self.Points.update(point._id, point)
-# convertFlightDestinationsToPoints
+# convertFlight
 #
 # Converts the localFlights minimongo cursor into points for the heatmap plugin
 # @param cursor, minimongo cursor of Flights
-GritsHeatmap::convertFlightDestinationsToPoints = (cursor) ->
-  self = this
-  cursor.forEach (flight) ->
-    longitude = flight.departureAirport.loc.coordinates[0]
-    latitude = flight.departureAirport.loc.coordinates[1]
-    _id = CryptoJS.MD5(longitude.toString() + latitude.toString()).toString()
-    existing = self.Points.findOne(_id: _id)
-    if _.isUndefined(existing)
-      self.Points.insert
-        _id: _id
-        longitude: longitude
-        latitude: latitude
-        count: 1
-    else
-      count = existing.count + 1
-      self.Points.update({_id: _id}, {longitude: existing.longitude, latitude: existing.latitude, count: count})
+GritsHeatmap::convertFlight = (flight) ->
+  longitude = flight.departureAirport.loc.coordinates[0]
+  latitude = flight.departureAirport.loc.coordinates[1]
+  _id = CryptoJS.MD5(longitude.toString() + latitude.toString()).toString()
+  existing = @Points.findOne(_id: _id)
+  if _.isUndefined(existing)
+    @Points.insert
+      _id: _id
+      longitude: longitude
+      latitude: latitude
+      count: 1
+  else
+    count = existing.count + 1
+    @Points.update({_id: _id}, {longitude: existing.longitude, latitude: existing.latitude, count: count})
+
 # remove
 #
 # removes the heatmap layerGroup from the map
@@ -93,13 +92,11 @@ GritsHeatmap::add = () ->
 # Sets the data for the heatmap plugin and updates the heatmap
 GritsHeatmap::draw = () ->
   if @Points.find().count() == 0
-    throw new Error 'The heatmap does not contain any points'
     return
 
   @_frequency()
   points = @Points.find({}, {fields: {data: 1}}).fetch();
   pointData = _.pluck(points, 'data')
-  console.log 'draw::layer.setLatLngs'
   @layer.setLatLngs(pointData)
 # clear
 #

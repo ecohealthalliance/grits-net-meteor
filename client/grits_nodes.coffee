@@ -21,8 +21,8 @@ GritsNode = (obj) ->
   @_name = 'Node'
 
   @marker =
-    height: 80
-    width: 55
+    height: 50
+    width: 30
 
   @latLng = [latitude, longitude]
 
@@ -63,7 +63,6 @@ GritsNodeLayer = (options) ->
   @UPDATE_COUNT = 100
   @WORKERS = 2
 
-  @minValue = null
   @maxValue = null
 
   if typeof options == 'undefined' or options == null
@@ -142,17 +141,17 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
     )
     .attr('x', (node) ->
       x = projection.latLngToLayerPoint(node.latLng).x
-      return x - ((node.marker.width/4) / projection.scale)
+      return x - ((node.marker.width/2) / projection.scale)
     )
     .attr('y', (node) ->
       y = projection.latLngToLayerPoint(node.latLng).y
-      return y - ((node.marker.height/2) / projection.scale)
+      return y - ((node.marker.height) / projection.scale)
     )
     .attr('width', (node) ->
-      (node.marker.width/2) / projection.scale
+      (node.marker.width) / projection.scale
     )
     .attr('height', (node) ->
-      (node.marker.height/2) / projection.scale
+      (node.marker.height) / projection.scale
     )
 
 
@@ -163,17 +162,17 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
     )
     .attr('x', (node) ->
       x = projection.latLngToLayerPoint(node.latLng).x
-      return x - ((node.marker.width/4) / projection.scale)
+      return x - ((node.marker.width/2) / projection.scale)
     )
     .attr('y', (node) ->
       y = projection.latLngToLayerPoint(node.latLng).y
-      return y - ((node.marker.height/2) / projection.scale)
+      return y - ((node.marker.height) / projection.scale)
     )
     .attr('width', (node) ->
-      (node.marker.width/2) / projection.scale
+      (node.marker.width) / projection.scale
     )
     .attr('height', (node) ->
-      (node.marker.height/2) / projection.scale
+      (node.marker.height) / projection.scale
     )
     .attr('class', (node) ->
       'marker-icon'
@@ -185,9 +184,6 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
     )
   markers.exit()
   return
-
-GritsNodeLayer::getRelativeZindex = (node) ->
-
 
 GritsNodeLayer::getRelativeThroughput = (node) ->
   maxAllowed = 0.9
@@ -201,9 +197,9 @@ GritsNodeLayer::getRelativeThroughput = (node) ->
 GritsNodeLayer::getMarkerHref = (node) ->
   v = node.grayscale[ @getRelativeThroughput(node) * 10]
   if !(typeof v == 'undefined' or v == null)
-    href = "/packages/grits_grits-net-meteor/client/images/marker-icon-#{v}.png"
+    href = "/packages/grits_grits-net-meteor/client/images/marker-icon-#{v}.svg"
   else
-    href = '/packages/grits_grits-net-meteor/client/images/marker-icon-B8B8B8.png'
+    href = '/packages/grits_grits-net-meteor/client/images/marker-icon-B8B8B8.svg'
   return href
 
 # draw
@@ -221,60 +217,37 @@ GritsNodeLayer::clear = () ->
   @removeLayer()
   @addLayer()
 
-# convertFlightsToNodes
+# processFlight
 #
-# Helper method that converts the localFlights minimongo cursor into a
-# set of nodes
-# @param cursor, minimongo cursor of Flights
-GritsNodeLayer::convertFlightToNodes = (Flights, done) ->
+#
+GritsNodeLayer::convertFlight = (flight) ->
   self = this
-  cursor = Flights.find({}, {fields: {departureAirport: 1, arrivalAirport: 1, totalSeats: 1}})
+  # the departureAirport of the flight
+  departure = flight.departureAirport
+  if (typeof departure != "undefined" and departure != null and departure.hasOwnProperty('_id'))
+    departureNode = self.Nodes[departure._id]
+    if (typeof departureNode == "undefined" or departureNode == null)
+      try
+        departureNode = new GritsNode(departure)
+        departureNode.outgoingThroughput = flight.totalSeats
+      catch e
+        console.error(e.message)
+        return
+      self.Nodes[departure._id] = departureNode
+    else
+      departureNode.outgoingThroughput += flight.totalSeats
 
-  count = 0
-  nodes = {}
-
-  processQueue = async.queue(((flight, callback) ->
-    # the departureAirport of the flight
-    departure = flight.departureAirport
-    if (typeof departure != "undefined" and departure != null and departure.hasOwnProperty('_id'))
-      departureNode = nodes[departure._id]
-      if (typeof departureNode == "undefined" or departureNode == null)
-        try
-          departureNode = new GritsNode(departure)
-          departureNode.outgoingThroughput = flight.totalSeats
-        catch e
-          console.error(e.message)
-          return
-        nodes[departure._id] = departureNode
-      else
-        departureNode.outgoingThroughput += flight.totalSeats
-    # the arrivalAirport of the flight
-    arrival = flight.arrivalAirport
-    if (typeof arrival != "undefined" and arrival != null and arrival.hasOwnProperty('_id'))
-      arrivalNode = nodes[arrival._id]
-      if (typeof arrivalNode == "undefined" or arrivalNode == null)
-        try
-          arrivalNode = new GritsNode(arrival)
-          arrivalNode.incomingThroughput = flight.totalSeats
-        catch e
-          console.error(e.message)
-          return
-        nodes[arrival._id] = arrivalNode
-      else
-        arrivalNode.incomingThroughput += flight.totalSeats
-
-    count++
-    async.nextTick ->
-      if !(count % self.UPDATE_COUNT)
-        # let the UI update every x iterations
-        _.extend(self.Nodes, nodes)
-        self.draw()
-      callback()
-  ), self.WORKERS)
-
-  # callback method for when all items within the queue are processed
-  processQueue.drain = ->
-    _.extend(self.Nodes, nodes)
-    done(null, true)
-
-  processQueue.push(cursor.fetch())
+  # the arrivalAirport of the flight
+  arrival = flight.arrivalAirport
+  if (typeof arrival != "undefined" and arrival != null and arrival.hasOwnProperty('_id'))
+    arrivalNode = self.Nodes[arrival._id]
+    if (typeof arrivalNode == "undefined" or arrivalNode == null)
+      try
+        arrivalNode = new GritsNode(arrival)
+        arrivalNode.incomingThroughput = flight.totalSeats
+      catch e
+        console.error(e.message)
+        return
+      self.Nodes[arrival._id] = arrivalNode
+    else
+      arrivalNode.incomingThroughput += flight.totalSeats

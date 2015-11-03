@@ -1,35 +1,37 @@
 # GritsPath
 #
-# Creates an instance of a node that represents a geoJSON point
+# Creates an instance of a path
 GritsPath = (obj) ->
   @obj = obj
   @name = 'Path'
   @_id = obj._id
+
   @pointList = null
   @midPoint = null
   @pathLine = null
-  @origin = null
-  @destination = null
-  @destWAC = null
-  @miles = obj.miles
-  @origWAC = obj['Orig WAC']
-  @totalSeats = obj.totalSeats
-  @seats_week = obj['Seats/Week']
-  @stops = obj.Stops
-  @flights = 0
+
   @visible = false
   @normalizedPercent = 0
   @level = obj.level
+
+  @metadata = {}
+  _.extend(@metadata, obj)
+
+  @totalSeats = obj.totalSeats
+  @flights = 0
   if obj.departureAirport != null
     obj.departureAirport.level = obj.level
     @departureAirport = new GritsNode(obj.departureAirport)
+
   if obj.arrivalAirport != null
     obj.arrivalAirport.level = obj.level
     @arrivalAirport = new GritsNode(obj.arrivalAirport)
+
   @pointList = [
     new (L.LatLng)(@departureAirport.latLng[0], @departureAirport.latLng[1]),
     new (L.LatLng)(@arrivalAirport.latLng[0], @arrivalAirport.latLng[1])
   ]
+
   @show= ->
     @visible = true
     # hide arrival/dest nodes if no other path touches them
@@ -37,6 +39,7 @@ GritsPath = (obj) ->
   @hide= ->
     @visible = false
     return
+
   @getMidPoint = ->
     points = @pointList
     ud = true
@@ -56,10 +59,12 @@ GritsPath = (obj) ->
         midPoint[0] = points[0].lat + (latDif / 4)
     midPoint[1] = (points[0].lng + points[1].lng) / 2
     return new (L.LatLng)(midPoint[0], midPoint[1])
+
   # @note redraw the path
   @refresh= ->
     @hide()
     @show()
+
   # @note Set the color and weight of the path
   #
   # @param [String] color - color of the path
@@ -68,15 +73,18 @@ GritsPath = (obj) ->
     @color = color
     @weight = weight
     @refresh()
+
   @midPoint = @getMidPoint()
   return this
+
 # GritsPathLayer
 #
 # Creates an instance of a path 'svg' layer.
 GritsPathLayer = (options) ->
   @_name = 'Path'
-  @Paths = new (Meteor.Collection)(null)
+  #@Paths = new (Meteor.Collection)(null)
   @currentPath = null
+  @normalizedCI = 0
 
   if typeof options == 'undefined' or options == null
     @options = {}
@@ -108,11 +116,16 @@ GritsPathLayer::_bindEvents = () ->
 # removes the heatmap layerGroup from the map
 GritsPathLayer::removeLayer = () ->
   Meteor.gritsUtil.map.removeLayer(@layerGroup)
+  @layer = null
+  @layerGroup = null
   return
 # add
 #
 # adds the heatmap layerGroup to the map
 GritsPathLayer::addLayer = () ->
+  @layer = L.d3SvgOverlay(_.bind(@drawCallback, this), @options)
+  @layerGroup = L.layerGroup([@layer])
+  Meteor.gritsUtil.addOverlayControl(@_name, @layerGroup)
   Meteor.gritsUtil.map.addLayer(@layerGroup)
   return
 # drawCallback
@@ -120,11 +133,11 @@ GritsPathLayer::addLayer = () ->
 # Note: makes used of _.bind within the constructor so 'this' is encapsulated
 # properly
 GritsPathLayer::drawCallback = (selection, projection) ->
-  pathCount = @Paths.find().count()
-  if pathCount <= 0
-    return
-  paths = @Paths.find({}).fetch()
+  self = this
+
+  paths = GritsPaths.gritsPaths
   lines = selection.selectAll('path').data(paths, (path) -> path._id)
+
   #work on existing nodes
   lines
     .attr('d', (path) ->
@@ -148,13 +161,13 @@ GritsPathLayer::drawCallback = (selection, projection) ->
       newLine = newLineFunction(d)
       return newLine
     ).attr('stroke-width', (path) ->
-      path.weight / projection.scale
+      weight = self.getWeight(path)
+      return weight / projection.scale
     ).attr("stroke", (path) ->
       if path.clicked
         return 'blue'
-      return path.color
-    )
-    .attr("fill", "none")
+      self.getStyle(path)
+    ).attr("fill", "none")
     .on('mouseover', (path) ->
       if path.clicked
         d3.select(this).style("cursor": "pointer")
@@ -210,11 +223,12 @@ GritsPathLayer::drawCallback = (selection, projection) ->
       newLine = newLineFunction(d)
       return newLine
     ).attr('stroke-width', (path) ->
-      path.weight / projection.scale
+      weight = self.getWeight(path)
+      weight / projection.scale
     ).attr("stroke", (path) ->
       if path.clicked
         return 'blue'
-      return path.color
+      self.getStyle(path)
     ).attr("fill", "none")
     .on('mouseover', (path) ->
       if path.clicked
@@ -239,7 +253,7 @@ GritsPathLayer::drawCallback = (selection, projection) ->
         @parentNode.appendChild this
         return
       this.id = path._id
-      d3.select(this).style('stroke', 'blue')      
+      d3.select(this).style('stroke', 'blue')
       oldPath = pathHandler.getCurrentPath()
       pathHandler.setCurrentPath(this)
       if oldPath isnt null
@@ -256,90 +270,61 @@ GritsPathLayer::drawCallback = (selection, projection) ->
 #
 # Sets the data for the heatmap plugin and updates the heatmap
 GritsPathLayer::draw = () ->
-  if @Paths.find().count() == 0
-    throw new Error 'The layer does not contain any paths'
+  if GritsPaths.gritsPaths.lenght <= 0
     return
-  @removeLayer()
-  @addLayer()
+  @layer.draw()
   return
 
 # clear
 #
 # Clears the Paths from collection
 GritsPathLayer::clear = () ->
-  @Paths.remove({});
+  GritsPaths.gritsPaths = []
+  GritsPaths.factors = []
   @removeLayer()
   @addLayer()
-GritsPathLayer::addPath = (path) ->
-  @Paths.upsert(path._id, path)
-GritsPathLayer::removePath = (path) ->
-  @Paths.remove(path._id)
-# convertFlightsToPaths
+
+GritsPathLayer::getWeight = (path) ->
+  weight = path.totalSeats / 250  + 2
+  path.weigh = weight
+  return weight
+
+GritsPathLayer::getStyle = (path) ->
+  color = '#fef0d9'
+  if @normalizedCI > 0
+    x = path.totalSeats / @normalizedCI
+    np = parseFloat(1-(1 - x))
+    path.normalizedPercent = np
+    if np < .20
+      color = '#fef0d9'
+    else if np < .40
+      color = '#fdcc8a'
+    else if np < .60
+      color = '#fc8d59'
+    else if np < .80
+      color = '#e34a33'
+    else if np <= 1
+      color = '#b30000'
+  return color
+
+# convertFlight
 #
-# Helper method that converts the localFlights minimongo cursor into a
-# set of paths
-# @param cursor, minimongo cursor of Flights
-GritsPathLayer::convertFlightToPaths = (cursor, cb) ->
-  self = this
-  self.normalizedCI = 0
-  count = 0
-  cursorCount = cursor.count()
+# convert a single flight record into a path
+GritsPathLayer::convertFlight = (flight) ->
+  if typeof flight != "undefined" and flight != null
+    path = GritsPaths.getGritsPathByFactor(flight)
+    if typeof path is null
+      try
+        path = GritsPaths.addFactor(flight)
+      catch e
+        console.error(e.message)
+        return
+    else
+      path = GritsPaths.addFactor(flight);
 
-  cursor.forEach((flight) ->
-    setTimeout(() ->
-      if typeof flight != "undefined" and flight != null
-        path = GritsPaths.getGritsPathByFactor(flight)
-        if typeof path is null
-          try
-            path = new GritsPath(flight)
-            self.addPath(path)
-            GritsPaths.addFactor(flight)
-          catch e
-            console.error(e.message)
-            return
-        else
-          path = GritsPaths.addFactor(flight);
+    if path.totalSeats > @normalizedCI
+      @normalizedCI = path.totalSeats
 
-        if path.totalSeats > self.normalizedCI
-          self.normalizedCI = path.totalSeats
-    , 0)
-  )
-
-  cursor.forEach((flight) ->
-    setTimeout(() ->
-      if typeof flight != "undefined" and flight != null
-        path = GritsPaths.getGritsPathByFactor(flight)
-        if typeof path is null
-          try
-            path = new GritsPath(flight)
-            self.addPath(path)
-            GritsPaths.addFactor(flight)
-          catch e
-            console.error(e.message)
-            return
-        else
-          path = GritsPaths.addFactor(flight);
-        if path isnt false
-          x = path.totalSeats / self.normalizedCI
-          np = parseFloat(1-(1 - x))
-          path.normalizedPercent = np
-          if np < .20
-            color = '#fef0d9'
-          else if np < .40
-            color = '#fdcc8a'
-          else if np < .60
-            color = '#fc8d59'
-          else if np < .80
-            color = '#e34a33'
-          else if np <= 1
-            color = '#b30000'
-          weight = path.totalSeats / 250  + 2
-          path.setStyle(color, weight)
-          self.addPath(path)
-      if cursorCount == ++count
-        cb(null, true)
-    , 0)
-  )
 
 GritsPaths =
   gritsPaths : []

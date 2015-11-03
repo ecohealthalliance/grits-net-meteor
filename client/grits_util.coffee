@@ -18,6 +18,7 @@ Meteor.gritsUtil =
   pathLayer: null # stores ref to the d3 layer containing the paths
   currentLevel: 1 # current level of connectedness depth
   currentPath: null #currently selected path svg element
+
   getLastFlightId: () ->
     @lastId
   setLastFlightId: () ->
@@ -30,6 +31,7 @@ Meteor.gritsUtil =
     if lastFlight
       @lastId = lastFlight._id
   localFlights: new Mongo.Collection(null)
+
   loadedRecords: null
   addQueueDrained: new ReactiveVar(false)
   updateQueueDrained: new ReactiveVar(false)
@@ -152,7 +154,6 @@ Meteor.gritsUtil =
     $('.node-detail').hide()
     div = $('.node-detail')[0]
     @nodeDetail = Blaze.renderWithData Template.nodeDetails, node, div
-    console.log 'nodeDetail: ', @nodeDetail
     $('.node-detail').show()
     $('.node-detail-close').off().on('click', (e) ->
       $('.node-detail').hide()
@@ -171,14 +172,16 @@ Meteor.gritsUtil =
   #
   # @param [GritsPath] path - path for which details will be displayed
   showPathDetails: (path) ->
+    self = this
     $('.path-detail').empty()
     $('.path-detail').hide()
     div = $('.path-detail')[0]
     Blaze.renderWithData Template.pathDetails, path, div
     $('.path-detail').show()
     $('.path-detail-close').off().on('click', (e) ->
-      $('.path-detail').hide()
+        self.hidePathDetails()
     )
+    
   # Clears the current path details and renders the current path's details
   #
   # @param [MapPath] path - path for which details will be displayed
@@ -353,42 +356,6 @@ Meteor.gritsUtil =
           value[op] = val
         Meteor.gritsUtil.addQueryCriteria({'critId': 10, 'key': 'weeklyFrequency', 'value': value})
 
-  # clearLocalFlights
-  #
-  # remove all the flight paths from the collection
-  clearLocalFlights: () ->
-    @localFlights.remove({})
-
-  appendExistingAirports: (flights) ->
-    departureAirports = Session.get('previousDepartureAirports')
-    arrivalAirports = Session.get('previousArrivalAirports')
-    for flight in flights
-      departureAirports[flight.departureAirport._id] = flight.departureAirport._id
-      arrivalAirports[flight.arrivalAirport._id] = flight.arrivalAirport._id
-    Session.set('previousDepartureAirports', Object.keys(departureAirports))
-    Session.set('previousArrivalAirports', Object.keys(arrivalAirports))
-
-  appendExistingFlights: (flights) ->
-    self = this
-    appendQueue = async.queue(((flight, callback) ->
-      if Meteor.gritsUtil.debug
-        console.log 'append flight: ', flight
-      self.localFlights.upsert(flight._id, flight)
-      path = GritsPaths.addFactor flight
-      async.nextTick ->
-        callback()
-    ), 1)
-    # callback method for when all items within the queue are processed
-    # sets the reactive var isUpdating to false.
-    appendQueue.drain = ->
-      if Meteor.gritsUtil.debug
-        console.log 'appendQueue is done.'
-      # update Session
-      Session.set 'isUpdating', false
-      # set lastId
-      Meteor.gritsUtil.setLastFlightId()
-    appendQueue.push flights
-
   # updateExistingAirports
   #
   # The collection of flights is iterated to build a set of previous
@@ -405,150 +372,6 @@ Meteor.gritsUtil =
     Session.set('previousDepartureAirports', Object.keys(departureAirports))
     Session.set('previousArrivalAirports', Object.keys(arrivalAirports))
 
-  # updateExistingFlights
-  #
-  # When Session.set('query') is applied with a new/changed value, Tracker
-  # autorun will re-subscribe to the 'flightsByQuery' publication.  When the
-  # subscription onReady callback is triggered, onSubscriptionReady method is
-  # called.  Subsequently, this method is called to update the map based on
-  # its previous state (if any).
-  #
-  # @param [Collection] newFlights, collection of MongoDb flight records
-  updateExistingFlights: (newFlights) ->
-    self = this
-    self.isUpdateExistingFlights = true
-    previousFlights = self.localFlights.find({}).fetch();
-    #self.clearLocalFlights()
-    if Meteor.gritsUtil.debug
-      console.log 'previousFlights: ', previousFlights
-
-    # The following queues will update the map 'asynchronously' based on its
-    # previous state.  By pausing execution of each next iteration through
-    # nextTick() is it possible to allow the UI to perform work on the current
-    # interpreter event loop in order to update the map.
-    # https://github.com/caolan/async
-    self.addQueueDrained.set false
-    addQueue = async.queue(((flight, callback) ->
-      if Meteor.gritsUtil.debug
-        console.log 'add flight: ', flight
-      self.localFlights.upsert(flight._id, flight)
-      path = L.MapPaths.addFactor flight
-      async.nextTick ->
-        callback()
-    ), 1)
-    # callback method for when all items within the queue are processed
-    # sets the reactive var to true.
-    addQueue.drain = ->
-      if Meteor.gritsUtil.debug
-        console.log 'addQueue is done.'
-      self.addQueueDrained.set true
-
-    self.removeQueueDrained.set false
-    removeQueue = async.queue(((flight, callback) ->
-      if Meteor.gritsUtil.debug
-        console.log 'remove flight: ', flight
-      self.localFlights.remove flight._id
-      pathAndFactor = L.MapPaths.removeFactor flight._id, flight
-      async.nextTick ->
-        callback()
-    ), 1)
-
-    # callback method for when all items within the queue are processed
-    # sets the reactive var to true.
-    removeQueue.drain = ->
-      if Meteor.gritsUtil.debug
-        console.log 'removeQueue is done.'
-      self.removeQueueDrained.set true
-
-    updateQueueDrained = new ReactiveVar(false)
-
-    updateQueue = async.queue(((flight, callback) ->
-      if Meteor.gritsUtil.debug
-        console.log 'update flight: ', flight
-      if !_.isEmpty(flight)
-        try
-          path = L.MapPaths.updateFactor flight
-          self.localFlights.upsert(flight._id, flight)
-        catch
-      async.nextTick ->
-        callback()
-    ), 1)
-    # callback method for when all items within the queue are processed
-    # sets the reactive var to true.
-    updateQueue.drain = ->
-      if Meteor.gritsUtil.debug
-        console.log 'updateQueue is done.'
-      self.updateQueueDrained.set true
-
-    # hide the ajax-loader and re-enable the applyFilter button
-    Tracker.autorun ->
-      if self.isUpdateExistingFlights
-        if self.addQueueDrained.get() and self.removeQueueDrained.get() and self.updateQueueDrained.get()
-          self.isUpdateExistingFlights = false
-          Session.set 'isUpdating', false
-          # Only show active nodes
-          # add path level logic here
-          if Meteor.gritsUtil.currentLevel is parseInt($("#connectednessLevels").val())
-            #styleMapPaths()
-            L.MapNodes.showCurrentPathNodes()
-            Meteor.gritsUtil.currentLevel = 0
-          else if $("#connectednessLevels").val() is ''
-            #styleMapPaths()
-            L.MapNodes.showCurrentPathNodes()
-          else
-            #styleMapPaths()
-            # re-enable the loadMore button when a new filter is applied
-            $('#loadMore').prop('disabled', false)
-
-            limit = parseInt($('#limit').val(), 10)
-            if !_.isNaN(limit)
-              Session.set 'limit', limit
-            else
-              Session.set 'limit', null
-            Session.set 'lastId', null
-
-            #L.MapNodes.showCurrentPathNodes()
-
-            Meteor.gritsUtil.currentLevel++
-
-            apCodes = L.MapNodes.getCurrentPathNodes()
-            Meteor.gritsUtil.applyFilters()
-            Meteor.gritsUtil.removeQueryCriteria(11)
-            Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: apCodes}})
-
-            Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
-          # set lastFlightId
-          self.setLastFlightId()
-          styleMapPaths()
-
-    if !_.isUndefined(previousFlights) and previousFlights.length > 0
-      # these computations will currently give a slight pause to the UI, less
-      # than a second with 1k records, before kicking off the async queue.  If
-      # it becomes an issue then a similar async strategy may be applied.
-      newFlightIds = _.pluck(newFlights, '_id')
-      previousFlightIds = _.pluck(previousFlights, '_id')
-      removeIds = _.difference(previousFlightIds, newFlightIds)
-      addIds = _.difference(newFlightIds, previousFlightIds)
-      updateIds = _.intersection(previousFlightIds, newFlightIds)
-      toRemove = _.filter(previousFlights, (flight) ->
-        return removeIds.indexOf(flight._id) >= 0
-      )
-      toAdd = _.filter(newFlights, (flight) ->
-        return addIds.indexOf(flight._id) >= 0
-      )
-      toUpdate = _.filter(newFlights, (flight) ->
-        return addIds.indexOf(flight._id) >= 0
-      )
-      # add the collections to the queue and update the map.
-      removeQueue.push toRemove
-      updateQueue.push toUpdate
-      addQueue.push toAdd
-    else
-      # no previousFlights, only performing add
-      removeQueue.push [] # push an empty array so that removeQueueDrained is set true
-      updateQueue.push [] # push an empty array so that updateQueueDrained is set true
-      addQueue.push newFlights
-
   # onSubscriptionReady
   #
   # This method is triggered with the 'flightsByQuery' subscription onReady
@@ -557,22 +380,16 @@ Meteor.gritsUtil =
   onSubscriptionReady: ->
     self = this
 
-    # sync the heatmap
-    if !(_.isUndefined(Meteor.gritsUtil.heatmap) or _.isNull(Meteor.gritsUtil.heatmap))
-      Meteor.gritsUtil.heatmap.clear()
-      Meteor.gritsUtil.heatmap.convertFlightDestinationsToPoints(Flights.find())
-      try
-        Meteor.gritsUtil.heatmap.draw()
-      catch e
-        console.error e.message
-
     tflights = Flights.find().fetch()
+
+    ###
     tlevArray = []
     apCodes = []
     for flight of tflights
       apCodes.push tflights[flight].arrivalAirport._id
       apCodes.push tflights[flight].departureAirport._id
       tlevArray.push tflights[flight]._id
+
     Meteor.gritsUtil.pathLevelIds[Meteor.gritsUtil.currentLevel] = tlevArray
     if Meteor.gritsUtil.currentLevel is parseInt($("#connectednessLevels").val())
       Meteor.gritsUtil.currentLevel = 1
@@ -587,27 +404,43 @@ Meteor.gritsUtil =
       Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: apCodes}})
       Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
       return
+    ###
 
-    # populate the node layer
-    self.nodeLayer.clear() #new subscription, clear old data
-    self.nodeLayer.convertFlightToNodes(Flights, (err, res) ->
+    count = 0
+    self.heatmap.clear()
+    self.nodeLayer.clear()
+    self.pathLayer.clear()
+    processQueue = async.queue(((flight, callback) ->
+      self.heatmap.convertFlight(flight)
+      self.nodeLayer.convertFlight(flight)
+      self.pathLayer.convertFlight(flight)
+      async.nextTick ->
+        if !(count % 100)
+          # let the UI update every x iterations
+          # the heatmap isn't visible by default so draw can happen in the drain
+          self.nodeLayer.draw()
+          self.pathLayer.draw()
+        Session.set('loadedRecords', ++count)
+        callback()
+    ), 1)
+
+    # callback method for when all items within the queue are processed
+    processQueue.drain = ->
+      self.heatmap.draw()
       self.nodeLayer.draw()
-      self.updateNodeDetails()
-      Session.set('isUpdating', false)
-    )
-
-    self.pathLayer.clear() #new subscription, clear old data
-    self.pathLayer.convertFlightToPaths(Flights.find(), (err, res) ->
       self.pathLayer.draw()
+      Session.set('loadedRecords', count)
       Session.set('isUpdating', false)
-    )
-    return
+
+    processQueue.push(tflights);
 
   # onMoreSubscriptionsReady
   #
   # This method is triggered when the [More..] button is pressed in continuation
   # of a limit/offset query
   onMoreSubscriptionsReady: ->
+    return
+    ###
     self = this
 
     # sync the heatmap
@@ -623,8 +456,10 @@ Meteor.gritsUtil =
       self.nodeLayer.draw()
       Session.set('isUpdating', false)
     )
+
     self.pathLayer.convertFlightToPaths(Flights.find(), (err, res) ->
       self.pathLayer.draw()
       Session.set('isUpdating', false)
     )
     return
+    ###

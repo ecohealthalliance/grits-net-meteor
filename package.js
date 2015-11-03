@@ -48,16 +48,16 @@ Package.on_use(function(api){
     'client/templates/pathDetails.html',
     'client/subscription.coffee',
     'client/images/ajax-loader.gif',
-    'client/images/marker-icon-282828.png',
-    'client/images/marker-icon-383838.png',
-    'client/images/marker-icon-484848.png',
-    'client/images/marker-icon-585858.png',
-    'client/images/marker-icon-787878.png',
-    'client/images/marker-icon-686868.png',
-    'client/images/marker-icon-888888.png',
-    'client/images/marker-icon-989898.png',
-    'client/images/marker-icon-A8A8A8.png',
-    'client/images/marker-icon-B8B8B8.png'
+    'client/images/marker-icon-282828.svg',
+    'client/images/marker-icon-383838.svg',
+    'client/images/marker-icon-484848.svg',
+    'client/images/marker-icon-585858.svg',
+    'client/images/marker-icon-787878.svg',
+    'client/images/marker-icon-686868.svg',
+    'client/images/marker-icon-888888.svg',
+    'client/images/marker-icon-989898.svg',
+    'client/images/marker-icon-A8A8A8.svg',
+    'client/images/marker-icon-B8B8B8.svg'
   ], 'client');
   // both client and server files
   api.add_files([
