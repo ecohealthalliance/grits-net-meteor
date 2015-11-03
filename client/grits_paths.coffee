@@ -153,7 +153,8 @@ GritsPathLayer::drawCallback = (selection, projection) ->
       if path.clicked
         return 'blue'
       return path.color
-    ).attr("fill", "none")
+    )
+    .attr("fill", "none")
     .on('mouseover', (path) ->
       if path.clicked
         d3.select(this).style("cursor": "pointer")
@@ -173,6 +174,9 @@ GritsPathLayer::drawCallback = (selection, projection) ->
         pathHandler.unClick(path)
         d3.select(this).style('stroke', 'black')
         return
+      d3.select(this).each ->
+        @parentNode.appendChild this
+        return
       this.id = path._id
       d3.select(this).style('stroke', 'blue')
       oldPath = pathHandler.getCurrentPath()
@@ -183,7 +187,7 @@ GritsPathLayer::drawCallback = (selection, projection) ->
         d3p.style('stroke', oldPath.__data__.color)
       pathHandler.click(path)
       return
-    )
+    ).enter()
   lines.enter().append('path')
     .attr('d', (path) ->
       d = []
@@ -231,8 +235,11 @@ GritsPathLayer::drawCallback = (selection, projection) ->
         pathHandler.unClick(path)
         d3.select(this).style('stroke', 'black')
         return
+      d3.select(this).each ->
+        @parentNode.appendChild this
+        return
       this.id = path._id
-      d3.select(this).style('stroke', 'blue')
+      d3.select(this).style('stroke', 'blue')      
       oldPath = pathHandler.getCurrentPath()
       pathHandler.setCurrentPath(this)
       if oldPath isnt null
