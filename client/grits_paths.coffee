@@ -2,6 +2,7 @@
 #
 # Creates an instance of a path
 GritsPath = (obj) ->
+  @clicked = false
   @obj = obj
   @name = 'Path'
   @_id = obj._id
@@ -134,6 +135,22 @@ GritsPathLayer::addLayer = () ->
 # properly
 GritsPathLayer::drawCallback = (selection, projection) ->
   self = this
+  arrowhead = d3.select("#arrowhead")
+  if typeof arrowhead == 'undefined' or arrowhead[0][0] is null
+    svg = d3.select("svg")
+    defs = svg.append('defs')
+    defs.append('marker').attr(
+      'id': 'arrowhead'
+      'viewBox': '0 -5 10 10'
+      'refX': 5
+      'refY': 0
+      'opacity': .5
+      'markerWidth': 4
+      'markerHeight': 4
+      'orient': 'auto')
+    .append('path')
+    .attr('d', 'M0,-5L10,0L0,5')
+    .attr('class', 'arrowHead')
 
   paths = GritsPaths.gritsPaths
   lines = selection.selectAll('path').data(paths, (path) -> path._id)
@@ -168,7 +185,11 @@ GritsPathLayer::drawCallback = (selection, projection) ->
         return 'blue'
       self.getStyle(path)
     ).attr("fill", "none")
+    .attr("marker-mid":"url(#arrowhead)")
     .on('mouseover', (path) ->
+      oldPath = pathHandler.getCurrentPath()
+      if this is oldPath
+        path.clicked = true
       if path.clicked
         d3.select(this).style("cursor": "pointer")
         return
@@ -176,6 +197,9 @@ GritsPathLayer::drawCallback = (selection, projection) ->
       .style("cursor": "pointer")
       return
     ).on('mouseout', (path) ->
+      oldPath = pathHandler.getCurrentPath()
+      if this is oldPath
+        path.clicked = true
       if path.clicked
         d3.select(this).style("cursor": "hand")
         return
@@ -183,6 +207,9 @@ GritsPathLayer::drawCallback = (selection, projection) ->
       .style("cursor": "hand")
       return
     ).on('click', (path)->
+      oldPath = pathHandler.getCurrentPath()
+      if this is oldPath
+        path.clicked = true
       if path.clicked
         pathHandler.unClick(path)
         d3.select(this).style('stroke', 'black')
@@ -192,7 +219,6 @@ GritsPathLayer::drawCallback = (selection, projection) ->
         return
       this.id = path._id
       d3.select(this).style('stroke', 'blue')
-      oldPath = pathHandler.getCurrentPath()
       pathHandler.setCurrentPath(this)
       if oldPath isnt null
         d3p = d3.select(oldPath)
@@ -230,7 +256,11 @@ GritsPathLayer::drawCallback = (selection, projection) ->
         return 'blue'
       self.getStyle(path)
     ).attr("fill", "none")
+    .attr("marker-mid":"url(#arrowhead)")
     .on('mouseover', (path) ->
+      oldPath = pathHandler.getCurrentPath()
+      if this is oldPath
+        path.clicked = true
       if path.clicked
         d3.select(this).style("cursor": "pointer")
         return
@@ -238,6 +268,9 @@ GritsPathLayer::drawCallback = (selection, projection) ->
       .style("cursor": "pointer")
       return
     ).on('mouseout', (path) ->
+      oldPath = pathHandler.getCurrentPath()
+      if this is oldPath
+        path.clicked = true
       if path.clicked
         d3.select(this).style("cursor": "hand")
         return
@@ -245,6 +278,9 @@ GritsPathLayer::drawCallback = (selection, projection) ->
       .style("cursor": "hand")
       return
     ).on('click', (path)->
+      oldPath = pathHandler.getCurrentPath()
+      if this is oldPath
+        path.clicked = true
       if path.clicked
         pathHandler.unClick(path)
         d3.select(this).style('stroke', 'black')
@@ -254,7 +290,6 @@ GritsPathLayer::drawCallback = (selection, projection) ->
         return
       this.id = path._id
       d3.select(this).style('stroke', 'blue')
-      oldPath = pathHandler.getCurrentPath()
       pathHandler.setCurrentPath(this)
       if oldPath isnt null
         d3p = d3.select(oldPath)
