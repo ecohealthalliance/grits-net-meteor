@@ -1,26 +1,94 @@
 <template name="pathDetails">
-  <div class="detailsDiv">
-    <div class="pathDetailsHeader">
-      <div>
-        <h3> Path Details </h3>
-      </div>
+  <div id="pathDetailsDiv" class="detailsDiv">
+    <div class="path-detail-header">
+        <button type="button" class="close path-detail-close" data-parent-id="pathDetailsDiv" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <span class="filter-title"> Path Details </span>
     </div>
-    <div id="pathDetails">
-      <div><b>ID : </b> {{this.id}} </div>
-      <div><b>Flights : </b> {{this.flights}} </div>
-      <div><b>Weight : </b> {{this.weight}} </div>
-      <div><b>Origin : </b> {{this.departureAirport.city}} </div>
-      <div><b>Origin WAC: </b> {{this.departureAirport.WAC}} </div>
-      <div><b>Destination : </b> {{this.arrivalAirport.city}} </div>
-      <div><b>Destination WAC: </b> {{this.arrivalAirport.WAC}} </div>
-      <div><b>Color : </b> {{this.color}} </div>
-      <div><b>Weight : </b> {{this.weight}} </div>
-      <div><b>% : </b> {{this.normalizedPercent}} </div>
-      <div><b>Miles : </b> {{this.miles}} </div>
-      <div><b>Ops/Day : </b> {{this.ops_day}} </div>
-      <div><b>Ops/Week : </b> {{this.ops_week}} </div>
-      <div><b>Stops : </b> {{this.stops}} </div>
-      <div><b>Seats : </b> {{this.totalSeats}} </div>
+    <div id="pathDetails" class="path-detail-container">
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Level:</span>
+          {{this.level}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">ID:</span>
+          {{this._id}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Flights:</span>
+          {{this.flights}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Weight:</span>
+          {{this.weight}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Origin:</span>
+          {{this.departureAirport.city}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Origin WAC:</span>
+          {{this.departureAirport.WAC}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Destination:</span>
+          {{this.arrivalAirport.city}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Destination WAC:</span>
+          {{this.arrivalAirport.WAC}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">%:</span>
+          {{this.normalizedPercent}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Miles:</span>
+          {{this.miles}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Ops/Day:</span>
+          {{this.ops_day}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Ops/Week:</span>
+          {{this.ops_week}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Stops:</span>
+          {{this.stops}}
+        </div>
+      </div>
+      <div class="row path-detail-row">
+        <div class="col-xs-12">
+          <span class="filter-label">Seats:</span>
+          {{this.totalSeats}}
+        </div>
+      </div>      
     </div>
   </div>
 </template>
