@@ -181,7 +181,7 @@ Meteor.gritsUtil =
     $('.path-detail-close').off().on('click', (e) ->
         self.hidePathDetails()
     )
-    
+
   # Clears the current path details and renders the current path's details
   #
   # @param [MapPath] path - path for which details will be displayed
@@ -382,7 +382,7 @@ Meteor.gritsUtil =
 
     tflights = Flights.find().fetch()
 
-    ###
+
     tlevArray = []
     apCodes = []
     for flight of tflights
@@ -404,7 +404,7 @@ Meteor.gritsUtil =
       Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: apCodes}})
       Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
       return
-    ###
+
 
     count = 0
     self.heatmap.clear()
