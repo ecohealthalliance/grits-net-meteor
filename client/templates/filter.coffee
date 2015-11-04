@@ -94,9 +94,10 @@ Template.filter.onRendered ->
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
   # applyFilter button and filterLoading indicator.
+
   this.autorun ->
-    # update the filter loaded record count
-    loadedRecords = Meteor.gritsUtil.localFlights.find({}).count()
+    # update the disabled status of the [More] button based loadedRecords
+    loadedRecords = Session.get 'loadedRecords'
     totalRecords = Session.get 'totalRecords'
     if loadedRecords < totalRecords
       # disable the [More] button
@@ -104,7 +105,6 @@ Template.filter.onRendered ->
     else
       # enable the [More] button
       $('#loadMore').prop('disabled', true)
-    Session.set 'loadedRecords', loadedRecords
 
     # update the ajax-loader
     isUpdating = Session.get 'isUpdating'

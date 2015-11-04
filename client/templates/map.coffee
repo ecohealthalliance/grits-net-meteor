@@ -1,16 +1,17 @@
-#Global event handlers for node and path click events.
-# @note L.MapNode click event handler
-@nodeHandler =
-  click: (node) ->
-    Meteor.gritsUtil.showNodeDetails(node)
-    if not Session.get('isUpdating')
-      $("#departureSearch").val('!' + node.id);
-      $("#applyFilter").click()
-
 # @note L.MapPath click event handler
 @pathHandler =
   click: (path) ->
+    path.clicked = true
     Meteor.gritsUtil.showPathDetails(path)
+    #Meteor.gritsUtil.currentPath = path
+  getCurrentPath: ->
+    return Meteor.gritsUtil.currentPath
+  setCurrentPath: (path) ->
+    Meteor.gritsUtil.currentPath = path
+  unClick: (path) ->
+    path.clicked = false
+    Meteor.gritsUtil.hidePathDetails()
+    @setCurrentPath(null)
 
 # @event builds the leaflet map when the map template is rendered
 Template.map.onRendered ->

@@ -5,30 +5,40 @@ Package.describe({
   git: '',
 });
 Package.on_use(function(api){
-  api.use([
-    'coffeescript',
-    'mongo',
-    'fuatsengul:leaflet@1.0.1',
-    'jagi:astronomy@0.12.0',
-    'jagi:astronomy-validators@0.10.8',
-    'mizzao:autocomplete@0.5.1',
-    'peerlibrary:async@0.9.2_1',
-    'twbs:bootstrap@3.3.4',
-    'mquandalle:stylus',
-    'fortawesome:fontawesome',
-    'grits:grits-net-mapper@0.2.2',
-    'reactive-var'
-  ]);
+  // client and server packages
   api.use([
     'underscore',
+    'coffeescript',
+    'mongo',
+    'reactive-var',
+    'reactive-dict',
+    'jagi:astronomy',
+    'jagi:astronomy-validators',
+    'mizzao:autocomplete',
+    'peerlibrary:async',
+    'twbs:bootstrap',
+    'mquandalle:stylus',
+    'jparker:crypto-md5',
+    'bevanhunt:leaflet',
+    'brylie:leaflet-heat',
+    'fortawesome:fontawesome',
+    'd3js:d3'
+  ]);
+  // client only packages
+  api.use([
     'templating',
     'minimongo',
     'session',
     'tracker'
   ], 'client');
+  // client-side only files
   api.add_files([
     'client/stylesheets/main.styl',
+    'client/lib/L.D3SvgOverlay.min.js',
+    'client/grits_nodes.coffee',
+    'client/grits_paths.coffee',
     'client/grits_util.coffee',
+    'client/grits_heatmap.coffee',
     'client/templates/map.html',
     'client/templates/map.coffee',
     'client/templates/legend.html',
@@ -37,19 +47,38 @@ Package.on_use(function(api){
     'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
     'client/subscription.coffee',
-    'client/images/ajax-loader.gif'
+    'client/images/ajax-loader.gif',
+    'client/images/marker-icon-282828.svg',
+    'client/images/marker-icon-383838.svg',
+    'client/images/marker-icon-484848.svg',
+    'client/images/marker-icon-585858.svg',
+    'client/images/marker-icon-787878.svg',
+    'client/images/marker-icon-686868.svg',
+    'client/images/marker-icon-888888.svg',
+    'client/images/marker-icon-989898.svg',
+    'client/images/marker-icon-A8A8A8.svg',
+    'client/images/marker-icon-B8B8B8.svg'
   ], 'client');
+  // both client and server files
   api.add_files([
     'models/airports.coffee',
     'models/flights.coffee'
   ],['client', 'server']);
+  //server-side only files
   api.add_files([
     'server/publications.coffee'
   ], 'server');
+  //public API
   api.export([
     'Airport',
     'Airports',
     'Flight',
-    'Flights'
+    'Flights',
+    'GritsHeatmap',
+    'GritsNode',
+    'GritsNodeLayer',
+    'GritsPath',
+    'GritsPaths',
+    'GritsPathLayer'
   ], ['client', 'server']);
 });
