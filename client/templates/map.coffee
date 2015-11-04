@@ -28,7 +28,7 @@ Template.map.onRendered ->
   Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     layerName: 'Esri_WorldImagery')
   baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
-  Meteor.gritsUtil.initLeaflet('grits-map', {'zoom': 2,'latlng': [0,-20]}, baseLayers)
+  Meteor.gritsUtil.initLeaflet('grits-map', {'zoom': 2,'latlng': [30,-20]}, baseLayers)
 
   # Add the filter to the map's controls.
   Meteor.gritsUtil.addControl('bottomleft', 'info', '<div id="filterContainer">')
