@@ -70,7 +70,7 @@ GritsPath::getMidPoint = () ->
 #
 # Creates an instance of a path 'svg' layer.
 GritsPathLayer = (options) ->
-  @_name = 'GritsPathLayer'
+  @_name = 'Paths'
   @Paths = {}
 
   @currentPath = null
