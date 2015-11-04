@@ -48,7 +48,6 @@ GritsPath = (obj, throughput, level, origin, destination) ->
 
   return
 
-
 GritsPath::getMidPoint = () ->
     ud = true
     midPoint = []
