@@ -23,19 +23,16 @@ Meteor.gritsUtil =
     @lastId
   setLastFlightId: () ->
     lastFlight = null
-    if @localFlights.find().count() > 0
+    if Flights.find().count() > 0
       options =
         sort:
           _id: -1
-      lastFlight = @localFlights.find({}, options).fetch()[0];
+      lastFlight = Flights.find({}, options).fetch()[0];
     if lastFlight
       @lastId = lastFlight._id
-  localFlights: new Mongo.Collection(null)
 
   loadedRecords: null
-  addQueueDrained: new ReactiveVar(false)
-  updateQueueDrained: new ReactiveVar(false)
-  removeQueueDrained: new ReactiveVar(false)
+
   overlays: {}
   overlayControl: null
   normalizedCI: 0
@@ -381,7 +378,7 @@ Meteor.gritsUtil =
     self = this
 
     tflights = Flights.find().fetch()
-
+    self.setLastFlightId()
 
     tlevArray = []
     apCodes = []
@@ -439,27 +436,34 @@ Meteor.gritsUtil =
   # This method is triggered when the [More..] button is pressed in continuation
   # of a limit/offset query
   onMoreSubscriptionsReady: ->
-    return
-    ###
     self = this
+    tflights = Flights.find().fetch()
+    self.setLastFlightId()
+    tflightsLen = tflights.length
+    count =  Session.get('loadedRecords')
+    tcount = 0
+    processQueue = async.queue(((flight, callback) ->
+      self.heatmap.convertFlight(flight)
+      self.nodeLayer.convertFlight(flight)
+      self.pathLayer.convertFlight(flight)
+      async.nextTick ->
+        if !(tcount % 100)
+          # let the UI update every x iterations
+          # the heatmap isn't visible by default so draw can happen in the drain
+          self.nodeLayer.draw()
+          self.pathLayer.draw()
+          tcount++
+        Session.set('loadedRecords', count+tflightsLen)
+        callback()
+    ), 1)
 
-    # sync the heatmap
-    if !(_.isUndefined(Meteor.gritsUtil.heatmap) or _.isNull(Meteor.gritsUtil.heatmap))
-      Meteor.gritsUtil.heatmap.convertFlightDestinationsToPoints(Flights.find())
-      try
-        Meteor.gritsUtil.heatmap.draw()
-      catch e
-        console.error e.message
-
-    # populate the node layer
-    self.nodeLayer.convertFlightToNodes(Flights, (err, res) ->
+    # callback method for when all items within the queue are processed
+    processQueue.drain = ->
+      self.heatmap.draw()
       self.nodeLayer.draw()
-      Session.set('isUpdating', false)
-    )
-
-    self.pathLayer.convertFlightToPaths(Flights.find(), (err, res) ->
       self.pathLayer.draw()
+
+      Session.set('loadedRecords', count+tflightsLen)
       Session.set('isUpdating', false)
-    )
-    return
-    ###
+
+    processQueue.push(tflights);
