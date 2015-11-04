@@ -67,9 +67,9 @@ Meteor.gritsUtil =
     element = element or 'grits-map'
     view = view or {}
     view.zoom = view.zoom or 5
-    view.latlong = view.latlng or [
-      37.8
-      -92
+    view.latlng = view.latlng or [
+      0,
+      0
     ]
     OpenStreetMap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       key: '1234'
@@ -81,7 +81,9 @@ Meteor.gritsUtil =
       noWrap: true
       maxZoom: 18
       minZoom: 0
-      layers: [ baseLayers[0] ]).setView(view.latlong, view.zoom)
+      layers: [ baseLayers[0] ])
+    console.log('view: ', view)
+    @map.setView(view.latlng, view.zoom)
     tempBaseLayers = {}
     for baseLayer in baseLayers
       tempBaseLayers[baseLayer.options.layerName] = baseLayer
