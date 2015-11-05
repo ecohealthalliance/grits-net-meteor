@@ -35,7 +35,7 @@ Meteor.publish 'flightsByQuery', (query, limit, lastId) ->
 
   console.log 'query: ', query
   console.log 'options: ', options
-  
+
   return Flights.find(query, options);
 
 Meteor.methods
@@ -47,6 +47,29 @@ Meteor.methods
     buildOptions(null)
 
     return Flights.find(query).count()
+
+Meteor.methods
+  getFlightsByLevel: (query, levels, origin) ->
+    if _.isUndefined(query) or _.isEmpty(query)
+      return 'query is empty'
+    if levels < 2
+      return 'levels is less than two: ' + levels
+    extendQuery(query, null)
+    buildOptions(null)
+    ctr = 1
+    origins = []
+    for o of origin
+      origins.push(origin[o])    
+    console.log 'original origins:' , origins
+    flights = null
+    while ctr < levels
+      flights = Flights.find(query).fetch()
+      for flight of flights
+        origins.push(flights[flight].arrivalAirport._id)
+      ctr++
+      query['departureAirport._id'] = {'$in':origins}
+    console.log 'level query: ', query
+    return Flights.find(query).fetch()
 
 Meteor.publish 'autoCompleteAirports', (query, options) ->
   Autocomplete.publishCursor(Airports.find(query, options), this)
