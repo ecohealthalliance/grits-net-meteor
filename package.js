@@ -2,7 +2,7 @@ Package.describe({
   summary: 'Exposes {{ >map }} template as the interface to grits-net-mapper',
   version: '0.0.1',
   name: 'grits:grits-net-meteor',
-  git: '',
+  git: ''
 });
 Package.on_use(function(api){
   // client and server packages
@@ -14,7 +14,6 @@ Package.on_use(function(api){
     'reactive-dict',
     'jagi:astronomy',
     'jagi:astronomy-validators',
-    'mizzao:autocomplete',
     'peerlibrary:async',
     'twbs:bootstrap',
     'mquandalle:stylus',
@@ -22,7 +21,9 @@ Package.on_use(function(api){
     'bevanhunt:leaflet',
     'brylie:leaflet-heat',
     'fortawesome:fontawesome',
-    'd3js:d3'
+    'd3js:d3',
+    'sergeyt:typeahead',
+    'ajduke:bootstrap-tokenfield'
   ]);
   // client only packages
   api.use([
