@@ -49,8 +49,15 @@ GritsNode = (obj) ->
 GritsNode::onClickHandler = (element, selection, projection) ->
   if not Session.get('isUpdating')
     Meteor.gritsUtil.showNodeDetails(this)
-    $("#departureSearch").val('!' + @_id)
-    $("#applyFilter").click()
+    if typeof Template.filter.departureSearch != 'undefined'
+      tokens =  Template.filter.departureSearch.tokenfield('getTokens')  
+      match = _.find(tokens, (t) -> t.label == this._id)
+      if match
+        return false
+      else
+        tokens.push({label: this._id, value: this.id + " - " + this.metadata.name})
+        Template.filter.departureSearch.tokenfield('setTokens', tokens)
+        $("#applyFilter").click()
 
 # GritsNodeLayer
 #
