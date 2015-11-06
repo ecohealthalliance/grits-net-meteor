@@ -406,18 +406,12 @@ Meteor.gritsUtil =
   # existing nodes (airports) and paths (flights).
   onSubscriptionReady: ->
     self = this
-    if Meteor.gritsUtil.currentLevel is parseInt($("#connectednessLevels").val())
-      Meteor.gritsUtil.currentLevel = 1
-      Meteor.gritsUtil.pathLevelIds = []
-    else if $("#connectednessLevels").val() is '' or $("#connectednessLevels").val() is '0'
-      Meteor.gritsUtil.currentLevel = 1
-      Meteor.gritsUtil.pathLevelIds = []
-    else
-      Meteor.call 'getFlightsByLevel', Meteor.gritsUtil.getQueryCriteria(), parseInt($("#connectednessLevels").val()), Meteor.gritsUtil.origin, (err, res) ->
+    if parseInt($("#connectednessLevels").val()) > 1
+      Meteor.call 'getFlightsByLevel', Meteor.gritsUtil.getQueryCriteria(), parseInt($("#connectednessLevels").val()), Meteor.gritsUtil.origin, Session.get('limit'), (err, res) ->
         if Meteor.gritsUtil.debug
-          console.log 'levelRecs: ', res
-        Session.set 'totalRecords', res.length
-        self.processQueueCallback(self, res)
+          console.log 'levelRecs: ', res[0]
+        Session.set 'totalRecords', res[1]
+        self.processQueueCallback(self, res[0])
       return
 
     tflights = Flights.find().fetch()
@@ -430,6 +424,13 @@ Meteor.gritsUtil =
   # of a limit/offset query
   onMoreSubscriptionsReady: ->
     self = this
+    if parseInt($("#connectednessLevels").val()) > 1
+      Meteor.call 'getFlightsByLevel', Meteor.gritsUtil.getQueryCriteria(), parseInt($("#connectednessLevels").val()), Meteor.gritsUtil.origin, Session.get('limit'), (err, res) ->
+        if Meteor.gritsUtil.debug
+          console.log 'levelRecs: ', res[0]
+        Session.set 'totalRecords', res[1]
+        self.processQueueCallback(self, res[0])
+      return
     tflights = Flights.find().fetch()
     self.setLastFlightId()
     tflightsLen = tflights.length
