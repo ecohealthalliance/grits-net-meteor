@@ -1,89 +1,79 @@
 # GritsPath
 #
 # Creates an instance of a path
-GritsPath = (obj) ->
-  @clicked = false
-  @obj = obj
-  @name = 'Path'
-  @_id = obj._id
+GritsPath = (obj, throughput, level, origin, destination) ->
+  @_name = 'GritsPath'
 
-  @pointList = null
-  @midPoint = null
-  @pathLine = null
+  if typeof obj == 'undefined' or !(obj instanceof Object)
+    throw new Error("#{@_name} - obj must be defined and of type Object")
+    return
 
-  @visible = false
+  if obj.hasOwnProperty('_id') == false
+    throw new Error("#{@_name} - obj requires the _id property")
+    return
+
+  if typeof throughput == 'undefined'
+    throw new Error("#{@_name} - throughput must be defined")
+    return
+
+  if typeof level == 'undefined'
+    throw new Error("#{@_name} - level must be defined")
+    return
+
+  if (typeof origin == 'undefined' or !(origin instanceof GritsNode))
+    throw new Error("#{@_name} - origin must be defined and of type GritsNode")
+    return
+
+  if (typeof origin == 'undefined' or !(destination instanceof GritsNode))
+    throw new Error("#{@_name} - destination must be defined and of type GritsNode")
+    return
+
+  # a unique path is defined as an origin to a destination
+  @_id = CryptoJS.MD5(origin._id + destination._id).toString()
+
+  @level = level
+  @throughput = throughput
+
   @normalizedPercent = 0
-  @level = obj.level
+  @occurrances = 1
+
+  @origin = origin
+  @destination = destination
+  @midPoint = @getMidPoint()
+
+  @clicked = false
 
   @metadata = {}
   _.extend(@metadata, obj)
 
-  @totalSeats = obj.totalSeats
-  @flights = 0
-  if obj.departureAirport != null
-    obj.departureAirport.level = obj.level
-    @departureAirport = new GritsNode(obj.departureAirport)
+  return
 
-  if obj.arrivalAirport != null
-    obj.arrivalAirport.level = obj.level
-    @arrivalAirport = new GritsNode(obj.arrivalAirport)
-
-  @pointList = [
-    new (L.LatLng)(@departureAirport.latLng[0], @departureAirport.latLng[1]),
-    new (L.LatLng)(@arrivalAirport.latLng[0], @arrivalAirport.latLng[1])
-  ]
-
-  @show= ->
-    @visible = true
-    # hide arrival/dest nodes if no other path touches them
-    return
-  @hide= ->
-    @visible = false
-    return
-
-  @getMidPoint = ->
-    points = @pointList
+GritsPath::getMidPoint = () ->
     ud = true
     midPoint = []
-    latDif = Math.abs(points[0].lat - (points[1].lat))
-    lngDif = Math.abs(points[0].lng - (points[1].lng))
+    latDif = Math.abs(@origin.latLng[0] - @destination.latLng[0])
+    lngDif = Math.abs(@origin.latLng[1] - @destination.latLng[1])
     ud = if latDif > lngDif then false else true
-    if points[0].lat > points[1].lat
+    if @origin.latLng[0] > @destination.latLng[0]
       if ud
-        midPoint[0] = points[1].lat + (latDif / 4)
+        midPoint[0] = @destination.latLng[0] + (latDif / 4)
       else
-        midPoint[0] = points[0].lat - (latDif / 4)
+        midPoint[0] = @origin.latLng[0] - (latDif / 4)
     else
       if ud
-        midPoint[0] = points[1].lat - (latDif / 4)
+        midPoint[0] = @destination.latLng[0] - (latDif / 4)
       else
-        midPoint[0] = points[0].lat + (latDif / 4)
-    midPoint[1] = (points[0].lng + points[1].lng) / 2
-    return new (L.LatLng)(midPoint[0], midPoint[1])
-
-  # @note redraw the path
-  @refresh= ->
-    @hide()
-    @show()
-
-  # @note Set the color and weight of the path
-  #
-  # @param [String] color - color of the path
-  # @param [Float] weight - weight of the path (pixels)
-  @setStyle= (color, weight) ->
-    @color = color
-    @weight = weight
-    @refresh()
-
-  @midPoint = @getMidPoint()
-  return this
+        midPoint[0] = @origin.latLng[0] + (latDif / 4)
+    midPoint[1] = (@origin.latLng[1] + @destination.latLng[1]) / 2
+    return midPoint
 
 # GritsPathLayer
 #
 # Creates an instance of a path 'svg' layer.
 GritsPathLayer = (options) ->
-  @_name = 'Path'
-  #@Paths = new (Meteor.Collection)(null)
+  @_name = 'Paths'
+  @Paths = {}
+
   @currentPath = null
   @normalizedCI = 0
 
@@ -92,10 +82,10 @@ GritsPathLayer = (options) ->
   else
     @options = options
 
-  @layer = L.d3SvgOverlay(_.bind(@drawCallback, this), options)
-  @layerGroup = L.layerGroup([@layer])
-  Meteor.gritsUtil.addOverlayControl(@_name, @layerGroup)
+  @layer = null
+  @layerGroup = null
   @_bindEvents()
+
   return
 # _bindEvents
 #
@@ -116,7 +106,8 @@ GritsPathLayer::_bindEvents = () ->
 #
 # removes the heatmap layerGroup from the map
 GritsPathLayer::removeLayer = () ->
-  Meteor.gritsUtil.map.removeLayer(@layerGroup)
+  if !(typeof @layerGroup == 'undefined' or @layerGroup == null)
+    Meteor.gritsUtil.map.removeLayer(@layerGroup)
   @layer = null
   @layerGroup = null
   return
@@ -152,24 +143,30 @@ GritsPathLayer::drawCallback = (selection, projection) ->
     .attr('d', 'M0,-5L10,0L0,5')
     .attr('class', 'arrowHead')
 
-  paths = GritsPaths.gritsPaths
-  lines = selection.selectAll('path').data(paths, (path) -> path._id)
+  paths = _.sortBy(_.values(@Paths, (path) ->
+    return path.destination.latLng[0]
+  ))
 
+  pathCount = paths.length
+  if pathCount <= 0
+    return
+
+  lines = selection.selectAll('path').data(paths, (path) -> path._id)
   #work on existing nodes
   lines
     .attr('d', (path) ->
       d = []
       d[0] = {}
-      d[0].x = projection.latLngToLayerPoint(new L.LatLng(path.departureAirport.latLng[0],path.departureAirport.latLng[1])).x
-      d[0].y = projection.latLngToLayerPoint(new L.LatLng(path.departureAirport.latLng[0],path.departureAirport.latLng[1])).y
+      d[0].x = projection.latLngToLayerPoint(path.origin.latLng).x
+      d[0].y = projection.latLngToLayerPoint(path.origin.latLng).y
 
       d[1] = {}
       d[1].x = projection.latLngToLayerPoint(path.midPoint).x
       d[1].y = projection.latLngToLayerPoint(path.midPoint).y
 
       d[2] = {}
-      d[2].x = projection.latLngToLayerPoint(new L.LatLng(path.arrivalAirport.latLng[0],path.arrivalAirport.latLng[1])).x
-      d[2].y = projection.latLngToLayerPoint(new L.LatLng(path.arrivalAirport.latLng[0],path.arrivalAirport.latLng[1])).y
+      d[2].x = projection.latLngToLayerPoint(path.destination.latLng).x
+      d[2].y = projection.latLngToLayerPoint(path.destination.latLng).y
 
       newLineFunction = d3.svg.line().x((d) ->
         d.x).y((d) ->
@@ -231,16 +228,16 @@ GritsPathLayer::drawCallback = (selection, projection) ->
     .attr('d', (path) ->
       d = []
       d[0] = {}
-      d[0].x = projection.latLngToLayerPoint(new L.LatLng(path.departureAirport.latLng[0],path.departureAirport.latLng[1])).x
-      d[0].y = projection.latLngToLayerPoint(new L.LatLng(path.departureAirport.latLng[0],path.departureAirport.latLng[1])).y
+      d[0].x = projection.latLngToLayerPoint(path.origin.latLng).x
+      d[0].y = projection.latLngToLayerPoint(path.origin.latLng).y
 
       d[1] = {}
       d[1].x = projection.latLngToLayerPoint(path.midPoint).x
       d[1].y = projection.latLngToLayerPoint(path.midPoint).y
 
       d[2] = {}
-      d[2].x = projection.latLngToLayerPoint(new L.LatLng(path.arrivalAirport.latLng[0],path.arrivalAirport.latLng[1])).x
-      d[2].y = projection.latLngToLayerPoint(new L.LatLng(path.arrivalAirport.latLng[0],path.arrivalAirport.latLng[1])).y
+      d[2].x = projection.latLngToLayerPoint(path.destination.latLng).x
+      d[2].y = projection.latLngToLayerPoint(path.destination.latLng).y
 
       newLineFunction = d3.svg.line().x((d) ->
         d.x).y((d) ->
@@ -305,7 +302,7 @@ GritsPathLayer::drawCallback = (selection, projection) ->
 #
 # Sets the data for the heatmap plugin and updates the heatmap
 GritsPathLayer::draw = () ->
-  if GritsPaths.gritsPaths.lenght <= 0
+  if Object.keys(@Paths).lenght <= 0
     return
   @layer.draw()
   return
@@ -314,20 +311,17 @@ GritsPathLayer::draw = () ->
 #
 # Clears the Paths from collection
 GritsPathLayer::clear = () ->
-  GritsPaths.gritsPaths = []
-  GritsPaths.factors = []
+  @Paths = {}
   @removeLayer()
   @addLayer()
 
 GritsPathLayer::getWeight = (path) ->
-  weight = path.totalSeats / 250  + 2
-  path.weigh = weight
-  return weight
+  path.weight = path.throughput / 250  + 2
 
 GritsPathLayer::getStyle = (path) ->
   color = '#fef0d9'
   if @normalizedCI > 0
-    x = path.totalSeats / @normalizedCI
+    x = path.throughput / @normalizedCI
     np = parseFloat(1-(1 - x))
     path.normalizedPercent = np
     if np < .20
@@ -345,132 +339,23 @@ GritsPathLayer::getStyle = (path) ->
 # convertFlight
 #
 # convert a single flight record into a path
-GritsPathLayer::convertFlight = (flight) ->
-  if typeof flight != "undefined" and flight != null
-    path = GritsPaths.getGritsPathByFactor(flight)
-    if typeof path is null
-      try
-        path = GritsPaths.addFactor(flight)
-      catch e
-        console.error(e.message)
-        return
-    else
-      path = GritsPaths.addFactor(flight);
+GritsPathLayer::convertFlight = (flight, level, origin, destination) ->
+  self = this
+  if typeof flight == 'undefined' or flight == null
+    return
 
-    if path.totalSeats > @normalizedCI
-      @normalizedCI = path.totalSeats
+  if typeof level == 'undefined'
+    level = 0
 
-
-GritsPaths =
-  gritsPaths : []
-  factors : []
-  resetLevels: () ->
-    for path in @gritsPaths
-      path.level = 0
-      path.arrivalAirport.level = 0
-      path.departureAirport.level = 0
-  getPathByPathLine: (pathId) ->
-    for path in @gritsPaths
-      if path.pathLine._leaflet_id is pathId
-        return path
-    return false
-  getLayerGroup: ->
-    L.layerGroup @gritsPaths
-  # @note finds and returns the factor by factorId if it exists
-  #
-  # @param [String] id - Id of factor to be retrieved
-  getFactorById: (id) ->
-    factor = undefined
-    i = undefined
-    len = undefined
-    ref = undefined
-    ref = @factors
-    i = 0
-    len = ref.length
-    while i < len
-      factor = ref[i]
-      if factor._id == id
-        return factor
-      i++
-    false
-  # @note finds and returns the MapPath by factor departure and arrival
-  #       airport if it exists
-  #
-  # @param [JSON] factor - flight data
-  getGritsPathByFactor: (factor) ->
-    i = undefined
-    len = undefined
-    ref = undefined
-    tempMapPath = undefined
-    ref = @gritsPaths
-    i = 0
-    len = ref.length
-    while i < len
-      tempMapPath = ref[i]
-      if tempMapPath.departureAirport._id == factor['departureAirport']._id and tempMapPath.arrivalAirport._id == factor['arrivalAirport']._id
-        return tempMapPath
-      i++
-    false
-  # @note adds a new MapPath to GritsPaths.gritsPaths
-  #
-  # @param [MapPath] mapPath
-  addInitializedPath: (mapPath) ->
-    @gritsPaths.push mapPath
-  # @note adds a new factor to GritsPaths.factors
-  #
-  # @param [JSON] factor - flight data
-  addFactor: (factor) ->
-    existingFactor = @getFactorById(factor._id)
-    if existingFactor != false
-      return @getGritsPathByFactor(existingFactor)
-    path = @getGritsPathByFactor(factor)
-    if path != false
-      path.totalSeats += factor['totalSeats']
-    else if path == false
-      path = new GritsPath(factor)
-    @factors.push factor
-    path.flights++
-    @gritsPaths.push path
-    return path
-  # @note removes a factor by id from GritsPaths.factors
-  #
-  # @param [String] id - Id of factor to be removed
-  removeFactor: (id) ->
-    factor = undefined
-    path = undefined
-    ref = undefined
-    factor = @getFactorById(id)
-    if factor == false
-      return false
-    @factors.splice @factors.indexOf(factor), 1
-    path = @getMapPathByFactor(factor)
-    path.totalSeats -= factor['totalSeats']
-    path.flights--
-    if path.flights is 0
-      path.hide()
-      #MapNodes.checkAndHideNodes(path)
-      return false
-    else
-      return {
-        'path': path
-        'factor': factor
-      }
-  # @note update an existing factor in GritsPaths.factors
-  #
-  # @param [String] id - Id of factor to be updated
-  # @param [JSON] newFactor - updated flight data
-  # @param [L.Map] map
-  updateFactor: (id, newFactor, map, level) ->
-    oldFactor = @getFactorById(id)
-    if !oldFactor
-      return false
-    path = @getMapPathByFactor(oldFactor)
+  _id = CryptoJS.MD5(origin._id + destination._id).toString()
+  path = self.Paths[_id]
+  if (typeof path == 'undefined' or path == null)
+    path = new GritsPath(flight, flight.totalSeats, level, origin, destination)
+    self.Paths[path._id] = path
+  else
     path.level = level
-    path.totalSeats -= oldFactor['totalSeats']
-    path.totalSeats += newFactor['totalSeats']
-    #TODO: What else needs to be updated?  seats_week?
-    return path
-  showPath: (mapPath) ->
-    mapPath.show()
-  hidePath: (mapPath) ->
-    mapPath.hide()
+    path.occurrances += 1
+    path.throughput += flight.totalSeats
+
+  if path.throughput > @normalizedCI
+    @normalizedCI = path.throughput

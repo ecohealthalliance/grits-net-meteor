@@ -19,8 +19,8 @@
       </div>
       <div class="row path-detail-row">
         <div class="col-xs-12">
-          <span class="filter-label">Flights:</span>
-          {{this.flights}}
+          <span class="filter-label">Occurrances:</span>
+          {{this.occurrances}}
         </div>
       </div>
       <div class="row path-detail-row">
@@ -32,25 +32,13 @@
       <div class="row path-detail-row">
         <div class="col-xs-12">
           <span class="filter-label">Origin:</span>
-          {{this.departureAirport.city}}
-        </div>
-      </div>
-      <div class="row path-detail-row">
-        <div class="col-xs-12">
-          <span class="filter-label">Origin WAC:</span>
-          {{this.departureAirport.WAC}}
+          {{this.origin.metadata.city}}
         </div>
       </div>
       <div class="row path-detail-row">
         <div class="col-xs-12">
           <span class="filter-label">Destination:</span>
-          {{this.arrivalAirport.city}}
-        </div>
-      </div>
-      <div class="row path-detail-row">
-        <div class="col-xs-12">
-          <span class="filter-label">Destination WAC:</span>
-          {{this.arrivalAirport.WAC}}
+          {{this.destination.metadata.city}}
         </div>
       </div>
       <div class="row path-detail-row">
@@ -61,34 +49,16 @@
       </div>
       <div class="row path-detail-row">
         <div class="col-xs-12">
-          <span class="filter-label">Miles:</span>
-          {{this.miles}}
-        </div>
-      </div>
-      <div class="row path-detail-row">
-        <div class="col-xs-12">
-          <span class="filter-label">Ops/Day:</span>
-          {{this.ops_day}}
-        </div>
-      </div>
-      <div class="row path-detail-row">
-        <div class="col-xs-12">
-          <span class="filter-label">Ops/Week:</span>
-          {{this.ops_week}}
-        </div>
-      </div>
-      <div class="row path-detail-row">
-        <div class="col-xs-12">
           <span class="filter-label">Stops:</span>
-          {{this.stops}}
+          {{this.metadata.stops}}
         </div>
       </div>
       <div class="row path-detail-row">
         <div class="col-xs-12">
-          <span class="filter-label">Seats:</span>
-          {{this.totalSeats}}
+          <span class="filter-label">Throughput:</span>
+          {{this.throughput}}
         </div>
-      </div>      
+      </div>
     </div>
   </div>
 </template>
