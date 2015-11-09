@@ -411,6 +411,8 @@ Meteor.gritsUtil =
         if Meteor.gritsUtil.debug
           console.log 'levelRecs: ', res[0]
         Session.set 'totalRecords', res[1]
+        if !_.isUndefined(res[2]) and !_.isEmpty(res[2])
+          Session.set 'lastId', res[2].replace(/"/g, '');
         self.processQueueCallback(self, res[0])
       return
 
@@ -425,7 +427,7 @@ Meteor.gritsUtil =
   onMoreSubscriptionsReady: ->
     self = this
     if parseInt($("#connectednessLevels").val()) > 1
-      Meteor.call 'getFlightsByLevel', Meteor.gritsUtil.getQueryCriteria(), parseInt($("#connectednessLevels").val()), Meteor.gritsUtil.origin, Session.get('limit'), (err, res) ->
+      Meteor.call 'getMoreFlightsByLevel', Meteor.gritsUtil.getQueryCriteria(), parseInt($("#connectednessLevels").val()), Meteor.gritsUtil.origin, Session.get('limit'), Session.get('lastId'), (err, res) ->
         if Meteor.gritsUtil.debug
           console.log 'levelRecs: ', res[0]
         Session.set 'totalRecords', res[1]
