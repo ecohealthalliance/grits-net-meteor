@@ -8,6 +8,7 @@ Template.filter.events
         $self.removeClass('fa-plus').addClass("fa-minus")
     )
   'click #applyFilter': () ->
+    #GritsPaths.resetLevels()
     Meteor.gritsUtil.applyFilters()
 
     query = Meteor.gritsUtil.getQueryCriteria()
@@ -27,7 +28,6 @@ Template.filter.events
 
   'click #loadMore': () ->
     Session.set 'lastId',  Meteor.gritsUtil.getLastFlightId()
-
 
 Template.filter.helpers({
   loadedRecords: () ->
