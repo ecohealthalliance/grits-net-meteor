@@ -8,7 +8,7 @@ Template.filter.events
         $self.removeClass('fa-plus').addClass("fa-minus")
     )
   'click #applyFilter': () ->
-    GritsPaths.resetLevels()
+    #GritsPaths.resetLevels()
     Meteor.gritsUtil.applyFilters()
 
     query = Meteor.gritsUtil.getQueryCriteria()
@@ -94,6 +94,7 @@ Template.filter.onRendered ->
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
   # applyFilter button and filterLoading indicator.
+
   this.autorun ->
     # update the disabled status of the [More] button based loadedRecords
     loadedRecords = Session.get 'loadedRecords'

@@ -378,7 +378,8 @@ Meteor.gritsUtil =
     processQueue = async.queue(((flight, callback) ->
       self.heatmap.convertFlight(flight)
       self.nodeLayer.convertFlight(flight)
-      self.pathLayer.convertFlight(flight)
+      nodes = self.nodeLayer.convertFlight(flight)
+      self.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])      
       async.nextTick ->
         if !(count % 100)
           # let the UI update every x iterations
@@ -441,7 +442,8 @@ Meteor.gritsUtil =
     processQueue = async.queue(((flight, callback) ->
       self.heatmap.convertFlight(flight)
       self.nodeLayer.convertFlight(flight)
-      self.pathLayer.convertFlight(flight)
+      nodes = self.nodeLayer.convertFlight(flight)
+      self.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
       async.nextTick ->
         if !(tcount % 100)
           # let the UI update every x iterations
