@@ -15,8 +15,14 @@ Feature: Map display
     Then I should see the title "example"
 
   @dev
+  Scenario: Minimize the filter
+    When I navigate to "/"
+    And I click on toggleFilter
+
+  @dev
   Scenario: Clicking on module a should give us some paths
     When I navigate to "/"
+    And I click on toggleFilter
     And I click on module A
-    Then I should see 2 map markers
+    Then I should see 4 map markers
     And I should see paths between them

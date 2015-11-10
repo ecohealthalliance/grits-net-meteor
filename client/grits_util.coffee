@@ -64,9 +64,9 @@ Meteor.gritsUtil =
     element = element or 'grits-map'
     view = view or {}
     view.zoom = view.zoom or 5
-    view.latlong = view.latlng or [
-      37.8
-      -92
+    view.latlng = view.latlng or [
+      0,
+      0
     ]
     OpenStreetMap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       key: '1234'
@@ -78,7 +78,9 @@ Meteor.gritsUtil =
       noWrap: true
       maxZoom: 18
       minZoom: 0
-      layers: [ baseLayers[0] ]).setView(view.latlong, view.zoom)
+      layers: [ baseLayers[0] ])
+    console.log('view: ', view)
+    @map.setView(view.latlng, view.zoom)
     tempBaseLayers = {}
     for baseLayer in baseLayers
       tempBaseLayers[baseLayer.options.layerName] = baseLayer
@@ -403,29 +405,35 @@ Meteor.gritsUtil =
       return
 
 
+    # This may run prior to initializing the leaflet map; check for undefined
+    # and return
+    if typeof self.heatmap == 'undefined'
+      return
+
     count = 0
     self.heatmap.clear()
-    self.nodeLayer.clear()
     self.pathLayer.clear()
+    self.nodeLayer.clear()
     processQueue = async.queue(((flight, callback) ->
       self.heatmap.convertFlight(flight)
-      self.nodeLayer.convertFlight(flight)
-      self.pathLayer.convertFlight(flight)
+      nodes = self.nodeLayer.convertFlight(flight)
+      self.pathLayer.convertFlight(flight, self.currentLevel, nodes[0], nodes[1])
+      count++
       async.nextTick ->
         if !(count % 100)
           # let the UI update every x iterations
           # the heatmap isn't visible by default so draw can happen in the drain
-          self.nodeLayer.draw()
           self.pathLayer.draw()
-        Session.set('loadedRecords', ++count)
+          self.nodeLayer.draw()
+          Session.set('loadedRecords', count)
         callback()
     ), 1)
 
     # callback method for when all items within the queue are processed
     processQueue.drain = ->
       self.heatmap.draw()
-      self.nodeLayer.draw()
       self.pathLayer.draw()
+      self.nodeLayer.draw()
       Session.set('loadedRecords', count)
       Session.set('isUpdating', false)
 

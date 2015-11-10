@@ -21,8 +21,8 @@ GritsNode = (obj) ->
   @_name = 'Node'
 
   @marker =
-    height: 50
-    width: 30
+    height: 25
+    width: 15
 
   @latLng = [latitude, longitude]
 
@@ -59,10 +59,6 @@ GritsNodeLayer = (options) ->
   @_name = 'Nodes'
   @Nodes = {}
 
-  #allow the UI to update every 100 iterations
-  @UPDATE_COUNT = 100
-  @WORKERS = 2
-
   @maxValue = null
 
   if typeof options == 'undefined' or options == null
@@ -73,7 +69,6 @@ GritsNodeLayer = (options) ->
   @layer = null
   @layerGroup = null
   @_bindEvents()
-  @addLayer()
 
   return
 # _bindEvents
@@ -95,7 +90,8 @@ GritsNodeLayer::_bindEvents = () ->
 #
 # removes the heatmap layerGroup from the map
 GritsNodeLayer::removeLayer = () ->
-  Meteor.gritsUtil.map.removeLayer(@layerGroup)
+  if !(typeof @layerGroup == 'undefined' or @layerGroup == null)
+    Meteor.gritsUtil.map.removeLayer(@layerGroup)
   @layer = null
   @layerGroup = null
   return
@@ -204,8 +200,10 @@ GritsNodeLayer::getMarkerHref = (node) ->
 
 # draw
 #
-# Sets the data for the heatmap plugin and updates the heatmap
+# Draws the layer on the map
 GritsNodeLayer::draw = () ->
+  if Object.keys(@Nodes).lenght <= 0
+    return
   @layer.draw()
   return
 
@@ -251,3 +249,5 @@ GritsNodeLayer::convertFlight = (flight) ->
       self.Nodes[arrival._id] = arrivalNode
     else
       arrivalNode.incomingThroughput += flight.totalSeats
+
+  return [departureNode, arrivalNode]
