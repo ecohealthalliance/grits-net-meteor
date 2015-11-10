@@ -8,7 +8,7 @@ Template.filter.events
         $self.removeClass('fa-plus').addClass("fa-minus")
     )
   'click #applyFilter': () ->
-    GritsPaths.resetLevels()
+    #GritsPaths.resetLevels()
     Meteor.gritsUtil.applyFilters()
 
     query = Meteor.gritsUtil.getQueryCriteria()

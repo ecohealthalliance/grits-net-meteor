@@ -64,9 +64,9 @@ Meteor.gritsUtil =
     element = element or 'grits-map'
     view = view or {}
     view.zoom = view.zoom or 5
-    view.latlng = view.latlng or [
-      0,
-      0
+    view.latlong = view.latlng or [
+      37.8
+      -92
     ]
     OpenStreetMap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       key: '1234'
@@ -78,9 +78,7 @@ Meteor.gritsUtil =
       noWrap: true
       maxZoom: 18
       minZoom: 0
-      layers: [ baseLayers[0] ])
-    console.log('view: ', view)
-    @map.setView(view.latlng, view.zoom)
+      layers: [ baseLayers[0] ]).setView(view.latlong, view.zoom)
     tempBaseLayers = {}
     for baseLayer in baseLayers
       tempBaseLayers[baseLayer.options.layerName] = baseLayer
@@ -290,6 +288,7 @@ Meteor.gritsUtil =
     departureSearchFilter: () ->
       val = $('input[name="departureSearch"]').val()
       codes = Meteor.gritsUtil.parseAirportCodes(val)
+      Meteor.gritsUtil.origin = Object.keys(codes)
       if _.isEmpty(codes)
         Meteor.gritsUtil.removeQueryCriteria(11)
       else
@@ -371,6 +370,36 @@ Meteor.gritsUtil =
     Session.set('previousDepartureAirports', Object.keys(departureAirports))
     Session.set('previousArrivalAirports', Object.keys(arrivalAirports))
 
+  processQueueCallback: (self, res) ->
+    self.heatmap.clear()
+    self.nodeLayer.clear()
+    self.pathLayer.clear()
+    count = 0
+    processQueue = async.queue(((flight, callback) ->
+      self.heatmap.convertFlight(flight)
+      self.nodeLayer.convertFlight(flight)
+      nodes = self.nodeLayer.convertFlight(flight)
+      self.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])      
+      async.nextTick ->
+        if !(count % 100)
+          # let the UI update every x iterations
+          # the heatmap isn't visible by default so draw can happen in the drain
+          self.nodeLayer.draw()
+          self.pathLayer.draw()
+        Session.set('loadedRecords', ++count)
+        callback()
+    ), 1)
+
+    # callback method for when all items within the queue are processed
+    processQueue.drain = ->
+      self.heatmap.draw()
+      self.nodeLayer.draw()
+      self.pathLayer.draw()
+      Session.set('loadedRecords', count)
+      Session.set('isUpdating', false)
+
+    processQueue.push(res);
+
   # onSubscriptionReady
   #
   # This method is triggered with the 'flightsByQuery' subscription onReady
@@ -378,66 +407,19 @@ Meteor.gritsUtil =
   # existing nodes (airports) and paths (flights).
   onSubscriptionReady: ->
     self = this
+    if parseInt($("#connectednessLevels").val()) > 1
+      Meteor.call 'getFlightsByLevel', Meteor.gritsUtil.getQueryCriteria(), parseInt($("#connectednessLevels").val()), Meteor.gritsUtil.origin, Session.get('limit'), (err, res) ->
+        if Meteor.gritsUtil.debug
+          console.log 'levelRecs: ', res[0]
+        Session.set 'totalRecords', res[1]
+        if !_.isUndefined(res[2]) and !_.isEmpty(res[2])
+          Session.set 'lastId', res[2].replace(/"/g, '');
+        self.processQueueCallback(self, res[0])
+      return
 
     tflights = Flights.find().fetch()
     self.setLastFlightId()
-
-    tlevArray = []
-    apCodes = []
-    for flight of tflights
-      apCodes.push tflights[flight].arrivalAirport._id
-      apCodes.push tflights[flight].departureAirport._id
-      tlevArray.push tflights[flight]._id
-
-    Meteor.gritsUtil.pathLevelIds[Meteor.gritsUtil.currentLevel] = tlevArray
-    if Meteor.gritsUtil.currentLevel is parseInt($("#connectednessLevels").val())
-      Meteor.gritsUtil.currentLevel = 1
-      Meteor.gritsUtil.pathLevelIds = []
-    else if $("#connectednessLevels").val() is '' or $("#connectednessLevels").val() is '0'
-      Meteor.gritsUtil.currentLevel = 1
-      Meteor.gritsUtil.pathLevelIds = []
-    else
-      Meteor.gritsUtil.currentLevel++
-      Meteor.gritsUtil.applyFilters()
-      Meteor.gritsUtil.removeQueryCriteria(11)
-      Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: apCodes}})
-      Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
-      return
-
-
-    # This may run prior to initializing the leaflet map; check for undefined
-    # and return
-    if typeof self.heatmap == 'undefined'
-      return
-
-    count = 0
-    self.heatmap.clear()
-    self.pathLayer.clear()
-    self.nodeLayer.clear()
-    processQueue = async.queue(((flight, callback) ->
-      self.heatmap.convertFlight(flight)
-      nodes = self.nodeLayer.convertFlight(flight)
-      self.pathLayer.convertFlight(flight, self.currentLevel, nodes[0], nodes[1])
-      count++
-      async.nextTick ->
-        if !(count % 100)
-          # let the UI update every x iterations
-          # the heatmap isn't visible by default so draw can happen in the drain
-          self.pathLayer.draw()
-          self.nodeLayer.draw()
-          Session.set('loadedRecords', count)
-        callback()
-    ), 1)
-
-    # callback method for when all items within the queue are processed
-    processQueue.drain = ->
-      self.heatmap.draw()
-      self.pathLayer.draw()
-      self.nodeLayer.draw()
-      Session.set('loadedRecords', count)
-      Session.set('isUpdating', false)
-
-    processQueue.push(tflights);
+    self.processQueueCallback(self, tflights)
 
   # onMoreSubscriptionsReady
   #
@@ -445,6 +427,13 @@ Meteor.gritsUtil =
   # of a limit/offset query
   onMoreSubscriptionsReady: ->
     self = this
+    if parseInt($("#connectednessLevels").val()) > 1
+      Meteor.call 'getMoreFlightsByLevel', Meteor.gritsUtil.getQueryCriteria(), parseInt($("#connectednessLevels").val()), Meteor.gritsUtil.origin, Session.get('limit'), Session.get('lastId'), (err, res) ->
+        if Meteor.gritsUtil.debug
+          console.log 'levelRecs: ', res[0]
+        Session.set 'totalRecords', res[1]
+        self.processQueueCallback(self, res[0])
+      return
     tflights = Flights.find().fetch()
     self.setLastFlightId()
     tflightsLen = tflights.length
@@ -453,7 +442,8 @@ Meteor.gritsUtil =
     processQueue = async.queue(((flight, callback) ->
       self.heatmap.convertFlight(flight)
       self.nodeLayer.convertFlight(flight)
-      self.pathLayer.convertFlight(flight)
+      nodes = self.nodeLayer.convertFlight(flight)
+      self.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
       async.nextTick ->
         if !(tcount % 100)
           # let the UI update every x iterations
