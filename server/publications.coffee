@@ -76,18 +76,11 @@ Meteor.methods
           originsByLevel[ctr+1].push(flights[flight].arrivalAirport._id)
       query['departureAirport._id'] = {'$in':originsByLevel[ctr+1]}
       ctr++
-    for flight of flightsByLevel
-      console.log 'flightsByLevel:' , flight + ' lev :' + flightsByLevel[flight].length
-    console.log 'originsByLevel: ', originsByLevel
     for origins of originsByLevel
-      Array::push.apply allOrigins, originsByLevel[origins]
-    console.log 'allOrigins: ', allOrigins
+      Array::push.apply allOrigins, originsByLevel[origins]    
     query['departureAirport._id'] = {'$in':allOrigins}
     nullOpts = buildOptions(null)
-    console.log 'allQuery: ', query
-    console.log 'allOpts: ', nullOpts
     allFlights = Flights.find(query, nullOpts).fetch()
-    console.log 'allFlights: ', allFlights.length
     if limit is null or limit is 0 #no limit specified
       return [allFlights, allFlights.length]
     else
@@ -105,21 +98,16 @@ Meteor.methods
       for flights of flightsByLevel
         if flights < retFlightByLevIndex
           Array::push.apply flightsToReturn, flightsByLevel[flights]
-      console.log 'limit: ', limit
-      console.log 'limitRemainder: ', limitRemainder
-      console.log 'flightsToReturn: ', flightsToReturn.length
-      console.log 'retFlightCount: ', retFlightCount
-      console.log 'retFlightByLevIndex: ', retFlightByLevIndex
+      lastId = null
       if limitRemainder > 0
         trailingFlights = []
         remainderOPTS = buildOptions(limitRemainder)
         cpol = originsByLevel[retFlightByLevIndex]
         query['departureAirport._id'] = {'$in':cpol}
-        console.log 'queryTrail: ', query
         trailingFlights = Flights.find(query, remainderOPTS).fetch()
-        console.log 'trailingFlights: ', trailingFlights.length
         Array::push.apply flightsToReturn, trailingFlights
-      return [flightsToReturn, allFlights.length, flightsToReturn[flightsToReturn.length-1]._id]
+        lastId = flightsToReturn[flightsToReturn.length-1]._id
+      return [flightsToReturn, allFlights.length, lastId]
 
 Meteor.methods
   getMoreFlightsByLevel: (query, levels, origin, limit, lastId) ->
@@ -156,10 +144,12 @@ Meteor.methods
     limitReached = false
     addToReturn = false
     flightsToReturn = []
+    skipped = 0
     for flights of flightsByLevel
       if limit is flightsToReturn.length
         break
       for flight of flightsByLevel[flights]
+        skipped++
         if flightsByLevel[flights][flight]._id is lastId
           addToReturn = true
           continue
@@ -169,12 +159,14 @@ Meteor.methods
               break
             else
               flightsToReturn.push(flightsByLevel[flights][flight])
+    console.log 'skipped: ', skipped
     console.log 'flightsToReturn: ', flightsToReturn.length
     newLastId = null
     if flightsToReturn.length > 0
       if _.isUndefined(flightsToReturn[flightsToReturn.length-1]._id) is false
         newLastId = flightsToReturn[flightsToReturn.length-1]._id
     console.log 'newLastId: ', newLastId
+    console.log 'flightsToReturn: ', flightsToReturn.length
     return [flightsToReturn, totalFlights, newLastId]
 
 Meteor.publish 'autoCompleteAirports', (query, options) ->

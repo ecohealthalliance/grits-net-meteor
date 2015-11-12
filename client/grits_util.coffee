@@ -400,6 +400,36 @@ Meteor.gritsUtil =
 
     processQueue.push(res);
 
+  processMoreQueueCallback: (self, res) ->
+    count =  Session.get('loadedRecords')
+    tcount = 0
+    processQueue = async.queue(((flight, callback) ->
+      self.heatmap.convertFlight(flight)
+      self.nodeLayer.convertFlight(flight)
+      nodes = self.nodeLayer.convertFlight(flight)
+      self.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
+      async.nextTick ->
+        if !(tcount % 100)
+          # let the UI update every x iterations
+          # the heatmap isn't visible by default so draw can happen in the drain
+          self.nodeLayer.draw()
+          self.pathLayer.draw()
+          tcount++
+        Session.set('loadedRecords', count+res.length)
+        callback()
+    ), 1)
+
+    # callback method for when all items within the queue are processed
+    processQueue.drain = ->
+      self.heatmap.draw()
+      self.nodeLayer.draw()
+      self.pathLayer.draw()
+
+      Session.set('loadedRecords', count+res.length)
+      Session.set('isUpdating', false)
+
+    processQueue.push(res);
+
   # onSubscriptionReady
   #
   # This method is triggered with the 'flightsByQuery' subscription onReady
@@ -413,8 +443,9 @@ Meteor.gritsUtil =
           console.log 'levelRecs: ', res[0]
         Session.set 'totalRecords', res[1]
         if !_.isUndefined(res[2]) and !_.isEmpty(res[2])
-          #Session.set 'lastId', res[2]
           Meteor.gritsUtil.lastId = res[2]
+        else
+
         self.processQueueCallback(self, res[0])
       return
 
@@ -433,67 +464,9 @@ Meteor.gritsUtil =
         if Meteor.gritsUtil.debug
           console.log 'levelRecs: ', res[0]
         Session.set 'totalRecords', res[1]
-        #Session.set 'lastId', res[2]
         Meteor.gritsUtil.lastId = res[2]
-        self.setLastFlightId()
-        tflightsLen = res[0].length
-        count =  Session.get('loadedRecords')
-        tcount = 0
-        processQueue = async.queue(((flight, callback) ->
-          self.heatmap.convertFlight(flight)
-          self.nodeLayer.convertFlight(flight)
-          nodes = self.nodeLayer.convertFlight(flight)
-          self.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
-          async.nextTick ->
-            if !(tcount % 100)
-              # let the UI update every x iterations
-              # the heatmap isn't visible by default so draw can happen in the drain
-              self.nodeLayer.draw()
-              self.pathLayer.draw()
-              tcount++
-            Session.set('loadedRecords', count+tflightsLen)
-            callback()
-        ), 1)
-
-        # callback method for when all items within the queue are processed
-        processQueue.drain = ->
-          self.heatmap.draw()
-          self.nodeLayer.draw()
-          self.pathLayer.draw()
-
-          Session.set('loadedRecords', count+tflightsLen)
-          Session.set('isUpdating', false)
-
-        processQueue.push(res[0]);
+        self.processMoreQueueCallback(self,res[0])
       return
     tflights = Flights.find().fetch()
     self.setLastFlightId()
-    tflightsLen = tflights.length
-    count =  Session.get('loadedRecords')
-    tcount = 0
-    processQueue = async.queue(((flight, callback) ->
-      self.heatmap.convertFlight(flight)
-      self.nodeLayer.convertFlight(flight)
-      nodes = self.nodeLayer.convertFlight(flight)
-      self.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
-      async.nextTick ->
-        if !(tcount % 100)
-          # let the UI update every x iterations
-          # the heatmap isn't visible by default so draw can happen in the drain
-          self.nodeLayer.draw()
-          self.pathLayer.draw()
-          tcount++
-        Session.set('loadedRecords', count+tflightsLen)
-        callback()
-    ), 1)
-
-    # callback method for when all items within the queue are processed
-    processQueue.drain = ->
-      self.heatmap.draw()
-      self.nodeLayer.draw()
-      self.pathLayer.draw()
-
-      Session.set('loadedRecords', count+tflightsLen)
-      Session.set('isUpdating', false)
-
-    processQueue.push(tflights);
+    self.processMoreQueueCallback(self,tflights)
