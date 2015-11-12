@@ -77,7 +77,7 @@ Meteor.methods
       query['departureAirport._id'] = {'$in':originsByLevel[ctr+1]}
       ctr++
     for origins of originsByLevel
-      Array::push.apply allOrigins, originsByLevel[origins]    
+      Array::push.apply allOrigins, originsByLevel[origins]
     query['departureAirport._id'] = {'$in':allOrigins}
     nullOpts = buildOptions(null)
     allFlights = Flights.find(query, nullOpts).fetch()
@@ -123,9 +123,7 @@ Meteor.methods
     originsByLevel[1] = origin
     totalFlights = 0
     while ctr <= levels
-      console.log 'ctr '+ctr+' ', query
       flights = Flights.find(query, buildOptions(null)).fetch()
-      console.log 'flights: ', flights.length
       totalFlights += flights.length
       flightsByLevel[ctr] = flights
       originsByLevel[ctr+1] = []
@@ -159,14 +157,10 @@ Meteor.methods
               break
             else
               flightsToReturn.push(flightsByLevel[flights][flight])
-    console.log 'skipped: ', skipped
-    console.log 'flightsToReturn: ', flightsToReturn.length
     newLastId = null
     if flightsToReturn.length > 0
       if _.isUndefined(flightsToReturn[flightsToReturn.length-1]._id) is false
         newLastId = flightsToReturn[flightsToReturn.length-1]._id
-    console.log 'newLastId: ', newLastId
-    console.log 'flightsToReturn: ', flightsToReturn.length
     return [flightsToReturn, totalFlights, newLastId]
 
 Meteor.publish 'autoCompleteAirports', (query, options) ->
