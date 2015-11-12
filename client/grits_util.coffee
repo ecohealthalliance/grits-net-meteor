@@ -444,8 +444,6 @@ Meteor.gritsUtil =
         Session.set 'totalRecords', res[1]
         if !_.isUndefined(res[2]) and !_.isEmpty(res[2])
           Meteor.gritsUtil.lastId = res[2]
-        else
-
         self.processQueueCallback(self, res[0])
       return
 
