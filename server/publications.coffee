@@ -35,7 +35,7 @@ Meteor.publish 'flightsByQuery', (query, limit, lastId) ->
 
   console.log 'query: ', query
   console.log 'options: ', options
-  
+
   return Flights.find(query, options);
 
 Meteor.methods
@@ -48,16 +48,14 @@ Meteor.methods
 
     return Flights.find(query).count()
   typeaheadAirport: (search, options) ->
-    regex = new RegExp("^" + search, 'ig');
     query = {
       $or: [
-        {_id: {$regex: new RegExp("^" + search, 'i')}},
-        {city: {$regex: new RegExp("^" + search, 'ig')}}
+        {_id: {$regex: new RegExp(search, 'i')}},
+        {city: {$regex: new RegExp(search, 'ig')}}
       ]
     }
-    console.log('query: ', query)
     return Airports.find(query, {limit: 10, sort: {_id: 1}}).fetch()
-  
+
 Meteor.publish 'autoCompleteAirports', (query, options) ->
   Autocomplete.publishCursor(Airports.find(query, options), this)
   this.ready()
