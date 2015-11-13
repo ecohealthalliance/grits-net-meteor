@@ -49,6 +49,7 @@ GritsNode = (obj) ->
 GritsNode::onClickHandler = (element, selection, projection) ->
   if not Session.get('isUpdating')
     Meteor.gritsUtil.showNodeDetails(this)
+    Meteor.gritsUtil.origin = @_id
     $("#departureSearch").val('!' + @_id)
     $("#applyFilter").click()
 
