@@ -7,7 +7,7 @@ Meteor.startup ->
 Meteor.gritsUtil =
   pathLevelIds: []
   debug: true
-  
+
   lastId: null # stores the lastId from the collection, used in limit/offset
   origin: null
   nodeDetail: null # stores ref to the Blaze Template that shows a nodes detail
@@ -20,19 +20,16 @@ Meteor.gritsUtil =
     @lastId
   setLastFlightId: () ->
     lastFlight = null
-    if @localFlights.find().count() > 0
+    if Flights.find().count() > 0
       options =
         sort:
           _id: -1
-      lastFlight = @localFlights.find({}, options).fetch()[0];
+      lastFlight = Flights.find({}, options).fetch()[0];
     if lastFlight
       @lastId = lastFlight._id
-  localFlights: new Mongo.Collection(null)
 
   loadedRecords: null
-  addQueueDrained: new ReactiveVar(false)
-  updateQueueDrained: new ReactiveVar(false)
-  removeQueueDrained: new ReactiveVar(false)
+
   overlays: {}
   overlayControl: null
   normalizedCI: 0
@@ -178,7 +175,7 @@ Meteor.gritsUtil =
     $('.path-detail-close').off().on('click', (e) ->
         self.hidePathDetails()
     )
-    
+
   # Clears the current path details and renders the current path's details
   #
   # @param [MapPath] path - path for which details will be displayed
@@ -276,6 +273,7 @@ Meteor.gritsUtil =
           Meteor.gritsUtil.removeQueryCriteria(11)
         else
           Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: codes}})
+
     # arrivalSearchFilter
     #
     # apply a filter on the parsed airport codes from the arrivalSearch input
@@ -338,48 +336,32 @@ Meteor.gritsUtil =
           value[op] = val
         Meteor.gritsUtil.addQueryCriteria({'critId': 10, 'key': 'weeklyFrequency', 'value': value})
 
-  # onSubscriptionReady
+  # updateExistingAirports
   #
-  # This method is triggered with the 'flightsByQuery' subscription onReady
-  # callback.  It gets the new flights from the collection and updates the
-  # existing nodes (airports) and paths (flights).
-  onSubscriptionReady: ->
-    self = this
+  # The collection of flights is iterated to build a set of previous
+  # departureAirports and arrivalAirports.  This maintains the application
+  # state so that filters against the currently display map may be applied.
+  #
+  # @param [Collection] newFlights, collection of MongoDb flight records
+  updateExistingAirports: (flights) ->
+    departureAirports = {}
+    arrivalAirports = {}
+    for flight in flights
+      departureAirports[flight.departureAirport._id] = flight.departureAirport._id
+      arrivalAirports[flight.arrivalAirport._id] = flight.arrivalAirport._id
+    Session.set('previousDepartureAirports', Object.keys(departureAirports))
+    Session.set('previousArrivalAirports', Object.keys(arrivalAirports))
 
-    tflights = Flights.find().fetch()
-    
-    ###
-    tlevArray = []
-    apCodes = []
-    for flight of tflights
-      apCodes.push tflights[flight].arrivalAirport._id
-      apCodes.push tflights[flight].departureAirport._id
-      tlevArray.push tflights[flight]._id
-
-    Meteor.gritsUtil.pathLevelIds[Meteor.gritsUtil.currentLevel] = tlevArray
-    if Meteor.gritsUtil.currentLevel is parseInt($("#connectednessLevels").val())
-      Meteor.gritsUtil.currentLevel = 1
-      Meteor.gritsUtil.pathLevelIds = []
-    else if $("#connectednessLevels").val() is '' or $("#connectednessLevels").val() is '0'
-      Meteor.gritsUtil.currentLevel = 1
-      Meteor.gritsUtil.pathLevelIds = []
-    else
-      Meteor.gritsUtil.currentLevel++
-      Meteor.gritsUtil.applyFilters()
-      Meteor.gritsUtil.removeQueryCriteria(11)
-      Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: apCodes}})
-      Session.set 'query', Meteor.gritsUtil.getQueryCriteria()
-      return
-    ###
-
-    count = 0
+  processQueueCallback: (self, res) ->
     self.heatmap.clear()
     self.nodeLayer.clear()
     self.pathLayer.clear()
+    count = 0
     processQueue = async.queue(((flight, callback) ->
       self.heatmap.convertFlight(flight)
       self.nodeLayer.convertFlight(flight)
-      self.pathLayer.convertFlight(flight)
+      nodes = self.nodeLayer.convertFlight(flight)
+      self.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
       async.nextTick ->
         if !(count % 100)
           # let the UI update every x iterations
@@ -398,34 +380,70 @@ Meteor.gritsUtil =
       Session.set('loadedRecords', count)
       Session.set('isUpdating', false)
 
-    processQueue.push(tflights);
+    processQueue.push(res);
+
+  # onSubscriptionReady
+  #
+  # This method is triggered with the 'flightsByQuery' subscription onReady
+  # callback.  It gets the new flights from the collection and updates the
+  # existing nodes (airports) and paths (flights).
+  onSubscriptionReady: ->
+    self = this
+    if parseInt($("#connectednessLevels").val()) > 1
+      Meteor.call 'getFlightsByLevel', Meteor.gritsUtil.getQueryCriteria(), parseInt($("#connectednessLevels").val()), Meteor.gritsUtil.origin, Session.get('limit'), (err, res) ->
+        if Meteor.gritsUtil.debug
+          console.log 'levelRecs: ', res[0]
+        Session.set 'totalRecords', res[1]
+        if !_.isUndefined(res[2]) and !_.isEmpty(res[2])
+          Session.set 'lastId', res[2].replace(/"/g, '');
+        self.processQueueCallback(self, res[0])
+      return
+
+    tflights = Flights.find().fetch()
+    self.setLastFlightId()
+    self.processQueueCallback(self, tflights)
 
   # onMoreSubscriptionsReady
   #
   # This method is triggered when the [More..] button is pressed in continuation
   # of a limit/offset query
   onMoreSubscriptionsReady: ->
-    return
-    ###
     self = this
+    if parseInt($("#connectednessLevels").val()) > 1
+      Meteor.call 'getMoreFlightsByLevel', Meteor.gritsUtil.getQueryCriteria(), parseInt($("#connectednessLevels").val()), Meteor.gritsUtil.origin, Session.get('limit'), Session.get('lastId'), (err, res) ->
+        if Meteor.gritsUtil.debug
+          console.log 'levelRecs: ', res[0]
+        Session.set 'totalRecords', res[1]
+        self.processQueueCallback(self, res[0])
+      return
+    tflights = Flights.find().fetch()
+    self.setLastFlightId()
+    tflightsLen = tflights.length
+    count =  Session.get('loadedRecords')
+    tcount = 0
+    processQueue = async.queue(((flight, callback) ->
+      self.heatmap.convertFlight(flight)
+      self.nodeLayer.convertFlight(flight)
+      nodes = self.nodeLayer.convertFlight(flight)
+      self.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
+      async.nextTick ->
+        if !(tcount % 100)
+          # let the UI update every x iterations
+          # the heatmap isn't visible by default so draw can happen in the drain
+          self.nodeLayer.draw()
+          self.pathLayer.draw()
+          tcount++
+        Session.set('loadedRecords', count+tflightsLen)
+        callback()
+    ), 1)
 
-    # sync the heatmap
-    if !(_.isUndefined(Meteor.gritsUtil.heatmap) or _.isNull(Meteor.gritsUtil.heatmap))
-      Meteor.gritsUtil.heatmap.convertFlightDestinationsToPoints(Flights.find())
-      try
-        Meteor.gritsUtil.heatmap.draw()
-      catch e
-        console.error e.message
-
-    # populate the node layer
-    self.nodeLayer.convertFlightToNodes(Flights, (err, res) ->
+    # callback method for when all items within the queue are processed
+    processQueue.drain = ->
+      self.heatmap.draw()
       self.nodeLayer.draw()
-      Session.set('isUpdating', false)
-    )
-
-    self.pathLayer.convertFlightToPaths(Flights.find(), (err, res) ->
       self.pathLayer.draw()
+
+      Session.set('loadedRecords', count+tflightsLen)
       Session.set('isUpdating', false)
-    )
-    return
-    ###
+
+    processQueue.push(tflights);
