@@ -194,6 +194,9 @@ Meteor.gritsUtil =
   # -Path details
   # -Node details
   addControls: ->
+    # Add the legend to the map's controls.
+    Meteor.gritsUtil.addControl('bottomright', 'info', '<div id="legendContainer">')
+    Blaze.render(Template.legend, $('#legendContainer')[0])
     pathDetails = L.control(position: 'bottomright')
     pathDetails.onAdd = @onAddHandler('info path-detail', '')
     pathDetails.addTo @map
