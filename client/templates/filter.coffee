@@ -1,11 +1,8 @@
 Template.filter.events
   'click #toggleFilter': (e) ->
     $self = $(e.currentTarget)
-    $("#filter").toggle("slow", () ->
-      if $("#filter :visible").length == 0
-        $self.removeClass('fa-minus').addClass("fa-plus")
-      else
-        $self.removeClass('fa-plus').addClass("fa-minus")
+    $("#filter").toggle("fast", () ->
+      #
     )
   'click #applyFilter': () ->
     #GritsPaths.resetLevels()
