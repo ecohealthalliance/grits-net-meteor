@@ -47,7 +47,10 @@ Package.on_use(function(api){
     'client/templates/filter.coffee',
     'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
-    'client/subscription.coffee',
+    'client/subscription.coffee'
+  ], 'client');
+  
+  api.addAssets([
     'client/images/ajax-loader.gif',
     'client/images/marker-icon-282828.svg',
     'client/images/marker-icon-383838.svg',
@@ -60,6 +63,7 @@ Package.on_use(function(api){
     'client/images/marker-icon-A8A8A8.svg',
     'client/images/marker-icon-B8B8B8.svg'
   ], 'client');
+  
   // both client and server files
   api.add_files([
     'models/airports.coffee',

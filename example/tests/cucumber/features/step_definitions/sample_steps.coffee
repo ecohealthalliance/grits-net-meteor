@@ -12,12 +12,14 @@ do ->
 
     @When /^I navigate to "([^"]*)"$/, (relativePath) ->
       # WebdriverIO supports Promises/A+ out the box, so you can return that too
-      @client.url url.resolve(process.env.ROOT_URL, relativePath)
+      @client.url process.env.ROOT_URL
       # process.env.ROOT_URL always points to the mirror
 
-    @Then /^I should see the title "([^"]*)"$/, (expectedTitle) ->
+    @When /^I should see the title "([^"]*)"$/, (expectedTitle) ->
       # you can use chai-as-promised in step definitions also
-      @client.waitForVisible('body *').getTitle().should.become expectedTitle
+      @client.waitForVisible('body *')
+      title = @client.getTitle()
+      expect(title).toEqual(expectedTitle)
 
     @When /^I click on toggleFilter$/, (module) ->
       @client.waitForVisible('#toggleFilter').click('#toggleFilter')
@@ -25,14 +27,20 @@ do ->
     @When /^I click on module ([^"]*)$/, (module) ->
       @client.waitForVisible('#moduleA').click('#moduleA')
 
+    @When /^I click on ([^"]*)$/, (id) ->
+      console.log 'id: ', id
+      @client.waitForVisible id
+      @client.click id
+
     @Then /^I should see ([^"]*) map markers$/, (numMarkers) ->
-      @client.waitForVisible('.marker-icon').should.become true
-      @client.elements('.marker-icon')
-        .should.eventually.have.deep.property 'value.length', parseInt numMarkers
+      @client.waitForVisible('.marker-icon')
+      elements = @client.elements('.marker-icon')
+      expect(elements.value.length).toEqual(parseInt(numMarkers, 10))
 
     @Then /^I should see paths between them$/, ->
-      @client.waitForVisible('path').should.become true
+      @client.waitForExist('path')
+      elements = @client.elements('path')
+      expect(elements.value.length).toBeGreaterThan(0)
 
     return
-
   return
