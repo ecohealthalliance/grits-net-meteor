@@ -12,10 +12,10 @@ do ->
 
     @When /^I navigate to "([^"]*)"$/, (relativePath) ->
       # WebdriverIO supports Promises/A+ out the box, so you can return that too
-      @client.url url.resolve(process.env.ROOT_URL, relativePath)
+      @client.url process.env.ROOT_URL
       # process.env.ROOT_URL always points to the mirror
 
-    @Then /^I should see the title "([^"]*)"$/, (expectedTitle) ->
+    @When /^I should see the title "([^"]*)"$/, (expectedTitle) ->
       # you can use chai-as-promised in step definitions also
       @client.waitForVisible('body *').getTitle().should.become expectedTitle
 
@@ -25,7 +25,13 @@ do ->
     @When /^I click on module ([^"]*)$/, (module) ->
       @client.waitForVisible('#moduleA').click('#moduleA')
 
+    @When /^I click on ([^"]*)$/, (id) ->
+      console.log 'id: ', id
+      @client.waitForVisible id
+      @client.click id
+
     @Then /^I should see ([^"]*) map markers$/, (numMarkers) ->
+
       @client.waitForVisible('.marker-icon').should.become true
       @client.elements('.marker-icon')
         .should.eventually.have.deep.property 'value.length', parseInt numMarkers
@@ -34,5 +40,4 @@ do ->
       @client.waitForVisible('path').should.become true
 
     return
-
   return

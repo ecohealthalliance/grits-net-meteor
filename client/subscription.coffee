@@ -24,8 +24,8 @@ Tracker.autorun ->
       totalRecords = Meteor.call 'countFlightsByQuery', query, (err, res) ->
         if Meteor.gritsUtil.debug
           console.log 'totalRecords: ', res
-        Session.set 'totalRecords', res
-        if lastId == null
+        if lastId is null
+          Session.set 'totalRecords', res
           Meteor.gritsUtil.onSubscriptionReady()
         else
           Meteor.gritsUtil.onMoreSubscriptionsReady()
