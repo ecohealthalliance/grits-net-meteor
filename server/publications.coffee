@@ -47,6 +47,7 @@ Meteor.methods
     buildOptions(null)
 
     return Flights.find(query).count()
+
   typeaheadAirport: (search, options) ->
     query = {
       $or: [
@@ -66,6 +67,7 @@ Meteor.methods
     flightsByLevel = []
     originsByLevel = []
     allOrigins = []
+    origin = [origin]
     originsByLevel[1] = origin
     while ctr < levels
       flights = Flights.find(query, buildOptions(null)).fetch()
@@ -116,6 +118,7 @@ Meteor.methods
         lastId = flightsToReturn[flightsToReturn.length-1]._id
       return [flightsToReturn, allFlights.length, lastId]
 
+Meteor.methods
   getMoreFlightsByLevel: (query, levels, origin, limit, lastId) ->
     if _.isUndefined(query) or _.isEmpty(query)
       return 'query is empty'
