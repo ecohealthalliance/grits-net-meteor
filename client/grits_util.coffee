@@ -371,19 +371,15 @@ Meteor.gritsUtil =
     Session.set('previousArrivalAirports', Object.keys(arrivalAirports))
 
   processQueueCallback: (self, res) ->
-    self.heatmap.clear()
     self.nodeLayer.clear()
     self.pathLayer.clear()
     count = 0
     processQueue = async.queue(((flight, callback) ->
-      self.heatmap.convertFlight(flight)
       self.nodeLayer.convertFlight(flight)
       nodes = self.nodeLayer.convertFlight(flight)
       self.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
       async.nextTick ->
         if !(count % 100)
-          # let the UI update every x iterations
-          # the heatmap isn't visible by default so draw can happen in the drain
           self.nodeLayer.draw()
           self.pathLayer.draw()
         Session.set('loadedRecords', ++count)
@@ -392,7 +388,6 @@ Meteor.gritsUtil =
 
     # callback method for when all items within the queue are processed
     processQueue.drain = ->
-      self.heatmap.draw()
       self.nodeLayer.draw()
       self.pathLayer.draw()
       Session.set('loadedRecords', count)
@@ -404,14 +399,11 @@ Meteor.gritsUtil =
     count =  Session.get('loadedRecords')
     tcount = 0
     processQueue = async.queue(((flight, callback) ->
-      self.heatmap.convertFlight(flight)
       self.nodeLayer.convertFlight(flight)
       nodes = self.nodeLayer.convertFlight(flight)
       self.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
       async.nextTick ->
         if !(tcount % 100)
-          # let the UI update every x iterations
-          # the heatmap isn't visible by default so draw can happen in the drain
           self.nodeLayer.draw()
           self.pathLayer.draw()
           tcount++
@@ -420,8 +412,7 @@ Meteor.gritsUtil =
     ), 1)
 
     # callback method for when all items within the queue are processed
-    processQueue.drain = ->
-      self.heatmap.draw()
+    processQueue.drain = ->      
       self.nodeLayer.draw()
       self.pathLayer.draw()
 
