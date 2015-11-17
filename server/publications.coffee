@@ -33,8 +33,8 @@ Meteor.publish 'flightsByQuery', (query, limit, lastId) ->
   extendQuery(query, lastId)
   options = buildOptions(limit)
 
-  console.log 'query: ', query
-  console.log 'options: ', options
+  console.log 'query: %j', query
+  console.log 'options: %j', options
 
   return Flights.find(query, options);
 
@@ -166,3 +166,10 @@ Meteor.methods
 Meteor.publish 'autoCompleteAirports', (query, options) ->
   Autocomplete.publishCursor(Airports.find(query, options), this)
   this.ready()
+
+Meteor.methods
+  findHeatmapByCode: (code) ->
+    if _.isUndefined(code) or _.isEmpty(code)
+      return {}
+    heatmap = Heatmaps.findOne({'_id': code})
+    return heatmap
