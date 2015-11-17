@@ -1,4 +1,6 @@
 Template.filter.events
+  'keyup #departureSearchMain': (event) ->
+    alert event.keyCode
   'click #toggleFilter': (e) ->
     $self = $(e.currentTarget)
     $("#filter").toggle("fast", () ->
@@ -66,7 +68,21 @@ Template.filter.helpers({
 })
 
 Template.filter.onRendered ->
+  Template.filter.departureSearchMain = $('#departureSearchMain').tokenfield({
+    typeahead: [null, { source: (query, callback) ->
+      Meteor.call('typeaheadAirport', query, (err, res) ->
+        if err or _.isUndefined(res) or _.isEmpty(res)
+          return
+        else
+          callback(res.map( (v) -> {value: v._id + " - " + v.city, label: v._id} ))
+      )
+    }]
+  })
 
+  $('#departureSearchMain-tokenfield').keyup (event) ->    
+    if event.keyCode == 13
+      $('#applyFilter').click()
+    return
   # Methods to use are:
   #  Template.filter.departureSearch.tokenfield('getTokens')
   #  Template.filter.departureSearch.tokenfield('setTokens', someNewTokenArray)
