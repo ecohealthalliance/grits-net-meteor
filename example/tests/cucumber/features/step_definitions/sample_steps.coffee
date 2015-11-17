@@ -22,7 +22,6 @@ do ->
       expect(title).toEqual(expectedTitle)
 
     @When /^I click on ([^"]*)$/, (id) ->
-      console.log 'id: ', id
       @client.waitForVisible id
       @client.click id
       
