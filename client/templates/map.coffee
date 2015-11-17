@@ -31,9 +31,5 @@ Template.map.onRendered ->
   Meteor.gritsUtil.initLeaflet('grits-map', {'zoom': 2,'latlng': [30,-20]}, baseLayers)
 
   # Add the filter to the map's controls.
-  Meteor.gritsUtil.addControl('bottomleft', 'info', '<div id="filterContainer">')
+  Meteor.gritsUtil.addControl('topleft', 'info', '<div id="filterContainer">')
   Blaze.render(Template.filter, $('#filterContainer')[0])
-
-  # Add the legend to the map's controls.
-  Meteor.gritsUtil.addControl('topleft', 'info', '<div id="legendContainer">')
-  Blaze.render(Template.legend, $('#legendContainer')[0])
