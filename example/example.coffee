@@ -7,19 +7,15 @@ if Meteor.isClient
 
   Template.moduleSelector.events
     'click .a': ->
-      heatmap = new GritsHeatmap()
       pathLayer = new GritsPathLayer()
       nodeLayer = new GritsNodeLayer()
-      heatmap.clear()
       pathLayer.clear()
       nodeLayer.clear()
 
       for flight in Meteor.dummyFlights
-        heatmap.convertFlight(flight)
         nodes = nodeLayer.convertFlight(flight)
         pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
 
-      heatmap.draw()
       pathLayer.draw()
       nodeLayer.draw()
       return
