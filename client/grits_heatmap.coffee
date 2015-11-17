@@ -9,11 +9,12 @@
 # injection framework.
 GritsHeatmap = () ->
   @name = 'Heatmap'
-  @Points = new (Meteor.Collection)(null)
-  @layer = L.heatLayer([], {radius: 35, blur: 55, max: 1.0})
+  @Points = []
+  @layer = L.heatLayer([], {radius: 35, blur: 55})
   @layerGroup = L.layerGroup([@layer])
   Meteor.gritsUtil.addOverlayControl(@name, @layerGroup)
   @_bindEvents()
+  @_trackDepartures()
   return
 # _bindEvents
 #
@@ -42,40 +43,42 @@ GritsHeatmap::_getCellSize = () ->
 # _getZoomFactor
 #
 # Determine the zoomFactor, which is a multiplier based on the maximum zoom
-# level minus the urrent zoom level.
+# level minus the current zoom level.
 GritsHeatmap::_getZoomFactor = () ->
   (Meteor.gritsUtil.map.getMaxZoom() - Meteor.gritsUtil.map.getZoom()) * 5
-# _frequency
-#
-# Calculates the frequency (intensity) of each node based on all nodes within
-# the collection.
-GritsHeatmap::_frequency = () ->
+
+GritsHeatmap::_trackDepartures = () ->
   self = this
-  total = self.Points.find().count()
-  if total == 0
-    return
-  self.Points.find().forEach (point) ->
-    point.frequency = (point.count / total) * self._getCellSize() * self._getZoomFactor()
-    point.data = [point.latitude, point.longitude, point.frequency]
-    self.Points.update(point._id, point)
-# convertFlight
-#
-# Converts the localFlights minimongo cursor into points for the heatmap plugin
-# @param cursor, minimongo cursor of Flights
-GritsHeatmap::convertFlight = (flight) ->
-  longitude = flight.departureAirport.loc.coordinates[0]
-  latitude = flight.departureAirport.loc.coordinates[1]
-  _id = CryptoJS.MD5(longitude.toString() + latitude.toString()).toString()
-  existing = @Points.findOne(_id: _id)
-  if _.isUndefined(existing)
-    @Points.insert
-      _id: _id
-      longitude: longitude
-      latitude: latitude
-      count: 1
-  else
-    count = existing.count + 1
-    @Points.update({_id: _id}, {longitude: existing.longitude, latitude: existing.latitude, count: count})
+  Tracker.autorun () ->
+    query = Session.get('query')
+    if _.isUndefined(query) || _.isNull(query)
+      return
+    if Session.get('isUpdating') == true
+      return
+    
+    # the filter has a departureAirport identified
+    if _.has(query, 'departureAirport._id')
+      # the filter has an array of airports 
+      if _.has(query['departureAirport._id'], '$in')
+        departures = query['departureAirport._id']['$in']
+        Meteor.call('findHeatmapByCode', departures[0], (err, res) ->
+          if err
+            console.error err
+            return
+          self.clear()
+          _.each(res.data, (a) ->
+            # if the node exists on the map, add to the heat map
+            #node = Meteor.gritsUtil.nodeLayer.Nodes[a[3]]
+            #if _.isUndefined(node)
+            #  return
+            intensity = a[2] * self._getCellSize() * self._getZoomFactor()
+            self.Points.push([a[0], a[1], intensity])
+          )
+          self.draw()
+        )
+    else
+      # if a departure airport is not specified, clear the heatmap
+      self.clear()
 
 # remove
 #
@@ -91,16 +94,12 @@ GritsHeatmap::add = () ->
 #
 # Sets the data for the heatmap plugin and updates the heatmap
 GritsHeatmap::draw = () ->
-  if @Points.find().count() == 0
+  if @Points.length == 0
     return
-
-  @_frequency()
-  points = @Points.find({}, {fields: {data: 1}}).fetch();
-  pointData = _.pluck(points, 'data')
-  @layer.setLatLngs(pointData)
+  @layer.setLatLngs(@Points)
 # clear
 #
 # Clears the data from the heatmap plugin and updates the heatmap
 GritsHeatmap::clear = () ->
-  @Points.remove({});
+  @Points = []
   @layer.setLatLngs([])
