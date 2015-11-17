@@ -1,16 +1,17 @@
-#Global event handlers for node and path click events.
-# @note L.MapNode click event handler
-@nodeHandler =
-  click: (node) ->
-    Meteor.gritsUtil.showNodeDetails(node)
-    if not Session.get('isUpdating')
-      $("#departureSearch").val('!' + node.id);
-      $("#applyFilter").click()
-
 # @note L.MapPath click event handler
 @pathHandler =
   click: (path) ->
+    path.clicked = true
     Meteor.gritsUtil.showPathDetails(path)
+    #Meteor.gritsUtil.currentPath = path
+  getCurrentPath: ->
+    return Meteor.gritsUtil.currentPath
+  setCurrentPath: (path) ->
+    Meteor.gritsUtil.currentPath = path
+  unClick: (path) ->
+    path.clicked = false
+    Meteor.gritsUtil.hidePathDetails()
+    @setCurrentPath(null)
 
 # @event builds the leaflet map when the map template is rendered
 Template.map.onRendered ->
@@ -27,7 +28,7 @@ Template.map.onRendered ->
   Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     layerName: 'Esri_WorldImagery')
   baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
-  Meteor.gritsUtil.initLeaflet('grits-map', {'zoom': 2,'latlng': [37.8, -92]}, baseLayers)
+  Meteor.gritsUtil.initLeaflet('grits-map', {'zoom': 2,'latlng': [30,-20]}, baseLayers)
 
   # Add the filter to the map's controls.
   Meteor.gritsUtil.addControl('bottomleft', 'info', '<div id="filterContainer">')

@@ -81,8 +81,8 @@
         <span class="filter-label">Departure:</span>
       </div>
       <div class="col-xs-8">
-        <div class="filter-group">
-          {{> inputAutocomplete id="departureSearch" class="form-control input-sm" name="departureSearch" settings=departureAirports }}
+        <div class="tokenized">
+          <input id="departureSearch" class="form-control input-sm" name="departureSearch" placeholder="Type to search" />
         </div>
       </div>
     </div>
@@ -91,9 +91,17 @@
         <span class="filter-label">Arrival:</span>
       </div>
       <div class="col-xs-8">
-        <div class="filter-group">
-          {{> inputAutocomplete id="arrivalSearch" class="form-control input-sm" name="arrivalSearch" settings=arrivalAirports }}
+        <div class="tokenized">
+          <input type="text" id="arrivalSearch" class="form-control input-sm" name="arrivalSearch" placeholder="Type to search"/>
         </div>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-4">
+        <span class="filter-label">Levels:</span>
+      </div>
+      <div class="col-xs-4">
+        <input type="number" id="connectednessLevels" min="1" value="1" class="form-control input-sm">
       </div>
     </div>
     <div class="row filter-row">
@@ -110,12 +118,14 @@
       </div>
     </div>
     <div class="row filter-row">
-      <button id="applyFilter" class="btn btn-sm btn-default">
-        <span class="filter-label">Apply</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="filterLoading"/>
-      </button>
-      <hr class="clearfix"/>
-      <span class="pull-left" style="margin-left:10px;"><span class="filter-label">Loaded Records:</span><span>{{ loadedRecords }}</span></span>
-      <span class="pull-right" style="margin-right:10px;"><span class="filter-label">Total Records:</span><span>{{ totalRecords }}</span></span>
+      <div class="col-xs-12">
+        <button id="applyFilter" class="btn btn-sm btn-default">
+          <span class="filter-label">Apply</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="filterLoading"/>
+        </button>
+        <hr class="filter-horizontal-rule clearfix" />
+        <span class="pull-left" style="margin-left:10px;"><span class="filter-label">Loaded Records: </span><span>{{ loadedRecords }}</span></span>
+        <span class="pull-right" style="margin-right:10px;"><span class="filter-label">Total Records: </span><span>{{ totalRecords }}</span></span>
+      </div>
     </div>
   </div>
 </template>
