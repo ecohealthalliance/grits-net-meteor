@@ -272,6 +272,8 @@ Meteor.gritsUtil =
 
       if typeof Template.filter.departureSearch != 'undefined'
         tokens =  Template.filter.departureSearch.tokenfield('getTokens')
+        if tokens.length is 0
+          tokens =  Template.filter.departureSearchMain.tokenfield('getTokens')          
         codes = _.pluck(tokens, 'label')
         if _.isEmpty(codes)
           Meteor.gritsUtil.removeQueryCriteria(11)
