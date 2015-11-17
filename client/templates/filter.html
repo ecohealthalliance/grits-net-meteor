@@ -81,8 +81,8 @@
         <span class="filter-label">Departure:</span>
       </div>
       <div class="col-xs-8">
-        <div class="filter-group">
-          {{> inputAutocomplete id="departureSearch" class="form-control input-sm" name="departureSearch" settings=departureAirports }}
+        <div class="tokenized">
+          <input id="departureSearch" class="form-control input-sm" name="departureSearch" placeholder="Type to search" />
         </div>
       </div>
     </div>
@@ -91,8 +91,8 @@
         <span class="filter-label">Arrival:</span>
       </div>
       <div class="col-xs-8">
-        <div class="filter-group">
-          {{> inputAutocomplete id="arrivalSearch" class="form-control input-sm" name="arrivalSearch" settings=arrivalAirports }}
+        <div class="tokenized">
+          <input type="text" id="arrivalSearch" class="form-control input-sm" name="arrivalSearch" placeholder="Type to search"/>
         </div>
       </div>
     </div>

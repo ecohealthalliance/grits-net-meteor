@@ -21,10 +21,16 @@ do ->
       title = @client.getTitle()
       expect(title).toEqual(expectedTitle)
 
+    @When /^I click on toggleFilter$/, (module) ->
+      @client.waitForVisible('#toggleFilter').click('#toggleFilter')
+
+    @When /^I click on module ([^"]*)$/, (module) ->
+      @client.waitForVisible('#moduleA').click('#moduleA')
+
     @When /^I click on ([^"]*)$/, (id) ->
       @client.waitForVisible id
       @client.click id
-      
+
     @Then /^I should see ([^"]*) map markers$/, (numMarkers) ->
       @client.waitForVisible('.marker-icon')
       elements = @client.elements('.marker-icon')

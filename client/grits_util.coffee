@@ -1,7 +1,4 @@
 Meteor.startup ->
-  Session.set 'previousDepartureAirports', []
-  Session.set 'previousArrivalAirports', []
-  #Session.set 'previousFlights', []
   Session.set 'query', null
   Session.set 'isUpdating', false
   Session.set 'loadedRecords', 0
@@ -10,7 +7,7 @@ Meteor.startup ->
 Meteor.gritsUtil =
   pathLevelIds: []
   debug: true
-  autoCompleteTokens: ['!', '@']
+
   lastId: null # stores the lastId from the collection, used in limit/offset
   origin: null
   nodeDetail: null # stores ref to the Blaze Template that shows a nodes detail
@@ -216,24 +213,7 @@ Meteor.gritsUtil =
       L.DomEvent.disableClickPropagation @_div
       L.DomEvent.disableScrollPropagation @_div
       @_div
-  # parseAirportCodes
-  #
-  # The airport filters are a list of airport codes seperated by spaces.  They
-  # may be prefixed with 'tokens.'  These are typically '!' and '@' from the
-  # autocompletion feature.
-  #
-  # @param [String] str, the airport code
-  parseAirportCodes: (str) ->
-    self = this
-    codes = {}
-    parts = str.split(' ')
-    _.each(parts, (part) ->
-      if _.isEmpty(part)
-        return
-      code = part.replace(new RegExp(self.autoCompleteTokens.join('|'), 'g'), '')
-      codes[code] = code;
-    )
-    return codes
+
   # applyFilters
   #
   # Iterate over the filters object then invoke its values.
@@ -286,24 +266,27 @@ Meteor.gritsUtil =
     # apply a filter on the parsed airport codes from the departureSearch input
     # @param [String] str, the airport code
     departureSearchFilter: () ->
-      val = $('input[name="departureSearch"]').val()
-      codes = Meteor.gritsUtil.parseAirportCodes(val)
-      Meteor.gritsUtil.origin = Object.keys(codes)
-      if _.isEmpty(codes)
-        Meteor.gritsUtil.removeQueryCriteria(11)
-      else
-        Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: Object.keys(codes)}})
+
+      if typeof Template.filter.departureSearch != 'undefined'
+        tokens =  Template.filter.departureSearch.tokenfield('getTokens')
+        codes = _.pluck(tokens, 'label')
+        if _.isEmpty(codes)
+          Meteor.gritsUtil.removeQueryCriteria(11)
+        else
+          Meteor.gritsUtil.addQueryCriteria({'critId': 11, 'key': 'departureAirport._id', 'value': {$in: codes}})
+
     # arrivalSearchFilter
     #
     # apply a filter on the parsed airport codes from the arrivalSearch input
     # @param [String] str, the airport code
     arrivalSearchFilter: () ->
-      val = $('input[name="arrivalSearch"]').val()
-      codes = Meteor.gritsUtil.parseAirportCodes(val)
-      if _.isEmpty(codes)
-        Meteor.gritsUtil.removeQueryCriteria(12)
-      else
-        Meteor.gritsUtil.addQueryCriteria({'critId': 12, 'key': 'arrivalAirport._id', 'value': {$in: Object.keys(codes)}})
+      if typeof Template.filter.departureSearch != 'undefined'
+        tokens =  Template.filter.arrivalSearch.tokenfield('getTokens')
+        codes = _.pluck(tokens, 'label')
+        if _.isEmpty(codes)
+          Meteor.gritsUtil.removeQueryCriteria(12)
+        else
+          Meteor.gritsUtil.addQueryCriteria({'critId': 12, 'key': 'arrivalAirport._id', 'value': {$in: codes}})
     daysOfWeekFilter: () ->
       if $('#dowSUN').is(':checked')
         Meteor.gritsUtil.addQueryCriteria({'critId': 3, 'key': 'day1', 'value': true})

@@ -48,7 +48,15 @@ Meteor.methods
 
     return Flights.find(query).count()
 
-Meteor.methods
+  typeaheadAirport: (search, options) ->
+    query = {
+      $or: [
+        {_id: {$regex: new RegExp(search, 'i')}},
+        {city: {$regex: new RegExp(search, 'ig')}}
+      ]
+    }
+    return Airports.find(query, {limit: 10, sort: {_id: 1}}).fetch()
+
   getFlightsByLevel: (query, levels, origin, limit) ->
     if _.isUndefined(query) or _.isEmpty(query)
       return 'query is empty'
@@ -59,6 +67,7 @@ Meteor.methods
     flightsByLevel = []
     originsByLevel = []
     allOrigins = []
+    origin = [origin]
     originsByLevel[1] = origin
     while ctr < levels
       flights = Flights.find(query, buildOptions(null)).fetch()
