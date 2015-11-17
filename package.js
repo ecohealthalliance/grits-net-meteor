@@ -19,8 +19,8 @@ Package.on_use(function(api){
     'twbs:bootstrap',
     'mquandalle:stylus',
     'jparker:crypto-md5',
-    'bevanhunt:leaflet',
-    'brylie:leaflet-heat',
+    'bevanhunt:leaflet@0.3.18',
+    'brylie:leaflet-heat@0.1.0',
     'fortawesome:fontawesome',
     'd3js:d3'
   ]);
@@ -66,7 +66,8 @@ Package.on_use(function(api){
   // both client and server files
   api.add_files([
     'models/airports.coffee',
-    'models/flights.coffee'
+    'models/flights.coffee',
+    'models/heatmaps.coffee'
   ],['client', 'server']);
   //server-side only files
   api.add_files([
@@ -78,6 +79,8 @@ Package.on_use(function(api){
     'Airports',
     'Flight',
     'Flights',
+    'Heatmap',
+    'Heatmaps',
     'GritsHeatmap',
     'GritsNode',
     'GritsNodeLayer',
