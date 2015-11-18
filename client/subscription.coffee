@@ -1,17 +1,17 @@
 Tracker.autorun ->
-  query = Session.get('query')
+  query = Session.get('grits-net-meteor:query')
   if _.isUndefined(query) or _.isEmpty(query)
     return
 
-  limit = Session.get('limit')
-  lastId = Session.get('lastId')
-  Session.set 'isUpdating', true
+  limit = Session.get('grits-net-meteor:limit')
+  lastId = Session.get('grits-net-meteor:lastId')
+  Session.set 'grits-net-meteor:isUpdating', true
 
   Meteor.subscribe 'flightsByQuery', query, limit, lastId,
     onError: ->
       if Meteor.gritsUtil.debug
         console.log 'subscription.flightsByQuery.onError: ', this
-      Session.set('isUpdating',false)
+      Session.set('grits-net-meteor:isUpdating',false)
       return
     onStop: ->
       if Meteor.gritsUtil.debug
@@ -25,7 +25,7 @@ Tracker.autorun ->
         if Meteor.gritsUtil.debug
           console.log 'totalRecords: ', res
         if lastId is null
-          Session.set 'totalRecords', res
+          Session.set 'grits-net-meteor:totalRecords', res
           Meteor.gritsUtil.onSubscriptionReady()
         else
           Meteor.gritsUtil.onMoreSubscriptionsReady()
