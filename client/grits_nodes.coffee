@@ -46,19 +46,22 @@ GritsNode = (obj) ->
     0: 'B8B8B8'
   return
 
+GritsNode::onMouseoverHandler = (element, selection, projection) ->
+  if not Session.get('grits-net-meteor:isUpdating')
+    Template.gritsMap.showNodeDetails(this)
+
 GritsNode::onClickHandler = (element, selection, projection) ->
-  if not Session.get('isUpdating')
-    Meteor.gritsUtil.showNodeDetails(this)
-    Meteor.gritsUtil.origin = @_id
+  if not Session.get('grits-net-meteor:isUpdating')
+    Template.gritsMap.showNodeDetails(this)
     $("#departureSearch").val('!' + @_id)
-    if typeof Template.filter.departureSearch != 'undefined'
-      tokens =  Template.filter.departureSearch.tokenfield('getTokens')
+    if typeof Template.gritsFilter.departureSearch != 'undefined'
+      tokens =  Template.gritsFilter.departureSearch.tokenfield('getTokens')
       match = _.find(tokens, (t) -> t.label == @._id)
       if match
         return false
       else
         tokens.push({label: this._id, value: this.id + " - " + this.metadata.name})
-        Template.filter.departureSearch.tokenfield('setTokens', tokens)
+        Template.gritsFilter.departureSearch.tokenfield('setTokens', tokens)
     $("#applyFilter").click()
 
 # GritsNodeLayer
@@ -85,7 +88,7 @@ GritsNodeLayer = (options) ->
 # Binds to the global map.on 'overlyadd' and 'overlayremove' methods
 GritsNodeLayer::_bindEvents = () ->
   self = this
-  Meteor.gritsUtil.map.on(
+  Template.gritsMap.map.on(
     overlayadd: (e) ->
       if e.name == self._name
         if Meteor.gritsUtil.debug
@@ -100,7 +103,7 @@ GritsNodeLayer::_bindEvents = () ->
 # removes the heatmap layerGroup from the map
 GritsNodeLayer::removeLayer = () ->
   if !(typeof @layerGroup == 'undefined' or @layerGroup == null)
-    Meteor.gritsUtil.map.removeLayer(@layerGroup)
+    Template.gritsMap.map.removeLayer(@layerGroup)
   @layer = null
   @layerGroup = null
   return
@@ -110,8 +113,8 @@ GritsNodeLayer::removeLayer = () ->
 GritsNodeLayer::addLayer = () ->
   @layer = L.d3SvgOverlay(_.bind(@drawCallback, this), @options)
   @layerGroup = L.layerGroup([@layer])
-  Meteor.gritsUtil.addOverlayControl(@_name, @layerGroup)
-  Meteor.gritsUtil.map.addLayer(@layerGroup)
+  Template.gritsMap.addOverlayControl(@_name, @layerGroup)
+  Template.gritsMap.map.addLayer(@layerGroup)
   return
 
 # drawCallback
@@ -186,6 +189,11 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
       d3.event.stopPropagation();
       # manual trigger node click handler
       node.onClickHandler(this, selection, projection)
+    )
+    .on('mouseover', (node) ->
+      d3.event.stopPropagation();
+      # manual trigger node click handler
+      node.onMouseoverHandler(this, selection, projection)
     )
   markers.exit()
   return

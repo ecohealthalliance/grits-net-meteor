@@ -12,7 +12,7 @@ GritsHeatmap = () ->
   @Points = []
   @layer = L.heatLayer([], {radius: 35, blur: 55})
   @layerGroup = L.layerGroup([@layer])
-  Meteor.gritsUtil.addOverlayControl(@name, @layerGroup)
+  Template.gritsMap.addOverlayControl(@name, @layerGroup)
   @_bindEvents()
   @_trackDepartures()
   return
@@ -21,7 +21,7 @@ GritsHeatmap = () ->
 # Binds to the global map.on 'overlyadd' and 'overlayremove' methods
 GritsHeatmap::_bindEvents = () ->
   self = this
-  Meteor.gritsUtil.map.on(
+  Template.gritsMap.map.on(
     overlayadd: (e) ->
       if e.name == self.name
         if Meteor.gritsUtil.debug
@@ -45,15 +45,15 @@ GritsHeatmap::_getCellSize = () ->
 # Determine the zoomFactor, which is a multiplier based on the maximum zoom
 # level minus the current zoom level.
 GritsHeatmap::_getZoomFactor = () ->
-  (Meteor.gritsUtil.map.getMaxZoom() - Meteor.gritsUtil.map.getZoom()) * 5
+  (Template.gritsMap.map.getMaxZoom() - Template.gritsMap.map.getZoom()) * 5
 
 GritsHeatmap::_trackDepartures = () ->
   self = this
   Tracker.autorun () ->
-    query = Session.get('query')
+    query = Session.get('grits-net-meteor:query')
     if _.isUndefined(query) || _.isNull(query)
       return
-    if Session.get('isUpdating') == true
+    if Session.get('grits-net-meteor:isUpdating') == true
       return
     
     # the filter has a departureAirport identified
@@ -65,6 +65,10 @@ GritsHeatmap::_trackDepartures = () ->
           if err
             console.error err
             return
+                    
+          if _.isUndefined(res)
+            return
+          
           self.clear()
           _.each(res.data, (a) ->
             # if the node exists on the map, add to the heat map
@@ -84,12 +88,12 @@ GritsHeatmap::_trackDepartures = () ->
 #
 # removes the heatmap layerGroup from the map
 GritsHeatmap::remove = () ->
-  Meteor.gritsUtil.map.removeLayer(@layerGroup)
+  Template.gritsMap.map.removeLayer(@layerGroup)
 # add
 #
 # adds the heatmap layerGroup to the map
 GritsHeatmap::add = () ->
-  Meteor.gritsUtil.addOverlayControl(@name, @layerGroup)
+  Template.gritsMap.addOverlayControl(@name, @layerGroup)
 # draw
 #
 # Sets the data for the heatmap plugin and updates the heatmap
