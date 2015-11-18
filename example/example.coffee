@@ -28,6 +28,7 @@ if Meteor.isClient
     'click .e': ->
       return
 
-  Template.map.onRendered ->
-    Meteor.gritsUtil.addControl('topleft', 'info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
+  Template.gritsMap.onRendered ->
+    console.log 'Template.gritsMap.onRendered:this:', this
+    Template.gritsMap.addControl('topleft', 'info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
     Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
