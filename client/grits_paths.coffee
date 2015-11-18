@@ -41,12 +41,47 @@ GritsPath = (obj, throughput, level, origin, destination) ->
   @destination = destination
   @midPoint = @getMidPoint()
 
-  @clicked = false
+  @element = null # d3 DOM element, updated when the layer draws
+  @color = '#fdcc8a' # default color, updated when the layer draws
 
   @metadata = {}
   _.extend(@metadata, obj)
 
   return
+
+GritsPath::onMouseoutHandler = (element, selection, projection) ->
+  if not Session.get('grits-net-meteor:isUpdating')
+    oldPath = Template.gritsMap.currentPath # initialized to null
+    if oldPath isnt null
+      if element is oldPath.element
+        d3.select(element).style("cursor": "pointer")
+        return
+    d3.select(element).style('stroke', @color).style("cursor": "pointer")
+
+GritsPath::onMouseoverHandler = (element, selection, projection) ->
+  if not Session.get('grits-net-meteor:isUpdating')
+    oldPath = Template.gritsMap.currentPath # initialized to null
+    if oldPath isnt null
+      if element is oldPath.element
+        d3.select(element).style("cursor": "pointer")
+        return
+    d3.select(element).style('stroke', 'black').style("cursor": "pointer")
+
+GritsPath::onClickHandler = (element, selection, projection) ->
+  if not Session.get('grits-net-meteor:isUpdating')
+    oldPath = Template.gritsMap.currentPath # initialized to null
+    if oldPath isnt null
+      d3.select(oldPath.element).style('stroke', oldPath.color)
+    
+    # set the gritsPath.element to the d3 element
+    @element = element
+    
+    # temporarily set the path color
+    d3.select(element).style('stroke', 'blue')
+    # set the currentPath to this gritsPath
+    Template.gritsMap.currentPath = this
+    # show the pathDetails template
+    Template.gritsMap.showPathDetails(this)
 
 GritsPath::getMidPoint = () ->
     ud = true
@@ -92,7 +127,7 @@ GritsPathLayer = (options) ->
 # Binds to the global map.on 'overlyadd' and 'overlayremove' methods
 GritsPathLayer::_bindEvents = () ->
   self = this
-  Meteor.gritsUtil.map.on(
+  Template.gritsMap.map.on(
     overlayadd: (e) ->
       if e.name == self._name
         if Meteor.gritsUtil.debug
@@ -107,7 +142,7 @@ GritsPathLayer::_bindEvents = () ->
 # removes the heatmap layerGroup from the map
 GritsPathLayer::removeLayer = () ->
   if !(typeof @layerGroup == 'undefined' or @layerGroup == null)
-    Meteor.gritsUtil.map.removeLayer(@layerGroup)
+    Template.gritsMap.map.removeLayer(@layerGroup)
   @layer = null
   @layerGroup = null
   return
@@ -117,8 +152,8 @@ GritsPathLayer::removeLayer = () ->
 GritsPathLayer::addLayer = () ->
   @layer = L.d3SvgOverlay(_.bind(@drawCallback, this), @options)
   @layerGroup = L.layerGroup([@layer])
-  Meteor.gritsUtil.addOverlayControl(@_name, @layerGroup)
-  Meteor.gritsUtil.map.addLayer(@layerGroup)
+  Template.gritsMap.addOverlayControl(@_name, @layerGroup)
+  Template.gritsMap.map.addLayer(@layerGroup)
   return
 # drawCallback
 #
@@ -180,50 +215,11 @@ GritsPathLayer::drawCallback = (selection, projection) ->
     ).attr("stroke", (path) ->
       if path.clicked
         return 'blue'
-      self.getStyle(path)
+      path.color = self.getStyle(path)      
+      return path.color
     ).attr("fill", "none")
     .attr("marker-mid":"url(#arrowhead)")
-    .on('mouseover', (path) ->
-      oldPath = pathHandler.getCurrentPath()
-      if this is oldPath
-        path.clicked = true
-      if path.clicked
-        d3.select(this).style("cursor": "pointer")
-        return
-      d3.select(this).style('stroke', 'black')
-      .style("cursor": "pointer")
-      return
-    ).on('mouseout', (path) ->
-      oldPath = pathHandler.getCurrentPath()
-      if this is oldPath
-        path.clicked = true
-      if path.clicked
-        d3.select(this).style("cursor": "hand")
-        return
-      d3.select(this).style('stroke', path.color)
-      .style("cursor": "hand")
-      return
-    ).on('click', (path)->
-      oldPath = pathHandler.getCurrentPath()
-      if this is oldPath
-        path.clicked = true
-      if path.clicked
-        pathHandler.unClick(path)
-        d3.select(this).style('stroke', 'black')
-        return
-      d3.select(this).each ->
-        @parentNode.appendChild this
-        return
-      this.id = path._id
-      d3.select(this).style('stroke', 'blue')
-      pathHandler.setCurrentPath(this)
-      if oldPath isnt null
-        d3p = d3.select(oldPath)
-        oldPath.__data__.clicked = false
-        d3p.style('stroke', oldPath.__data__.color)
-      pathHandler.click(path)
-      return
-    ).enter()
+    
   lines.enter().append('path')
     .attr('d', (path) ->
       d = []
@@ -251,49 +247,16 @@ GritsPathLayer::drawCallback = (selection, projection) ->
     ).attr("stroke", (path) ->
       if path.clicked
         return 'blue'
-      self.getStyle(path)
+      path.color = self.getStyle(path)      
+      return path.color
     ).attr("fill", "none")
     .attr("marker-mid":"url(#arrowhead)")
     .on('mouseover', (path) ->
-      oldPath = pathHandler.getCurrentPath()
-      if this is oldPath
-        path.clicked = true
-      if path.clicked
-        d3.select(this).style("cursor": "pointer")
-        return
-      d3.select(this).style('stroke', 'black')
-      .style("cursor": "pointer")
-      return
+      path.onMouseoverHandler(this, selection, projection)
     ).on('mouseout', (path) ->
-      oldPath = pathHandler.getCurrentPath()
-      if this is oldPath
-        path.clicked = true
-      if path.clicked
-        d3.select(this).style("cursor": "hand")
-        return
-      d3.select(this).style('stroke', path.color)
-      .style("cursor": "hand")
-      return
+      path.onMouseoutHandler(this, selection, projection)
     ).on('click', (path)->
-      oldPath = pathHandler.getCurrentPath()
-      if this is oldPath
-        path.clicked = true
-      if path.clicked
-        pathHandler.unClick(path)
-        d3.select(this).style('stroke', 'black')
-        return
-      d3.select(this).each ->
-        @parentNode.appendChild this
-        return
-      this.id = path._id
-      d3.select(this).style('stroke', 'blue')
-      pathHandler.setCurrentPath(this)
-      if oldPath isnt null
-        d3p = d3.select(oldPath)
-        oldPath.__data__.clicked = false
-        d3p.style('stroke', oldPath.__data__.color)
-      pathHandler.click(path)
-      return
+      path.onClickHandler(this, selection, projection)
     )
   lines.exit()
   return
