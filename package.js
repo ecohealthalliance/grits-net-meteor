@@ -1,5 +1,5 @@
 Package.describe({
-  summary: 'Exposes {{ >map }} template as the interface to grits-net-mapper',
+  summary: 'Exposes {{ >gritsMap }} template as the interface to grits-net-mapper',
   version: '0.0.1',
   name: 'grits:grits-net-meteor',
   git: ''
@@ -40,11 +40,11 @@ Package.on_use(function(api){
     'client/grits_paths.coffee',
     'client/grits_util.coffee',
     'client/grits_heatmap.coffee',
-    'client/templates/map.html',
-    'client/templates/map.coffee',
+    'client/templates/grits_map.html',
+    'client/templates/grits_map.coffee',
     'client/templates/legend.html',
-    'client/templates/filter.html',
-    'client/templates/filter.coffee',
+    'client/templates/grits_filter.html',
+    'client/templates/grits_filter.coffee',
     'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
     'client/subscription.coffee'
