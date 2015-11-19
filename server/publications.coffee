@@ -52,7 +52,12 @@ Meteor.methods
     query = {
       $or: [
         {_id: {$regex: new RegExp(search, 'i')}},
-        {city: {$regex: new RegExp(search, 'ig')}}
+        {name: {$regex: new RegExp(search, 'i')}},
+        {city: {$regex: new RegExp(search, 'ig')}},
+        {state: {$regex: new RegExp(search, 'ig')}},
+        {country: {$regex: new RegExp(search, 'ig')}},
+        {countryName: {$regex: new RegExp(search, 'ig')}},
+        {globalRegion: {$regex: new RegExp(search, 'ig')}}
       ]
     }
     return Airports.find(query, {limit: 10, sort: {_id: 1}}).fetch()
