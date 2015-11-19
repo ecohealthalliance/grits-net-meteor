@@ -65,15 +65,15 @@ Meteor.gritsUtil =
   onSubscriptionReady: ->
     self = this
     if parseInt($("#connectednessLevels").val()) > 1
-      query = Template.gritsFilter.getQueryCriteria();
-      origin = Template.gritsFilter.getOrigin();
+      query = GritsFilterCriteria.getQueryObject()
+      origin = Template.gritsFilter.getOrigin()
       if !_.isNull(origin)
         Meteor.call 'getFlightsByLevel', query, parseInt($("#connectednessLevels").val()), origin, Session.get('grits-net-meteor:limit'), (err, res) ->
           if Meteor.gritsUtil.debug
             console.log 'levelRecs: ', res[0]
           Session.set 'grits-net-meteor:totalRecords', res[1]
           if !_.isUndefined(res[2]) and !_.isEmpty(res[2])
-            Template.gritsFilter.lastId = res[2]
+            Template.gritsFilter.setLastFlightId(res[2])
           self.processQueueCallback(self, res[0])
         return
 
@@ -88,14 +88,14 @@ Meteor.gritsUtil =
   onMoreSubscriptionsReady: ->
     self = this
     if parseInt($("#connectednessLevels").val()) > 1
-      query = Template.gritsFilter.getQueryCriteria();
-      origin = Template.gritsFilter.getOrigin();
+      query = GritsFilterCriteria.getQueryObject()
+      origin = Template.gritsFilter.getOrigin()
       if !_.isNull(origin)
         Meteor.call 'getMoreFlightsByLevel', query, parseInt($("#connectednessLevels").val()), origin, Session.get('grits-net-meteor:limit'), Session.get('grits-net-meteor:lastId'), (err, res) ->
           if Meteor.gritsUtil.debug
             console.log 'levelRecs: ', res[0]
           Session.set 'grits-net-meteor:totalRecords', res[1]
-          Templaokte.gritsFilter.lastId = res[2]
+          Template.gritsFilter.setLastFlightId(res[2])
           self.processMoreQueueCallback(self,res[0])
         return
     
