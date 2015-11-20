@@ -2,11 +2,7 @@
 #
 # Creates an instance of a heatmap layer.  Relies on client/grits_util.coffee
 # to be placed at a higher order within package.js.  In addition, it cannot be
-# constructed until Meteor.gritsUtil.initLeaflet has been called.
-#
-# Note: these ordering requirements could be avoided through a third-party
-# library, such as reactive-depenency, which implements a lightweight dependency
-# injection framework.
+# constructed until Template.gritsMap.initLeaflet has been called.
 GritsHeatmap = () ->
   @name = 'Heatmap'
   @Points = []
