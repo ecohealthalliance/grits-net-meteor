@@ -194,6 +194,9 @@ Meteor.gritsUtil =
   # -Path details
   # -Node details
   addControls: ->
+    # Add the legend to the map's controls.
+    Meteor.gritsUtil.addControl('bottomright', 'info', '<div id="legendContainer">')
+    Blaze.render(Template.legend, $('#legendContainer')[0])
     pathDetails = L.control(position: 'bottomright')
     pathDetails.onAdd = @onAddHandler('info path-detail', '')
     pathDetails.addTo @map
@@ -269,6 +272,8 @@ Meteor.gritsUtil =
 
       if typeof Template.filter.departureSearch != 'undefined'
         tokens =  Template.filter.departureSearch.tokenfield('getTokens')
+        if tokens.length is 0
+          tokens =  Template.filter.departureSearchMain.tokenfield('getTokens')          
         codes = _.pluck(tokens, 'label')
         if _.isEmpty(codes)
           Meteor.gritsUtil.removeQueryCriteria(11)
