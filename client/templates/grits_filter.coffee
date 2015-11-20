@@ -40,6 +40,7 @@ Template.gritsFilter.getOrigin = () ->
         return origins[0]
   return null
 
+
 # helpers
 #
 # Sets an object to be used by Meteors' Blaze templating engine (views)

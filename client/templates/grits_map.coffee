@@ -2,19 +2,18 @@
 #
 # When another meteor app adds grits:grits-net-meteor as a package
 # Template.gritsFilter will be available globally.
-Template.gritsMap.map = null # leaflet map
-Template.gritsMap.overlays = {}
-Template.gritsMap.overlayControl = null
 
+_imagePath = 'packages/bevanhunt_leaflet/images'
+_overlays = {}
+_overlayControl = null
+
+Template.gritsMap.map = null # leaflet map
 Template.gritsMap.nodeDetail = null # container for displaying nodeDetail.html
 Template.gritsMap.pathDetail = null # container for displaying pathDetail.html
 Template.gritsMap.currentPath = null # currently selected path on the map
-
 Template.gritsMap.nodeLayer = null # the GritsNodeLayer instance
 Template.gritsMap.pathLayer = null # the GritsPathLayer instance
 Template.gritsMap.heatmapLayer = null # the GritsHeatmapLayer instance
-
-Template.gritsMap.imagePath = 'packages/bevanhunt_leaflet/images'
 
 # Initialize the window the map will be rendered
 #
@@ -33,7 +32,7 @@ Template.gritsMap.initWindow = (element, css) ->
 # @param [JSON] view - map view options
 # @param [Array<L.tileLayer>] baseLayers - map layers
 Template.gritsMap.initLeaflet = (element, view, baseLayers) ->
-  L.Icon.Default.imagePath = @imagePath
+  L.Icon.Default.imagePath = _imagePath
   # sensible defaults if nothing specified
   element = element or 'grits-map'
   view = view or {}
@@ -58,70 +57,81 @@ Template.gritsMap.initLeaflet = (element, view, baseLayers) ->
     tempBaseLayers[baseLayer.options.layerName] = baseLayer
   @baseLayers = tempBaseLayers
 
-  @pathLayer = new GritsPathLayer()
   @heatmapLayer = new GritsHeatmap()
+  @pathLayer = new GritsPathLayer()  
   @nodeLayer = new GritsNodeLayer()
 
   @drawOverlayControls()
-  @addControls()
+  @_addDefaultControls()
+  return
 
-
+# drawOverlayControls
+#
 # Draws the overlay controls within the control box in the upper-right
-# corner of the map.  It uses @overlayControl to place the reference of
-# the overlay controls.
+# corner of the map.  Overlay controls provide a checkbox to toggle
+# a layer on/off
 Template.gritsMap.drawOverlayControls = () ->
-  if @overlayControl == null
-    @overlayControl = L.control.layers(@baseLayers, @overlays).addTo @map
+  if _overlayControl == null
+    _overlayControl = L.control.layers(@baseLayers, _overlays).addTo @map
   else
-    @overlayControl.removeFrom(@map)
-    @overlayControl = L.control.layers(@baseLayers, @overlays).addTo @map
+    _overlayControl.removeFrom(@map)
+    _overlayControl = L.control.layers(@baseLayers, _overlays).addTo @map
+  return
 
-# addOverlayControl, adds a new overlay control to the map
+# addOverlayControl
+#
+# adds a new overlay control to the map, this will also add the layerGroup
 Template.gritsMap.addOverlayControl = (layerName, layerGroup) ->
-  @overlays[layerName] = layerGroup
+  _overlays[layerName] = layerGroup
   @drawOverlayControls()
+  return
 
-# removeOverlayControl, removes overlay control from the map
+# removeOverlayControl
+#
+# removes overlay control from the map, this will also remove the layerGroup
 Template.gritsMap.removeOverlayControl = (layerName) ->
-  if @overlays.hasOwnProperty layerName
-    delete @overlays[layerName]
+  if _overlays.hasOwnProperty layerName
+    delete _overlays[layerName]
     @drawOverlayControls()
+  return
 
 # addControl
 #
 # Add a single control to the map.
 Template.gritsMap.addControl = (position, selector, content) ->
   control = L.control(position: position)
-  control.onAdd = @onAddHandler(selector, content)
+  control.onAdd = @_onAddHandler(selector, content)
   control.addTo @map
   
-# Adds control overlays to the map
-# -Module Selector
+# addControls
+#
+# Adds the default controls to the map
 # -Path details
 # -Node details
-Template.gritsMap.addControls = () ->
+Template.gritsMap._addDefaultControls = () ->
   pathDetails = L.control(position: 'bottomright')
-  pathDetails.onAdd = @onAddHandler('info path-detail', '')
+  pathDetails.onAdd = @_onAddHandler('info path-detail', '')
   pathDetails.addTo @map
   $('.path-detail').hide()
   
   nodeDetails = L.control(position: 'bottomright')
-  nodeDetails.onAdd = @onAddHandler('info node-detail', '')
+  nodeDetails.onAdd = @_onAddHandler('info node-detail', '')
   nodeDetails.addTo @map
   $('.node-detail').hide()
 
   $(".path-detail-close").on 'click', ->
     $('.path-detail').hide()
-    
-# @note This method is used for initializing dialog boxes created via addControls
-Template.gritsMap.onAddHandler = (selector, html) ->
-  ->
-    @_div = L.DomUtil.create('div', selector)
-    @_div.innerHTML = html
-    L.DomEvent.disableClickPropagation @_div
-    L.DomEvent.disableScrollPropagation @_div
-    @_div
 
+# onAddHandler
+#
+# @note This method is used for initializing dialog boxes created via addControls
+Template.gritsMap._onAddHandler = (selector, html) ->
+  ->
+    _div = L.DomUtil.create('div', selector)
+    _div.innerHTML = html
+    L.DomEvent.disableClickPropagation _div
+    L.DomEvent.disableScrollPropagation _div
+    _div
 
 # Clears the current node details and renders the current node's details
 #
@@ -166,6 +176,104 @@ Template.gritsMap.updatePathDetails = () ->
   if typeof newPath == 'undefined' or newPath == null
     return
   @pathDetail.dataVar.set(newPath)
+
+# setView
+#
+# wrapper, Sets the view of the map (geographical center and zoom) with the given animation options.
+# @param [Array] latLng - the poing
+# @param [Integet] zoom - the zoom level
+# @param [Object] options - the animation options
+Template.gritsMap.setView = (latLng, zoom, options) ->
+  if _.isNull(@map)
+    throw new Error('The map has not be initialized.')
+  @map.setView(latLng, zoom, options)
+  return
+
+# fitBounds
+#
+# wrapper, Sets a map view that contains the given geographical bounds with the maximum zoom level possible.
+Template.gritsMap.fitBounds = (latLngBounds, options) ->
+  if _.isNull(@map)
+    throw new Error('The map has not be initialized.')
+  @map.fitBounds(latLngBounds, options)
+  return
+
+# setMaxBounds
+#
+# wrapper, Restricts the map view to the given bounds
+Template.gritsMap.setMaxBounds = (latLngBounds) ->
+  if _.isNull(@map)
+    throw new Error('The map has not be initialized.')
+  @map.setMaxBounds(latLngBounds)
+  return
+
+# getBounds
+#
+# wrapper, Returns the LatLngBounds of the current map view.
+Template.gritsMap.getBounds = (latLngBounds) ->
+  if _.isNull(@map)
+    throw new Error('The map has not be initialized.')
+  @map.getBounds()
+  return
+
+# setZoom
+#
+# wrapper, Sets the zoom of the map.
+# @param [Array] latLng - the poing
+# @param [Integet] zoom - the zoom level
+# @param [Object] options - the animation options
+Template.gritsMap.setZoom = (zoom, options) ->
+  if _.isNull(@map)
+    throw new Error('The map has not be initialized.')
+  @map.setZoom(zoom, options)
+  return
+
+# zoomIn
+#
+# wrapper, Increases the zoom of the map by delta (1 by default).
+# @param [Integer] delta
+Template.gritsMap.zoomIn = (delta) ->
+  if _.isNull(@map)
+    throw new Error('The map has not be initialized.')
+  @map.zoomIn(delta)
+  return
+
+# zoomOut
+#
+# wrapper, Decreases the zoom of the map by delta (1 by default).
+# @param [Integer] delta
+Template.gritsMap.zoomOut = (delta) ->
+  if _.isNull(@map)
+    throw new Error('The map has not be initialized.')
+  @map.zoomOut(delta)
+  return
+
+# getZoom
+#
+# wrapper, Returns the current zoom of the map view.
+Template.gritsMap.getZoom = () ->
+  if _.isNull(@map)
+    throw new Error('The map has not be initialized.')
+  @map.getZoom()
+  return
+
+# panTo
+#
+# wrapper, Pans the map to a given center. Makes an animated pan if new center is not more than one screen away from the current one.
+Template.gritsMap.panTo = (latLng, options) ->
+  if _.isNull(@map)
+    throw new Error('The map has not be initialized.')
+  @map.panTo(latLng, options)
+  return
+  
+# remove
+#
+# wrapper, Destroys the map and clears all related event listeners.
+Template.gritsMap.remove = () ->
+  if _.isNull(@map)
+    throw new Error('The map has not be initialized.')
+  @map.remove()
+  return
 
 # @event builds the leaflet map when the map template is rendered
 Template.gritsMap.onRendered ->
