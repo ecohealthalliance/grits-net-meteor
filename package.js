@@ -36,10 +36,10 @@ Package.on_use(function(api){
   api.add_files([
     'client/stylesheets/main.styl',
     'client/lib/L.D3SvgOverlay.min.js',
-    'client/grits_nodes.coffee',
-    'client/grits_paths.coffee',
     'client/grits_util.coffee',
-    'client/grits_heatmap.coffee',
+    'client/layers/grits_nodes.coffee',
+    'client/layers/grits_paths.coffee',    
+    'client/layers/grits_heatmap.coffee',
     'client/models/grits_filter_criteria.coffee',
     'client/templates/grits_map.html',
     'client/templates/grits_map.coffee',
@@ -81,14 +81,13 @@ Package.on_use(function(api){
     'Airports',
     'Flight',
     'Flights',
-    'GritsFilterCriteria',
     'Heatmap',
     'Heatmaps',
+    'GritsFilterCriteria',
     'GritsHeatmap',
     'GritsNode',
     'GritsNodeLayer',
     'GritsPath',
-    'GritsPaths',
     'GritsPathLayer'
   ], ['client', 'server']);
 });
