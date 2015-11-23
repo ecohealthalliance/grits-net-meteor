@@ -24,7 +24,7 @@ Package.on_use(function(api){
     'd3js:d3',
     'sergeyt:typeahead',
     'ajduke:bootstrap-tokenfield',
-    'grits:grits-net-mapper'
+    'grits:grits-net-mapper@0.2.2'
   ]);
   // client only packages
   api.use([
