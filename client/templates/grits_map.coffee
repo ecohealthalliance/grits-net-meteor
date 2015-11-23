@@ -5,7 +5,6 @@
 
 _instance = null
 
-
 Template.gritsMap.currentPath = null # currently selected path on the map
 
 Template.gritsMap.getInstance = () ->
@@ -45,3 +44,15 @@ Template.gritsMap.showPathDetails = (path) ->
   $('.path-detail-close').off().on('click', (e) ->
     $('.path-detail').hide()
   )
+  
+Template.gritsMap.addDefaultControls = (map) ->
+  map.addControl('bottomright', 'info path-detail', '')
+  $('.path-detail').hide()
+  
+  map.addControl('bottomright', 'info node-detail', '')
+  $('.node-detail').hide()
+  
+  map.addControl('topleft', 'info', '<div id="filterContainer">')
+  Blaze.render(Template.gritsFilter, $('#filterContainer')[0])
+  
+  
