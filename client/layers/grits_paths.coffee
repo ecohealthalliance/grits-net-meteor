@@ -1,165 +1,59 @@
-# GritsPath
-#
-# Creates an instance of a path
-GritsPath = (obj, throughput, level, origin, destination) ->
-  @_name = 'GritsPath'
+_eventHandlers = {
+  mouseout: (element, selection, projection) ->
+    if not Session.get('grits-net-meteor:isUpdating')
+      oldPath = Template.gritsMap.currentPath # initialized to null
+      if oldPath isnt null
+        if element is oldPath.element
+          d3.select(element).style("cursor": "pointer")
+          return
+      d3.select(element).style('stroke', @color).style("cursor": "pointer")
+  mouseover: (element, selection, projection) ->
+    if not Session.get('grits-net-meteor:isUpdating')
+      oldPath = Template.gritsMap.currentPath # initialized to null
+      if oldPath isnt null
+        if element is oldPath.element
+          d3.select(element).style("cursor": "pointer")
+          return
+      d3.select(element).style('stroke', 'black').style("cursor": "pointer")
+  click: (element, selection, projection) ->
+    if not Session.get('grits-net-meteor:isUpdating')
+      oldPath = Template.gritsMap.currentPath # initialized to null
+      if oldPath isnt null
+        d3.select(oldPath.element).style('stroke', oldPath.color)
+      
+      # set the gritsPath.element to the d3 element
+      @element = element
+      
+      # temporarily set the path color
+      d3.select(element).style('stroke', 'blue')
+      # set the currentPath to this gritsPath
+      Template.gritsMap.currentPath = this
+      # show the pathDetails template
+      Template.gritsMap.showPathDetails(this)
+}
 
-  if typeof obj == 'undefined' or !(obj instanceof Object)
-    throw new Error("#{@_name} - obj must be defined and of type Object")
+GritsPathLayer = (map) ->
+  GritsLayer.call(this)
+  
+  if typeof map == 'undefined'
+    throw new Error('A layer requires a map to be defined')
     return
-
-  if obj.hasOwnProperty('_id') == false
-    throw new Error("#{@_name} - obj requires the _id property")
+  if !map instanceof GritsMap
+    throw new Error('A layer requires a valid map instance')
     return
-
-  if typeof throughput == 'undefined'
-    throw new Error("#{@_name} - throughput must be defined")
-    return
-
-  if typeof level == 'undefined'
-    throw new Error("#{@_name} - level must be defined")
-    return
-
-  if (typeof origin == 'undefined' or !(origin instanceof GritsNode))
-    throw new Error("#{@_name} - origin must be defined and of type GritsNode")
-    return
-
-  if (typeof origin == 'undefined' or !(destination instanceof GritsNode))
-    throw new Error("#{@_name} - destination must be defined and of type GritsNode")
-    return
-
-  # a unique path is defined as an origin to a destination
-  @_id = CryptoJS.MD5(origin._id + destination._id).toString()
-
-  @level = level
-  @throughput = throughput
-
-  @normalizedPercent = 0
-  @occurrances = 1
-
-  @origin = origin
-  @destination = destination
-  @midPoint = @getMidPoint()
-
-  @element = null # d3 DOM element, updated when the layer draws
-  @color = '#fdcc8a' # default color, updated when the layer draws
-
-  @metadata = {}
-  _.extend(@metadata, obj)
-
-  return
-
-GritsPath::onMouseoutHandler = (element, selection, projection) ->
-  if not Session.get('grits-net-meteor:isUpdating')
-    oldPath = Template.gritsMap.currentPath # initialized to null
-    if oldPath isnt null
-      if element is oldPath.element
-        d3.select(element).style("cursor": "pointer")
-        return
-    d3.select(element).style('stroke', @color).style("cursor": "pointer")
-
-GritsPath::onMouseoverHandler = (element, selection, projection) ->
-  if not Session.get('grits-net-meteor:isUpdating')
-    oldPath = Template.gritsMap.currentPath # initialized to null
-    if oldPath isnt null
-      if element is oldPath.element
-        d3.select(element).style("cursor": "pointer")
-        return
-    d3.select(element).style('stroke', 'black').style("cursor": "pointer")
-
-GritsPath::onClickHandler = (element, selection, projection) ->
-  if not Session.get('grits-net-meteor:isUpdating')
-    oldPath = Template.gritsMap.currentPath # initialized to null
-    if oldPath isnt null
-      d3.select(oldPath.element).style('stroke', oldPath.color)
-    
-    # set the gritsPath.element to the d3 element
-    @element = element
-    
-    # temporarily set the path color
-    d3.select(element).style('stroke', 'blue')
-    # set the currentPath to this gritsPath
-    Template.gritsMap.currentPath = this
-    # show the pathDetails template
-    Template.gritsMap.showPathDetails(this)
-
-GritsPath::getMidPoint = () ->
-    ud = true
-    midPoint = []
-    latDif = Math.abs(@origin.latLng[0] - @destination.latLng[0])
-    lngDif = Math.abs(@origin.latLng[1] - @destination.latLng[1])
-    ud = if latDif > lngDif then false else true
-    if @origin.latLng[0] > @destination.latLng[0]
-      if ud
-        midPoint[0] = @destination.latLng[0] + (latDif / 4)
-      else
-        midPoint[0] = @origin.latLng[0] - (latDif / 4)
-    else
-      if ud
-        midPoint[0] = @destination.latLng[0] - (latDif / 4)
-      else
-        midPoint[0] = @origin.latLng[0] + (latDif / 4)
-    midPoint[1] = (@origin.latLng[1] + @destination.latLng[1]) / 2
-    return midPoint
-
-# GritsPathLayer
-#
-# Creates an instance of a path 'svg' layer.
-GritsPathLayer = (options) ->
+  
   @_name = 'Paths'
-  @Paths = {}
-
-  @currentPath = null
-  @normalizedCI = 0
-
-  if typeof options == 'undefined' or options == null
-    @options = {}
-  else
-    @options = options
-
-  @layer = null
-  @layerGroup = null
-  @_bindEvents()
-
+  @_map = map
+  
+  @_layer = L.d3SvgOverlay(_.bind(@_drawCallback, this), {})
+  
+  @_bindMapEvents()
   return
-# _bindEvents
-#
-# Binds to the global map.on 'overlyadd' and 'overlayremove' methods
-GritsPathLayer::_bindEvents = () ->
-  self = this
-  Template.gritsMap.map.on(
-    overlayadd: (e) ->
-      if e.name == self._name
-        if Meteor.gritsUtil.debug
-          console.log self._name + ' added'
-    overlayremove: (e) ->
-      if e.name == self._name
-        if Meteor.gritsUtil.debug
-          console.log self._name + ' removed'
-  )
-# remove
-#
-# removes the heatmap layerGroup from the map
-GritsPathLayer::removeLayer = () ->
-  if !(typeof @layerGroup == 'undefined' or @layerGroup == null)
-    Template.gritsMap.map.removeLayer(@layerGroup)
-  @layer = null
-  @layerGroup = null
-  return
-# add
-#
-# adds the heatmap layerGroup to the map
-GritsPathLayer::addLayer = () ->
-  @layer = L.d3SvgOverlay(_.bind(@drawCallback, this), @options)
-  @layerGroup = L.layerGroup([@layer])
-  Template.gritsMap.addOverlayControl(@_name, @layerGroup)
-  Template.gritsMap.map.addLayer(@layerGroup)
-  return
-# drawCallback
-#
-# Note: makes used of _.bind within the constructor so 'this' is encapsulated
-# properly
-GritsPathLayer::drawCallback = (selection, projection) ->
+
+GritsPathLayer.prototype = Object.create(GritsLayer.prototype)
+GritsPathLayer.prototype.constructor = GritsPathLayer
+
+GritsPathLayer::_drawCallback = (selection, projection) ->
   self = this
   arrowhead = d3.select("#arrowhead")
   if typeof arrowhead == 'undefined' or arrowhead[0][0] is null
@@ -178,7 +72,7 @@ GritsPathLayer::drawCallback = (selection, projection) ->
     .attr('d', 'M0,-5L10,0L0,5')
     .attr('class', 'arrowHead')
 
-  paths = _.sortBy(_.values(@Paths, (path) ->
+  paths = _.sortBy(_.values(self._data, (path) ->
     return path.destination.latLng[0]
   ))
 
@@ -210,12 +104,12 @@ GritsPathLayer::drawCallback = (selection, projection) ->
       newLine = newLineFunction(d)
       return newLine
     ).attr('stroke-width', (path) ->
-      weight = self.getWeight(path)
+      weight = self._getWeight(path)
       return weight / projection.scale
     ).attr("stroke", (path) ->
       if path.clicked
         return 'blue'
-      path.color = self.getStyle(path)      
+      path.color = self._getStyle(path)      
       return path.color
     ).attr("fill", "none")
     .attr("marker-mid":"url(#arrowhead)")
@@ -242,49 +136,32 @@ GritsPathLayer::drawCallback = (selection, projection) ->
       newLine = newLineFunction(d)
       return newLine
     ).attr('stroke-width', (path) ->
-      weight = self.getWeight(path)
+      weight = self._getWeight(path)
       weight / projection.scale
     ).attr("stroke", (path) ->
       if path.clicked
         return 'blue'
-      path.color = self.getStyle(path)      
+      path.color = self._getStyle(path)      
       return path.color
     ).attr("fill", "none")
     .attr("marker-mid":"url(#arrowhead)")
     .on('mouseover', (path) ->
-      path.onMouseoverHandler(this, selection, projection)
+      path.eventHandlers.mouseover(this, selection, projection)
     ).on('mouseout', (path) ->
-      path.onMouseoutHandler(this, selection, projection)
+      path.eventHandlers.mouseout(this, selection, projection)
     ).on('click', (path)->
-      path.onClickHandler(this, selection, projection)
+      path.eventHandlers.click(this, selection, projection)
     )
   lines.exit()
   return
 
-# draw
-#
-# Sets the data for the heatmap plugin and updates the heatmap
-GritsPathLayer::draw = () ->
-  if Object.keys(@Paths).lenght <= 0
-    return
-  @layer.draw()
-  return
-
-# clear
-#
-# Clears the Paths from collection
-GritsPathLayer::clear = () ->
-  @Paths = {}
-  @removeLayer()
-  @addLayer()
-
-GritsPathLayer::getWeight = (path) ->
+GritsPathLayer::_getWeight = (path) ->
   path.weight = path.throughput / 250  + 2
 
-GritsPathLayer::getStyle = (path) ->
+GritsPathLayer::_getStyle = (path) ->
   color = '#fef0d9'
-  if @normalizedCI > 0
-    x = path.throughput / @normalizedCI
+  if @_normalizedCI > 0
+    x = path.throughput / @_normalizedCI
     np = parseFloat(1-(1 - x))
     path.normalizedPercent = np
     if np < .20
@@ -299,26 +176,36 @@ GritsPathLayer::getStyle = (path) ->
       color = '#b30000'
   return color
 
-# convertFlight
+# _bindMapEvents
 #
-# convert a single flight record into a path
-GritsPathLayer::convertFlight = (flight, level, origin, destination) ->
+# Binds to the global map.on 'overlyadd' and 'overlayremove' methods
+GritsPathLayer::_bindMapEvents = () ->
   self = this
+  @_map.map.on(
+    overlayadd: (e) ->
+      if e.name == self._name
+        if Meteor.gritsUtil.debug
+          console.log self._name + ' added'
+    overlayremove: (e) ->
+      if e.name == self._name
+        if Meteor.gritsUtil.debug
+          console.log self._name + ' removed'
+  )
+ 
+GritsPathLayer::convertFlight = (flight, level, origin, destination) ->
   if typeof flight == 'undefined' or flight == null
     return
-
   if typeof level == 'undefined'
     level = 0
-
   _id = CryptoJS.MD5(origin._id + destination._id).toString()
-  path = self.Paths[_id]
+  path = @_data[_id]
   if (typeof path == 'undefined' or path == null)
     path = new GritsPath(flight, flight.totalSeats, level, origin, destination)
-    self.Paths[path._id] = path
+    path.setEventHandlers(_eventHandlers)
+    @_data[path._id] = path
   else
     path.level = level
     path.occurrances += 1
     path.throughput += flight.totalSeats
-
-  if path.throughput > @normalizedCI
-    @normalizedCI = path.throughput
+  if path.throughput > @_normalizedCI
+    @_normalizedCI = path.throughput

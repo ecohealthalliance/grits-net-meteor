@@ -1,130 +1,47 @@
-# GritsNode
-#
-# Creates an instance of a node that represents a geoJSON point
-GritsNode = (obj) ->
-  if typeof obj == 'undefined' or obj == null
-    throw new Error('A node requires valid input object')
+_eventHandlers = {
+  mouseover: (element, selection, projection) ->
+    if not Session.get('grits-net-meteor:isUpdating')
+      Template.gritsMap.showNodeDetails(this)
+  click: (element, selection, projection) ->
+    if not Session.get('grits-net-meteor:isUpdating')
+      Template.gritsMap.showNodeDetails(this)
+      if typeof Template.gritsFilter.departureSearch != 'undefined'
+        tokens =  Template.gritsFilter.departureSearch.tokenfield('getTokens')
+        match = _.find(tokens, (t) -> t.label == this._id)
+        if match
+          return false
+        else
+          tokens.push({label: this._id, value: this._id + " - " + this.metadata.name})
+          Template.gritsFilter.departureSearch.tokenfield('setTokens', tokens)
+      GritsFilterCriteria.scan.departure()
+      GritsFilterCriteria.apply()
+}
+
+GritsNodeLayer = (map) ->
+  GritsLayer.call(this)
+  
+  if typeof map == 'undefined'
+    throw new Error('A layer requires a map to be defined')
     return
-
-  if obj.hasOwnProperty('_id') == false
-    throw new Error('A node requires the "_id" location property')
+  if !map instanceof GritsMap
+    throw new Error('A layer requires a valid map instance')
     return
-
-  if obj.hasOwnProperty('loc') == false
-    throw new Error('A node requires the "loc" location property')
-    return
-
-  longitude = obj.loc.coordinates[0]
-  latitude = obj.loc.coordinates[1]
-
-  @_id = obj._id
-  @_name = 'Node'
-
-  @marker =
-    height: 25
-    width: 15
-
-  @latLng = [latitude, longitude]
-
-  @incomingThroughput = 0
-  @outgoingThroughput = 0
-  @level = 0
-
-  @metadata = {}
-  _.extend(@metadata, obj)
-
-  @grayscale =
-    9: '282828'
-    8: '383838'
-    7: '484848'
-    6: '585858'
-    5: '686868'
-    4: '787878'
-    3: '888888'
-    2: '989898'
-    1: 'A8A8A8'
-    0: 'B8B8B8'
-  return
-
-GritsNode::onMouseoverHandler = (element, selection, projection) ->
-  if not Session.get('grits-net-meteor:isUpdating')
-    Template.gritsMap.showNodeDetails(this)
-
-GritsNode::onClickHandler = (element, selection, projection) ->
-  if not Session.get('grits-net-meteor:isUpdating')
-    Template.gritsMap.showNodeDetails(this)
-    $("#departureSearch").val('!' + @_id)
-    if typeof Template.gritsFilter.departureSearch != 'undefined'
-      tokens =  Template.gritsFilter.departureSearch.tokenfield('getTokens')
-      match = _.find(tokens, (t) -> t.label == @._id)
-      if match
-        return false
-      else
-        tokens.push({label: this._id, value: this.id + " - " + this.metadata.name})
-        Template.gritsFilter.departureSearch.tokenfield('setTokens', tokens)
-    $("#applyFilter").click()
-
-# GritsNodeLayer
-#
-# Creates an instance of a node 'svg' layer.
-GritsNodeLayer = (options) ->
+  
   @_name = 'Nodes'
-  @Nodes = {}
-
-  @maxValue = null
-
-  if typeof options == 'undefined' or options == null
-    @options = {}
-  else
-    @options = options
-
-  @layer = null
-  @layerGroup = null
-  @_bindEvents()
-
-  return
-# _bindEvents
-#
-# Binds to the global map.on 'overlyadd' and 'overlayremove' methods
-GritsNodeLayer::_bindEvents = () ->
-  self = this
-  Template.gritsMap.map.on(
-    overlayadd: (e) ->
-      if e.name == self._name
-        if Meteor.gritsUtil.debug
-          console.log self._name + ' added'
-    overlayremove: (e) ->
-      if e.name == self._name
-        if Meteor.gritsUtil.debug
-          console.log self._name + ' removed'
-  )
-# remove
-#
-# removes the heatmap layerGroup from the map
-GritsNodeLayer::removeLayer = () ->
-  if !(typeof @layerGroup == 'undefined' or @layerGroup == null)
-    Template.gritsMap.map.removeLayer(@layerGroup)
-  @layer = null
-  @layerGroup = null
-  return
-# add
-#
-# adds the heatmap layerGroup to the map
-GritsNodeLayer::addLayer = () ->
-  @layer = L.d3SvgOverlay(_.bind(@drawCallback, this), @options)
-  @layerGroup = L.layerGroup([@layer])
-  Template.gritsMap.addOverlayControl(@_name, @layerGroup)
-  Template.gritsMap.map.addLayer(@layerGroup)
+  @_map = map
+  
+  @_layer = L.d3SvgOverlay(_.bind(@_drawCallback, this), {})
+  
+  @_bindMapEvents()
   return
 
-# drawCallback
-#
-# Note: makes used of _.bind within the constructor so 'this' is encapsulated
-# properly
-GritsNodeLayer::drawCallback = (selection, projection) ->
+GritsNodeLayer.prototype = Object.create(GritsLayer.prototype)
+GritsNodeLayer.prototype.constructor = GritsNodeLayer
+
+GritsNodeLayer::_drawCallback = (selection, projection) ->
   self = this
   # sort by latitude so markers that are lower appear on top
-  nodes = _.sortBy(_.values(@Nodes), (node) ->
+  nodes = _.sortBy(_.values(self._data), (node) ->
     return node.latLng[0] * -1
   )
 
@@ -137,7 +54,7 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
   sums = _.map(nodes, (node) ->
     node.incomingThroughput + node.outgoingThroughput
   )
-  self.maxValue = _.max(sums)
+  self._normalizedCI = _.max(sums)
 
   # select any existing circles and store data onto elements
   markers = selection.selectAll('image').data(nodes, (node) -> node._id)
@@ -145,7 +62,7 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
   #work on existing nodes
   markers
     .attr('xlink:href', (node) ->
-      self.getMarkerHref(node)
+      self._getMarkerHref(node)
     )
     .attr('x', (node) ->
       x = projection.latLngToLayerPoint(node.latLng).x
@@ -166,7 +83,7 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
   # add new elements workflow (following https://github.com/mbostock/d3/wiki/Selections#enter )
   markers.enter().append('image')
     .attr('xlink:href', (node) ->
-      self.getMarkerHref(node)
+      self._getMarkerHref(node)
     )
     .attr('x', (node) ->
       x = projection.latLngToLayerPoint(node.latLng).x
@@ -188,83 +105,81 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
     .on('click', (node) ->
       d3.event.stopPropagation();
       # manual trigger node click handler
-      node.onClickHandler(this, selection, projection)
+      node.eventHandlers.click(this, selection, projection)
     )
     .on('mouseover', (node) ->
       d3.event.stopPropagation();
-      # manual trigger node click handler
-      node.onMouseoverHandler(this, selection, projection)
+      # manual trigger node mouseover handler
+      node.eventHandlers.mouseover(this, selection, projection)
     )
   markers.exit()
   return
 
-GritsNodeLayer::getRelativeThroughput = (node) ->
-  maxAllowed = 0.9
-  r = 0.0
-  if @maxValue > 0
-    r = ((node.incomingThroughput + node.outgoingThroughput) / @maxValue)
-  if r > maxAllowed
-    return maxAllowed
-  return +(r).toFixed(1)
-
-GritsNodeLayer::getMarkerHref = (node) ->
-  v = node.grayscale[ @getRelativeThroughput(node) * 10]
-  if !(typeof v == 'undefined' or v == null)
-    href = "/packages/grits_grits-net-meteor/client/images/marker-icon-#{v}.svg"
-  else
-    href = '/packages/grits_grits-net-meteor/client/images/marker-icon-B8B8B8.svg'
-  return href
-
-# draw
-#
-# Draws the layer on the map
-GritsNodeLayer::draw = () ->
-  if Object.keys(@Nodes).lenght <= 0
-    return
-  @layer.draw()
-  return
-
-# clear
-#
-# Clears the Nodes and layers
-GritsNodeLayer::clear = () ->
-  @Nodes = {}
-  @removeLayer()
-  @addLayer()
-
-# processFlight
-#
-#
 GritsNodeLayer::convertFlight = (flight) ->
   self = this
   # the departureAirport of the flight
   departure = flight.departureAirport
   if (typeof departure != "undefined" and departure != null and departure.hasOwnProperty('_id'))
-    departureNode = self.Nodes[departure._id]
+    departureNode = self._data[departure._id]
     if (typeof departureNode == "undefined" or departureNode == null)
       try
         departureNode = new GritsNode(departure)
+        departureNode.setEventHandlers(_eventHandlers)
         departureNode.outgoingThroughput = flight.totalSeats
       catch e
         console.error(e.message)
         return
-      self.Nodes[departure._id] = departureNode
+      self._data[departure._id] = departureNode
     else
       departureNode.outgoingThroughput += flight.totalSeats
 
   # the arrivalAirport of the flight
   arrival = flight.arrivalAirport
   if (typeof arrival != "undefined" and arrival != null and arrival.hasOwnProperty('_id'))
-    arrivalNode = self.Nodes[arrival._id]
+    arrivalNode = self._data[arrival._id]
     if (typeof arrivalNode == "undefined" or arrivalNode == null)
       try
         arrivalNode = new GritsNode(arrival)
+        arrivalNode.setEventHandlers(_eventHandlers)
         arrivalNode.incomingThroughput = flight.totalSeats
       catch e
         console.error(e.message)
         return
-      self.Nodes[arrival._id] = arrivalNode
+      self._data[arrival._id] = arrivalNode
     else
       arrivalNode.incomingThroughput += flight.totalSeats
 
   return [departureNode, arrivalNode]
+  
+GritsNodeLayer::_getNormalizedThroughput = (node) ->
+  maxAllowed = 0.9
+  r = 0.0
+  if @_normalizedCI > 0
+    r = ((node.incomingThroughput + node.outgoingThroughput) / @_normalizedCI)
+  if r > maxAllowed
+    return maxAllowed
+  return +(r).toFixed(1)
+
+GritsNodeLayer::_getMarkerHref = (node) ->
+  v = node.marker.colorScale[@_getNormalizedThroughput(node) * 10]
+  if !(typeof v == 'undefined' or v == null)
+    href = "/packages/grits_grits-net-mapper/images/marker-icon-#{v}.svg"
+  else
+    href = '/packages/grits_grits-net-mapper/images/marker-icon-B8B8B8.svg'
+  return href
+
+# _bindMapEvents
+#
+# Binds to the global map.on 'overlyadd' and 'overlayremove' methods
+GritsNodeLayer::_bindMapEvents = () ->
+  self = this
+  @_map.map.on(
+    overlayadd: (e) ->
+      if e.name == self._name
+        if Meteor.gritsUtil.debug
+          console.log self._name + ' added'
+    overlayremove: (e) ->
+      if e.name == self._name
+        if Meteor.gritsUtil.debug
+          console.log self._name + ' removed'
+  )

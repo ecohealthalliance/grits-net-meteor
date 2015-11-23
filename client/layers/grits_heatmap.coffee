@@ -1,49 +1,64 @@
-# GritsHeatmap
-#
-# Creates an instance of a heatmap layer.  Relies on client/grits_util.coffee
-# to be placed at a higher order within package.js.  In addition, it cannot be
-# constructed until Template.gritsMap.initLeaflet has been called.
-GritsHeatmap = () ->
-  @name = 'Heatmap'
-  @Points = []
-  @layer = L.heatLayer([], {radius: 35, blur: 55})
-  @layerGroup = L.layerGroup([@layer])
-  Template.gritsMap.addOverlayControl(@name, @layerGroup)
-  @_bindEvents()
+GritsHeatmapLayer = (map) ->
+  GritsLayer.call(this)
+  
+  if typeof map == 'undefined'
+    throw new Error('A layer requires a map to be defined')
+    return
+  if !map instanceof GritsMap
+    throw new Error('A layer requires a valid map instance')
+    return
+  
+  @_name = 'Heatmap'
+  @_map = map  
+  @_data = []
+  
+  @_layer = L.heatLayer([], {radius: 35, blur: 55})
+  @_layerGroup = L.layerGroup([@_layer])
+  @_map.addOverlayControl(@_name, @_layerGroup)
+  
+  @_bindMapEvents()
   @_trackDepartures()
   return
-# _bindEvents
+  
+GritsHeatmapLayer.prototype = Object.create(GritsLayer.prototype)
+GritsHeatmapLayer.prototype.constructor = GritsHeatmapLayer
+
 #
-# Binds to the global map.on 'overlyadd' and 'overlayremove' methods
-GritsHeatmap::_bindEvents = () ->
-  self = this
-  Template.gritsMap.map.on(
-    overlayadd: (e) ->
-      if e.name == self.name
-        if Meteor.gritsUtil.debug
-          console.log self.name + ' added'
-    overlayremove: (e) ->
-      if e.name == self.name
-        if Meteor.gritsUtil.debug
-          console.log self.name + ' removed'
-  )
+#
+# override
+GritsHeatmapLayer::draw = () ->
+  if @_data.length == 0
+    return
+  @_layer.setLatLngs(@_data)
+
+#
+#
+# override
+GritsHeatmapLayer::clear = () ->
+  @_data = []
+  @_layer.setLatLngs(@_data)  
+
 # _getCellSize
 #
 # Leaflet.Heat uses a cell size to 'blend' points into a cluster.
 # returns  the cellSize
-GritsHeatmap::_getCellSize = () ->
+GritsHeatmapLayer::_getCellSize = () ->
   cellSize = 100
-  if @layer.hasOwnProperty('options') and @layer.options.hasOwnProperty('radius')
-    cellSize = @layer.options.radius * 4
+  if @_layer.hasOwnProperty('options') and @_layer.options.hasOwnProperty('radius')
+    cellSize = @_layer.options.radius * 4
   cellSize
+
 # _getZoomFactor
 #
 # Determine the zoomFactor, which is a multiplier based on the maximum zoom
 # level minus the current zoom level.
-GritsHeatmap::_getZoomFactor = () ->
-  (Template.gritsMap.map.getMaxZoom() - Template.gritsMap.map.getZoom()) * 5
+GritsHeatmapLayer::_getZoomFactor = () ->
+  (@_map.map.getMaxZoom() - @_map.map.getZoom()) * 5
 
-GritsHeatmap::_trackDepartures = () ->
+# _trackDepartures
+#
+#
+GritsHeatmapLayer::_trackDepartures = () ->
   self = this
   Tracker.autorun () ->
     query = Session.get('grits-net-meteor:query')
@@ -72,7 +87,7 @@ GritsHeatmap::_trackDepartures = () ->
             #if _.isUndefined(node)
             #  return
             intensity = a[2] * self._getCellSize() * self._getZoomFactor()
-            self.Points.push([a[0], a[1], intensity])
+            self._data.push([a[0], a[1], intensity])
           )
           self.draw()
         )
@@ -80,26 +95,18 @@ GritsHeatmap::_trackDepartures = () ->
       # if a departure airport is not specified, clear the heatmap
       self.clear()
 
-# remove
+# _bindMapEvents
 #
-# removes the heatmap layerGroup from the map
-GritsHeatmap::remove = () ->
-  Template.gritsMap.map.removeLayer(@layerGroup)
-# add
-#
-# adds the heatmap layerGroup to the map
-GritsHeatmap::add = () ->
-  Template.gritsMap.addOverlayControl(@name, @layerGroup)
-# draw
-#
-# Sets the data for the heatmap plugin and updates the heatmap
-GritsHeatmap::draw = () ->
-  if @Points.length == 0
-    return
-  @layer.setLatLngs(@Points)
-# clear
-#
-# Clears the data from the heatmap plugin and updates the heatmap
-GritsHeatmap::clear = () ->
-  @Points = []
-  @layer.setLatLngs([])
+# Binds to the global map.on 'overlyadd' and 'overlayremove' methods
+GritsHeatmapLayer::_bindMapEvents = () ->
+  self = this
+  @_map.map.on(
+    overlayadd: (e) ->
+      if e.name == self._name
+        if Meteor.gritsUtil.debug
+          console.log self._name + ' added'
+    overlayremove: (e) ->
+      if e.name == self._name
+        if Meteor.gritsUtil.debug
+          console.log self._name + ' removed'
+  )
