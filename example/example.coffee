@@ -7,8 +7,8 @@ if Meteor.isClient
 
   Template.moduleSelector.events
     'click .a': ->
-      pathLayer = new GritsPathLayer()
-      nodeLayer = new GritsNodeLayer()
+      pathLayer = new GritsPathLayer(Template.gritsMap.getInstance())
+      nodeLayer = new GritsNodeLayer(Template.gritsMap.getInstance())
       pathLayer.clear()
       nodeLayer.clear()
 
@@ -51,11 +51,12 @@ if Meteor.isClient
     map.addLayer(new GritsPathLayer(map))
     map.addLayer(new GritsNodeLayer(map))
     
-    # Add the filter to the map's controls.
-    map.addControl('topleft', 'info', '<div id="filterContainer">')
-    Blaze.render(Template.gritsFilter, $('#filterContainer')[0])
+    # Add the default controls to the map.
+    Template.gritsMap.addDefaultControls(map)
     
+    # Add custom control
     map.addControl('topleft', 'info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
     Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
     
     Template.gritsMap.setInstance(map)
+    return
