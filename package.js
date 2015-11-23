@@ -23,7 +23,8 @@ Package.on_use(function(api){
     'fortawesome:fontawesome',
     'd3js:d3',
     'sergeyt:typeahead',
-    'ajduke:bootstrap-tokenfield'
+    'ajduke:bootstrap-tokenfield',
+    'grits:grits-net-mapper'
   ]);
   // client only packages
   api.use([
@@ -52,17 +53,7 @@ Package.on_use(function(api){
   ], 'client');
   
   api.addAssets([
-    'client/images/ajax-loader.gif',
-    'client/images/marker-icon-282828.svg',
-    'client/images/marker-icon-383838.svg',
-    'client/images/marker-icon-484848.svg',
-    'client/images/marker-icon-585858.svg',
-    'client/images/marker-icon-787878.svg',
-    'client/images/marker-icon-686868.svg',
-    'client/images/marker-icon-888888.svg',
-    'client/images/marker-icon-989898.svg',
-    'client/images/marker-icon-A8A8A8.svg',
-    'client/images/marker-icon-B8B8B8.svg'
+    'client/images/ajax-loader.gif'
   ], 'client');
   
   // both client and server files
@@ -84,10 +75,9 @@ Package.on_use(function(api){
     'Heatmap',
     'Heatmaps',
     'GritsFilterCriteria',
-    'GritsHeatmap',
-    'GritsNode',
+    'GritsMap',
+    'GritsHeatmapLayer',
     'GritsNodeLayer',
-    'GritsPath',
     'GritsPathLayer'
   ], ['client', 'server']);
 });
