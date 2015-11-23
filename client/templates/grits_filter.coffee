@@ -5,6 +5,9 @@
 
 _lastFlightId = null # stores the last flight _id from the collection, used in limit/offset
 
+Template.gritsFilter.departureSearch = null # onRendered will set this to a typeahead object
+Template.gritsFilter.arrivalSearch = null # onRendered will set this to a typeahead object
+
 # getLastFlightId
 #
 #
