@@ -53,7 +53,7 @@ GritsHeatmapLayer::_getCellSize = () ->
 # Determine the zoomFactor, which is a multiplier based on the maximum zoom
 # level minus the current zoom level.
 GritsHeatmapLayer::_getZoomFactor = () ->
-  (@_map.map.getMaxZoom() - @_map.map.getZoom()) * 5
+  (@_map.getMap().getMaxZoom() - @_map.getMap().getZoom()) * 5
 
 # _trackDepartures
 #
@@ -100,7 +100,9 @@ GritsHeatmapLayer::_trackDepartures = () ->
 # Binds to the global map.on 'overlyadd' and 'overlayremove' methods
 GritsHeatmapLayer::_bindMapEvents = () ->
   self = this
-  @_map.map.on(
+  if typeof self._map.getMap() == 'undefined'
+    return  
+  self._map.getMap().on(
     overlayadd: (e) ->
       if e.name == self._name
         if Meteor.gritsUtil.debug

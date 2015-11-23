@@ -1,7 +1,7 @@
 _eventHandlers = {
-  mouseover: (element, selection, projection) ->
-    if not Session.get('grits-net-meteor:isUpdating')
-      Template.gritsMap.showNodeDetails(this)
+  #mouseover: (element, selection, projection) ->
+  #  if not Session.get('grits-net-meteor:isUpdating')
+  #    Template.gritsMap.showNodeDetails(this)
   click: (element, selection, projection) ->
     if not Session.get('grits-net-meteor:isUpdating')
       Template.gritsMap.showNodeDetails(this)
@@ -105,12 +105,16 @@ GritsNodeLayer::_drawCallback = (selection, projection) ->
     .on('click', (node) ->
       d3.event.stopPropagation();
       # manual trigger node click handler
-      node.eventHandlers.click(this, selection, projection)
+      if node.hasOwnProperty('eventHandlers')
+        if node.eventHandlers.hasOwnProperty('click')
+          node.eventHandlers.click(this, selection, projection)
     )
     .on('mouseover', (node) ->
       d3.event.stopPropagation();
       # manual trigger node mouseover handler
-      node.eventHandlers.mouseover(this, selection, projection)
+      if node.hasOwnProperty('eventHandlers')
+        if node.eventHandlers.hasOwnProperty('mouseover')
+          node.eventHandlers.mouseover(this, selection, projection)
     )
   markers.exit()
   return
@@ -173,7 +177,9 @@ GritsNodeLayer::_getMarkerHref = (node) ->
 # Binds to the global map.on 'overlyadd' and 'overlayremove' methods
 GritsNodeLayer::_bindMapEvents = () ->
   self = this
-  @_map.map.on(
+  if typeof self._map.getMap() == 'undefined'
+    return  
+  self._map.getMap().on(
     overlayadd: (e) ->
       if e.name == self._name
         if Meteor.gritsUtil.debug

@@ -181,7 +181,9 @@ GritsPathLayer::_getStyle = (path) ->
 # Binds to the global map.on 'overlyadd' and 'overlayremove' methods
 GritsPathLayer::_bindMapEvents = () ->
   self = this
-  @_map.map.on(
+  if typeof self._map.getMap() == 'undefined'
+    return  
+  self._map.getMap().on(
     overlayadd: (e) ->
       if e.name == self._name
         if Meteor.gritsUtil.debug
