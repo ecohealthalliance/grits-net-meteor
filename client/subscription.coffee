@@ -32,29 +32,32 @@ Tracker.autorun ->
       return
   return
 
-
 # processQueueCallback
 #
 #
 _processQueueCallback = (res) ->
-  Template.gritsMap.nodeLayer.clear()
-  Template.gritsMap.pathLayer.clear()
+  map = Template.gritsMap.getInstance()
+  nodeLayer = map.getLayer('Nodes')
+  pathLayer = map.getLayer('Paths')  
+  nodeLayer.clear()
+  pathLayer.clear()
+  
   count = 0
   processQueue = async.queue(((flight, callback) ->
-    nodes = Template.gritsMap.nodeLayer.convertFlight(flight)
-    Template.gritsMap.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
+    nodes = nodeLayer.convertFlight(flight)
+    pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
     async.nextTick ->
       if !(count % 100)
-        Template.gritsMap.nodeLayer.draw()
-        Template.gritsMap.pathLayer.draw()
+        nodeLayer.draw()
+        pathLayer.draw()
       Session.set('grits-net-meteor:loadedRecords', ++count)
       callback()
   ), 1)
 
   # callback method for when all items within the queue are processed
   processQueue.drain = ->
-    Template.gritsMap.nodeLayer.draw()
-    Template.gritsMap.pathLayer.draw()
+    nodeLayer.draw()
+    pathLayer.draw()
     Session.set('grits-net-meteor:loadedRecords', count)
     Session.set('grits-net-meteor:isUpdating', false)
 
@@ -67,13 +70,17 @@ _processQueueCallback = (res) ->
 _processMoreQueueCallback = (res) ->
   count =  Session.get('grits-net-meteor:loadedRecords')
   tcount = 0
+  map = Template.gritsMap.getInstance()
+  nodeLayer = map.getLayer('Nodes')
+  pathLayer = map.getLayer('Paths')  
+  
   processQueue = async.queue(((flight, callback) ->
-    nodes = Template.gritsMap.nodeLayer.convertFlight(flight)
-    Template.gritsMap.pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
+    nodes = nodeLayer.convertFlight(flight)
+    pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
     async.nextTick ->
       if !(tcount % 100)
-        Template.gritsMap.nodeLayer.draw()
-        Template.gritsMap.pathLayer.draw()
+        nodeLayer.draw()
+        pathLayer.draw()
         tcount++
       Session.set('grits-net-meteor:loadedRecords', count+res.length)
       callback()
@@ -81,8 +88,8 @@ _processMoreQueueCallback = (res) ->
 
   # callback method for when all items within the queue are processed
   processQueue.drain = ->      
-    Template.gritsMap.nodeLayer.draw()
-    Template.gritsMap.pathLayer.draw()
+    nodeLayer.draw()
+    pathLayer.draw()
 
     Session.set('grits-net-meteor:loadedRecords', count+res.length)
     Session.set('grits-net-meteor:isUpdating', false)
