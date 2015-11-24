@@ -5,15 +5,15 @@ _eventHandlers = {
   click: (element, selection, projection) ->
     if not Session.get('grits-net-meteor:isUpdating')
       Template.gritsMap.showNodeDetails(this)
-      if typeof Template.gritsFilter.departureSearch != 'undefined'
-        tokens =  Template.gritsFilter.departureSearch.tokenfield('getTokens')
+      if typeof Template.gritsFilter.getDepartureSearch() != 'undefined'
+        tokens =  Template.gritsFilter.getDepartureSearch().tokenfield('getTokens')
         match = _.find(tokens, (t) -> t.label == this._id)
         if match
           return false
         else
           tokens.push({label: this._id, value: this._id + " - " + this.metadata.name})
-          Template.gritsFilter.departureSearch.tokenfield('setTokens', tokens)
-      GritsFilterCriteria.scan.departure()
+          Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', tokens)
+      GritsFilterCriteria.readDeparture()
       GritsFilterCriteria.apply()
 }
 # Creates an instance of a GritsNodeLayer, extends  GritsLayer
