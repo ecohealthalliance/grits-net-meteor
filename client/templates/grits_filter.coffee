@@ -4,20 +4,20 @@
 # Template.gritsFilter will be available globally.
 
 _lastFlightId = null # stores the last flight _id from the collection, used in limit/offset
+_departureSearchMain = null # onRendered will set this to a typeahead object
+_departureSearch = null # onRendered will set this to a typeahead object
+_arrivalSearch = null # onRendered will set this to a typeahead object
 
-Template.gritsFilter.departureSearch = null # onRendered will set this to a typeahead object
-Template.gritsFilter.arrivalSearch = null # onRendered will set this to a typeahead object
-
-# getLastFlightId
+# returns the last flight _id, used for the [More] button in limit/offset
 #
-#
-Template.gritsFilter.getLastFlightId = () ->
+# @return [String] lastFlightId, the last _id of a flight record
+getLastFlightId = () ->
   _lastFlightId
 
-# setLastFlightId
+# sets the last flight _id
 #
-#
-Template.gritsFilter.setLastFlightId = (lastId) ->
+# @param [String] lastId, the last _id of a flight record
+setLastFlightId = (lastId) ->
   if !_.isUndefined(lastId)
     _lastFlightId = lastId
     return
@@ -30,10 +30,10 @@ Template.gritsFilter.setLastFlightId = (lastId) ->
   if lastFlight
     _lastFlightId = lastFlight._id
 
-# getOrigin
+# returns the first origin within GritsFilterCriteria
 #
-#
-Template.gritsFilter.getOrigin = () ->
+# @return [String] origin, a string airport IATA code
+getOrigin = () ->
   query = GritsFilterCriteria.getQueryObject()
   if _.has(query, 'departureAirport._id')
     # the filter has an array of airports 
@@ -43,10 +43,43 @@ Template.gritsFilter.getOrigin = () ->
         return origins[0]
   return null
 
-
-# helpers
+# returns the typeahead object for the '#departureSearchMain' input
 #
-# Sets an object to be used by Meteors' Blaze templating engine (views)
+# @see: http://sliptree.github.io/bootstrap-tokenfield/#methods
+# @return [Object] typeahead
+getDepartureSearchMain = () ->
+  return _departureSearchMain
+
+# sets the typeahead object for the '#departureSearchMain' input
+_setDepartureSearchMain = (typeahead) ->
+  _departureSearchMain = typeahead
+  return
+
+# returns the typeahead object for the '#departureSearch' input
+#
+# @see http://sliptree.github.io/bootstrap-tokenfield/#methods
+# @return [Object] typeahead
+getDepartureSearch = () ->
+  return _departureSearch
+
+# sets the typeahead object for the '#departureSearch' input
+_setDepartureSearch = (typeahead) ->
+  _departureSearch = typeahead
+  return
+
+# returns the typeahead object for the '#arrivalSearch' input
+#
+# @see http://sliptree.github.io/bootstrap-tokenfield/#methods
+# @return [Object] typeahead
+getArrivalSearch = () ->
+  return _arrivalSearch
+
+# sets the typeahead object for the '#departureSearchMain' input
+_setArrivalSearch = (typeahead) ->
+  _arrivalSearch = typeahead
+  return
+
+# sets an object to be used by Meteors' Blaze templating engine (views)
 Template.gritsFilter.helpers({
   loadedRecords: () ->
     return Session.get 'grits-net-meteor:loadedRecords'
@@ -54,16 +87,20 @@ Template.gritsFilter.helpers({
     return Session.get 'grits-net-meteor:totalRecords'
 })
 
+Template.gritsFilter.onCreated ->
+  # Public API
+  # Currently we declare methods above for documentation purposes then assign
+  # to the Template.gritsFilter as a global export
+  Template.gritsFilter.getLastFlightId = getLastFlightId
+  Template.gritsFilter.setLastFlightId = setLastFlightId
+  Template.gritsFilter.getOrigin = getOrigin
+  Template.gritsFilter.getDepartureSearchMain = getDepartureSearchMain
+  Template.gritsFilter.getDepartureSearch = getDepartureSearch
+  Template.gritsFilter.getArrivalSearch = getArrivalSearch
 
-# onRendered
-#
 # triggered when the 'filter' template is rendered
-Template.gritsFilter.onRendered ->
-  # Methods to use are:
-  #  Template.gritsFilter.departureSearchMain.tokenfield('getTokens')
-  #  Template.gritsFilter.departureSearchMain.tokenfield('setTokens', someNewTokenArray)
-  #  See: http://sliptree.github.io/bootstrap-tokenfield/#methods
-  Template.gritsFilter.departureSearchMain = $('#departureSearchMain').tokenfield({
+Template.gritsFilter.onRendered ->  
+  departureSearchMain = $('#departureSearchMain').tokenfield({
     typeahead: [null, { source: (query, callback) ->
       Meteor.call('typeaheadAirport', query, (err, res) ->
         if err or _.isUndefined(res) or _.isEmpty(res)
@@ -73,11 +110,9 @@ Template.gritsFilter.onRendered ->
       )
     }]
   })
-  # Methods to use are:
-  #  Template.gritsFilter.departureSearch.tokenfield('getTokens')
-  #  Template.gritsFilter.departureSearch.tokenfield('setTokens', someNewTokenArray)
-  #  See: http://sliptree.github.io/bootstrap-tokenfield/#methods
-  Template.gritsFilter.departureSearch = $('#departureSearch').tokenfield({
+  _setDepartureSearchMain(departureSearchMain)
+  
+  departureSearch = $('#departureSearch').tokenfield({
     typeahead: [null, { source: (query, callback) ->
       Meteor.call('typeaheadAirport', query, (err, res) ->
         if err or _.isUndefined(res) or _.isEmpty(res)
@@ -87,11 +122,9 @@ Template.gritsFilter.onRendered ->
       )
     }]
   })
-  # Methods to use are:
-  #  Template.gritsFilter.arrivalSearch.tokenfield('getTokens')
-  #  Template.gritsFilter.arrivalSearch.tokenfield('setTokens', someNewTokenArray)
-  #  See: http://sliptree.github.io/bootstrap-tokenfield/#methods
-  Template.gritsFilter.arrivalSearch = $('#arrivalSearch').tokenfield({
+  _setDepartureSearch(departureSearch)
+  
+  arrivalSearch = $('#arrivalSearch').tokenfield({
     typeahead: [null, { source: (query, callback) ->
       Meteor.call('typeaheadAirport', query, (err, res) ->
         if err or _.isUndefined(res) or _.isEmpty(res)
@@ -101,6 +134,8 @@ Template.gritsFilter.onRendered ->
       )
     }]
   })
+  _setArrivalSearch(arrivalSearch)
+  
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
   # apply button and filterLoading indicator.
@@ -128,7 +163,7 @@ Template.gritsFilter.onRendered ->
 # events
 #
 # Event handlers for the grits_filter.html template
-Template.gritsFilter.events
+_events = Template.gritsFilter.events
   'keyup #departureSearchMain-tokenfield': (event) ->
     if event.keyCode == 13
       GritsFilterCriteria.scanAll()

@@ -23,16 +23,18 @@ _Filter = Astro.Class(
   }
 )
 
-## Public API
-# GritsFilterCriteria
-#
-# This object provides the interface for interacting with the
-# filter form inputs and maintaining the collection of filter criteria.
-GritsFilterCriteria = {
-  # createOrUpdate
+# GritsFilterCriteria, this object provides the interface for
+# accessing the UI filter box.
+class FilterCriteria
+  # Creates a new filter criteria and adds it to the collection or updates
+  # the collection if it already exists
   #
-  # 
-  createOrUpdate : (id, fields) ->
+  # @param [String] id, the name of the filter criteria
+  # @note must be one of 'day1', 'day2', 'day3', 'day4', 'day5', 'day6',
+  #   'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival',
+  #   'levels'
+  # @return [Object] Astronomy model 'FilterCriteria'
+  createOrUpdate: (id, fields) ->
     if _.indexOf(_validFields, id) < 0
       throw new Error('Invalid filter: ' + id)
     obj = _Collection.findOne({_id: id})
@@ -49,10 +51,15 @@ GritsFilterCriteria = {
         throw new Error(_.values(obj.getValidationErrors()))
       obj.save()
       return obj
-  # remove
+  
+  # removes a FilterCriteria from the collection
   #
-  #
-  remove : (id, cb) ->
+  # @param [String] id, the name of the filter criteria
+  # @note must be one of 'day1', 'day2', 'day3', 'day4', 'day5', 'day6',
+  #   'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival',
+  #   'levels'
+  # @optional [Function] cb, the callback method if removing async
+  remove: (id, cb) ->
     obj = _Collection.findOne({_id: id})
     if obj and cb
       obj.remove(cb)
@@ -61,10 +68,11 @@ GritsFilterCriteria = {
       return obj.remove()
     else
       return 0
-  # getQueryObject
+  
+  # returns the query object used to filter the server-side collection
   #
-  #
-  getQueryObject : () ->
+  # @return [Object] query, a mongoDB query object
+  getQueryObject: () ->
     criteria = _Collection.find({})
     result = {}
     criteria.forEach((filter) ->
@@ -78,10 +86,11 @@ GritsFilterCriteria = {
       result[filter.get('key')] = value
     )
     return result
-  # apply
-  #
-  #
-  apply : () ->
+  
+  # sets the global Session 'grits-net-meteor:query' object to the current
+  # getQueryObject.  This will trigger an update of the map through the
+  # server-side publication
+  apply: () ->
     query = GritsFilterCriteria.getQueryObject()
     if _.isUndefined(query) or _.isEmpty(query)
       return
@@ -97,9 +106,12 @@ GritsFilterCriteria = {
     Session.set 'grits-net-meteor:lastId', null
     Session.set 'grits-net-meteor:query', query
     return
-  # setDayOfWeek
+  
+  # sets the corresponding checkbox on the UI to the 'day' and 'value'
+  # specified, as well as, updating the underlying FilterCriteria.
   #
-  #
+  # @param [String] day, one of 'SUN','MON','TUE','WED','THU','FRI','SAT'
+  # @param [Boolean] value, true or false
   setDayOfWeek : (day, value) ->
     if _.indexOf(_validDays, day.toUpperCase()) < 0
       throw new Error('Invalid day: ' + day)
@@ -125,9 +137,12 @@ GritsFilterCriteria = {
     else if day == 'SAT'
       setField('day7')
     return
-  # setWeeklyFrequency
+  
+  # sets the weeklyFrequency input on the UI to the 'operator' and 'value'
+  # specified, as well as, updating the underlying FilterCriteria.
   #
-  #
+  # @param [String] operator, one of '$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in'
+  # @param [Integer] value
   setWeeklyFrequency : (operator, value) ->
     if _.indexOf(_validOperators, operator) < 0
       throw new Error('Invalid operator: ', operator)
@@ -142,9 +157,12 @@ GritsFilterCriteria = {
     $('#weekly-frequency-operand').val(operator);  
     $("#weeklyFrequencyInput").val(value);
     return
-  # setStops
+  
+  # sets the stops input on the UI to the 'operator' and 'value'
+  # specified, as well as, updating the underlying FilterCriteria.
   #
-  #
+  # @param [String] operator, one of '$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in'
+  # @param [Integer] value
   setStops : (operator, value) ->
     if _.indexOf(_validOperators, operator) < 0
       throw new Error('Invalid operator: ', operator)
@@ -159,9 +177,12 @@ GritsFilterCriteria = {
     $('#stops-operand').val(operator);  
     $("#stopsInput").val(value);
     return
-  # setSeats
+  
+  # sets the seats input on the UI to the 'operator' and 'value'
+  # specified, as well as, updating the underlying FilterCriteria.
   #
-  #
+  # @param [String] operator, one of '$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in'
+  # @param [Integer] value
   setSeats : (operator, value) ->
     if _.indexOf(_validOperators, operator) < 0
       throw new Error('Invalid operator: ', operator)
@@ -176,43 +197,51 @@ GritsFilterCriteria = {
     $('#seats-operand').val(operator);  
     $("#seatsInput").val(value);
     return
-  # setDeparture
+  
+  # sets the departure input on the UI to the 'code'
+  # specified, as well as, updating the underlying FilterCriteria.
   #
-  #
+  # @param [String] code, an airport IATA code
+  # @see http://www.iata.org/Pages/airports.aspx 
   setDeparture : (code) ->
     if _.isUndefined(code)
       throw new Error('A code must be defined or null.')
     if _.isNull(code)
       GritsFilterCriteria.remove('departure')
-      Template.gritsFilter.departureSearch.tokenfield('setTokens', [])
+      Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [])
       return  
     if _.isArray(code)
       GritsFilterCriteria.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: code})
-      Template.gritsFilter.departureSearch.tokenfield('setTokens', code)
+      Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', code)
     else
       GritsFilterCriteria.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: [code]})
-      Template.gritsFilter.departureSearch.tokenfield('setTokens', [code])
+      Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [code])
     return
-  # setArrival
+  
+  # sets the arrival input on the UI to the 'code'
+  # specified, as well as, updating the underlying FilterCriteria.
   #
-  #
+  # @param [String] code, an airport IATA code
+  # @see http://www.iata.org/Pages/airports.aspx 
   setArrival : (code) ->
     if _.isUndefined(code)
       throw new Error('A code must be defined or null.')
     if _.isNull(code)
       GritsFilterCriteria.remove('arrival')
-      Template.gritsFilter.departureSearch.tokenfield('setTokens', [])
+      Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [])
       return  
     if _.isArray(code)
       GritsFilterCriteria.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: code})
-      Template.gritsFilter.departureSearch.tokenfield('setTokens', code)
+      Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', code)
     else
       GritsFilterCriteria.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: [code]})
-      Template.gritsFilter.departureSearch.tokenfield('setTokens', [code])
+      Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [code])
     return
-  # setLevels
+  
+  # sets the level input on the UI to the 'value'
+  # specified, as well as, updating the underlying FilterCriteria.
   #
-  #
+  # @param [Intever] value
   setLevels : (value) ->
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
@@ -226,9 +255,12 @@ GritsFilterCriteria = {
     GritsFilterCriteria.createOrUpdate('levels', {key: 'flightNumber', operator: '$ne', value: -val})
     $("#connectednessLevels").val(val)
     return
-  # setLimit
+  
+  # sets the limit input on the UI to the 'value'
+  # specified, as well as, updating the underlying global Session
+  # 'grits-net-meteor:limit' variable.
   #
-  #
+  # @param [Intever] value
   setLimit : (value) ->
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
@@ -238,130 +270,131 @@ GritsFilterCriteria = {
     $('#limit').val(val)
     Session.set('grits-net-meteor:limit', val)
     return
-  # scanAll
-  #
-  #
+  
+  # convenience method for reading all the filter UI inputs and creating and/or
+  # updating the underlying FilterCriteria
   scanAll : () ->
-    for name, method of @scan
-      method()
-  # scan
-  #
-  #
-  scan : {
-    # scan.levels
-    #
-    #
-    levels : () ->  
-      val = $("#connectednessLevels").val()
-      GritsFilterCriteria.remove('levels')
-      if val isnt '' and val isnt '0'
-        GritsFilterCriteria.createOrUpdate('levels', {key: 'flightNumber', operator:'$ne', value:-val})
-    # scan.seats
-    #
-    # apply a filter on number of seats if it is not undefined or NaN
-    seats : () ->
-      val = parseInt($("#seatsInput").val())
-      op = $('#seats-operand').val();
-      if _.isUndefined(op)
-        return
-      if _.isUndefined(val) or isNaN(val)
-        GritsFilterCriteria.remove('seats')
-      else
-        GritsFilterCriteria.createOrUpdate('seats', {key: 'totalSeats', operator: op, value: val})
-    # scan.stops
-    #
-    # apply a filter on number of stops if it is not undefined or NaN
-    stops : () ->
-      val = parseInt($("#stopsInput").val())
-      op = $('#stops-operand').val();
-      if _.isUndefined(op)
-        return
-      if _.isUndefined(val) or isNaN(val)
-        GritsFilterCriteria.remove('stops')
-      else
-        GritsFilterCriteria.createOrUpdate('stops', {key: 'stops', operator: op, value: val})
-    # scan.departure
-    #
-    # apply a filter on the parsed airport codes from the departureSearch input
-    # @param [String] str, the airport code
-    departure : () ->
-      combined = []
+    for name, method of this
+      if name.indexOf('read') >= 0
+        method()
+    return
+  
+  # scans (reads) the 'levels' input currently displayed on the filter UI,
+  # then creates and/or updates the underlying FilterCriteria
+  readLevels : () ->
+    val = $("#connectednessLevels").val()
+    GritsFilterCriteria.remove('levels')
+    if val isnt '' and val isnt '0'
+      GritsFilterCriteria.createOrUpdate('levels', {key: 'flightNumber', operator:'$ne', value:-val})
+    return
+  
+  # scans (reads) the 'seats' input currently displayed on the filter UI,
+  # then creates and/or updates the underlying FilterCriteria
+  readSeats : () ->
+    val = parseInt($("#seatsInput").val())
+    op = $('#seats-operand').val();
+    if _.isUndefined(op)
+      return
+    if _.isUndefined(val) or isNaN(val)
+      GritsFilterCriteria.remove('seats')
+    else
+      GritsFilterCriteria.createOrUpdate('seats', {key: 'totalSeats', operator: op, value: val})
+    return
+  
+  # scans (reads) the 'stops' input currently displayed on the filter UI,
+  # then creates and/or updates the underlying FilterCriteria
+  readStops : () ->
+    val = parseInt($("#stopsInput").val())
+    op = $('#stops-operand').val();
+    if _.isUndefined(op)
+      return
+    if _.isUndefined(val) or isNaN(val)
+      GritsFilterCriteria.remove('stops')
+    else
+      GritsFilterCriteria.createOrUpdate('stops', {key: 'stops', operator: op, value: val})
+    return
+  
+  # scans (reads) the 'departure' input currently displayed on the filter UI,
+  # then creates and/or updates the underlying FilterCriteria
+  readDeparture : () ->
+    combined = []
+      
+    if typeof Template.gritsFilter.getDepartureSearchMain() != 'undefined'
+      tokens =  Template.gritsFilter.getDepartureSearchMain().tokenfield('getTokens')
+      codes = _.pluck(tokens, 'label')
+      combined = _.union(codes, combined)
+      
+    if typeof Template.gritsFilter.getDepartureSearch() != 'undefined'
+      tokens =  Template.gritsFilter.getDepartureSearch().tokenfield('getTokens')
+      codes = _.pluck(tokens, 'label')
+      combined = _.union(codes, combined)
         
-      if typeof Template.gritsFilter.departureSearchMain != 'undefined'
-        tokens =  Template.gritsFilter.departureSearchMain.tokenfield('getTokens')
-        codes = _.pluck(tokens, 'label')
-        combined = _.union(codes, combined)
-        
-      if typeof Template.gritsFilter.departureSearch != 'undefined'
-        tokens =  Template.gritsFilter.departureSearch.tokenfield('getTokens')
-        codes = _.pluck(tokens, 'label')
-        combined = _.union(codes, combined)
-          
-      if _.isEmpty(combined)
-        GritsFilterCriteria.remove('departure')
-      else
-        GritsFilterCriteria.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: combined})
-    # scan.arrival
-    #
-    # apply a filter on the parsed airport codes from the arrivalSearch input
-    # @param [String] str, the airport code
-    arrival : () ->
-      if typeof Template.gritsFilter.departureSearch != 'undefined'
-        tokens =  Template.gritsFilter.arrivalSearch.tokenfield('getTokens')
-        codes = _.pluck(tokens, 'label')
-      if _.isEmpty(codes)
-        GritsFilterCriteria.remove('arrival')
-      else
-        GritsFilterCriteria.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: codes})
-    # scan.daysOfWeek
-    #
-    #
-    daysOfWeek : () ->
-      day = 'day1'
-      if $('#dowSUN').is(':checked')      
-        GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-      else if !$('#dowSUN').is(':checked')
-        GritsFilterCriteria.remove(day)
-       
-      day = 'day2'
-      if $('#dowMON').is(':checked')
-        GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-      else if !$('#dowMON').is(':checked')
-        GritsFilterCriteria.remove(day)
-    
-      day = 'day3'
-      if $('#dowTUE').is(':checked')
-        GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-      else if !$('#dowTUE').is(':checked')
-        GritsFilterCriteria.remove(day)
-    
-      day = 'day4'
-      if $('#dowWED').is(':checked')
-        GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-      else if !$('#dowWED').is(':checked')
-        GritsFilterCriteria.remove(day)
-    
-      day = 'day5'
-      if $('#dowTHU').is(':checked')
-        GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-      else if !$('#dowTHU').is(':checked')
-        GritsFilterCriteria.remove(day)
-    
-      day = 'day6'
-      if $('#dowFRI').is(':checked')
-        GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-      else if !$('#dowFRI').is(':checked')
-        GritsFilterCriteria.remove(day)
-    
-      day = 'day7'
-      if $('#dowSAT').is(':checked')
-        GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-      else if !$('#dowSAT').is(':checked')
-        GritsFilterCriteria.remove(day)
-    # scan.weeklyFrequency
-    #
-    #
-    weeklyFrequency : () ->
+    if _.isEmpty(combined)
+      GritsFilterCriteria.remove('departure')
+    else
+      GritsFilterCriteria.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: combined})
+  
+  # scans (reads) the 'arrival' input currently displayed on the filter UI,
+  # then creates and/or updates the underlying FilterCriteria
+  readArrival : () ->
+    if typeof Template.gritsFilter.getDepartureSearch() != 'undefined'
+      tokens =  Template.gritsFilter.getArrivalSearch().tokenfield('getTokens')
+      codes = _.pluck(tokens, 'label')
+    if _.isEmpty(codes)
+      GritsFilterCriteria.remove('arrival')
+    else
+      GritsFilterCriteria.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: codes})
+    return
+  
+  # scans (reads) the 'days Of Week' checkboxes currently displayed on the
+  # filter UI, then creates and/or updates the underlying FilterCriteria
+  readDaysOfWeek : () ->
+    day = 'day1'
+    if $('#dowSUN').is(':checked')      
+      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
+    else if !$('#dowSUN').is(':checked')
+      GritsFilterCriteria.remove(day)
+     
+    day = 'day2'
+    if $('#dowMON').is(':checked')
+      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
+    else if !$('#dowMON').is(':checked')
+      GritsFilterCriteria.remove(day)
+  
+    day = 'day3'
+    if $('#dowTUE').is(':checked')
+      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
+    else if !$('#dowTUE').is(':checked')
+      GritsFilterCriteria.remove(day)
+  
+    day = 'day4'
+    if $('#dowWED').is(':checked')
+      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
+    else if !$('#dowWED').is(':checked')
+      GritsFilterCriteria.remove(day)
+  
+    day = 'day5'
+    if $('#dowTHU').is(':checked')
+      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
+    else if !$('#dowTHU').is(':checked')
+      GritsFilterCriteria.remove(day)
+  
+    day = 'day6'
+    if $('#dowFRI').is(':checked')
+      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
+    else if !$('#dowFRI').is(':checked')
+      GritsFilterCriteria.remove(day)
+  
+    day = 'day7'
+    if $('#dowSAT').is(':checked')
+      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
+    else if !$('#dowSAT').is(':checked')
+      GritsFilterCriteria.remove(day)
+    return
+  
+  # scans (reads) the 'weeklyFrequency' input currently displayed on the filter UI,
+  # then creates and/or updates the underlying FilterCriteria
+  readWeeklyFrequency : () ->
       val = parseInt($("#weeklyFrequencyInput").val())
       op = $('#weekly-frequency-operand').val();
       if _.isUndefined(op)
@@ -370,5 +403,6 @@ GritsFilterCriteria = {
         GritsFilterCriteria.remove('weeklyFrequency')
       else
         GritsFilterCriteria.createOrUpdate('weeklyFrequency', {key: 'weeklyFrequency', operator: op, value: val})
-  }
-}
+      return
+  
+GritsFilterCriteria = new FilterCriteria() #GritsFilterCriteria exports as a singleton
