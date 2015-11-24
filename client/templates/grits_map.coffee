@@ -4,13 +4,18 @@
 # Template.gritsFilter will be available globally.
 
 _instance = null
+_currentPath = null
 
-Template.gritsMap.currentPath = null # currently selected path on the map
-
-Template.gritsMap.getInstance = () ->
+# returns the map instance
+#
+# @return [GritsMap] map, a GritsMap instance
+getInstance = () ->
   return _instance
 
-Template.gritsMap.setInstance = (map) ->
+# sets the map instance
+#
+# @param [GritsMap] map, a GritsMap object
+setInstance = (map) ->
   if typeof map == 'undefined'
     throw new Error('Requires a map to be defined')
     return
@@ -19,10 +24,22 @@ Template.gritsMap.setInstance = (map) ->
     return
   _instance = map
 
-# Clears the current node details and renders the current node's details
+# returns the current path
+#
+# @return [GritsPath] path, a GritsPath object
+getCurrentPath = () ->
+  return _currentPath
+
+# sets the current path
+#
+# @param [GritsPath] path, a GritsPath object
+setCurrentPath = (path) ->
+  _currentPath = path
+
+# clears the current node details and renders the current node's details
 #
 # @param [GritsNode] node - node for which details will be displayed
-Template.gritsMap.showNodeDetails = (node) ->
+showNodeDetails = (node) ->
   $('.node-detail').empty()
   $('.node-detail').hide()
   div = $('.node-detail')[0]
@@ -32,10 +49,10 @@ Template.gritsMap.showNodeDetails = (node) ->
     $('.node-detail').hide()
   )
 
-# Clears the current path details and renders the current path's details
+# clears the current path details and renders the current path's details
 #
 # @param [GritsPath] path - path for which details will be displayed
-Template.gritsMap.showPathDetails = (path) ->
+showPathDetails = (path) ->
   $('.path-detail').empty()
   $('.path-detail').hide()
   div = $('.path-detail')[0]
@@ -44,8 +61,11 @@ Template.gritsMap.showPathDetails = (path) ->
   $('.path-detail-close').off().on('click', (e) ->
     $('.path-detail').hide()
   )
-  
-Template.gritsMap.addDefaultControls = (map) ->
+
+# adds the default controls to the map specified
+#
+# @param [GritsMap] map - map to apply the default controls
+addDefaultControls = (map) ->
   map.addControl('bottomright', 'info path-detail', '')
   $('.path-detail').hide()
   
@@ -54,5 +74,18 @@ Template.gritsMap.addDefaultControls = (map) ->
   
   map.addControl('topleft', 'info', '<div id="filterContainer">')
   Blaze.render(Template.gritsFilter, $('#filterContainer')[0])
+
+
+Template.gritsMap.onCreated ->
+  # Public API
+  # Currently we declare methods above for documentation purposes then assign
+  # to the Template.gritsFilter as a global export
+  Template.gritsMap.getInstance = getInstance
+  Template.gritsMap.setInstance = setInstance
+  Template.gritsMap.getCurrentPath = getCurrentPath
+  Template.gritsMap.setCurrentPath = setCurrentPath
+  Template.gritsMap.showPathDetails = showPathDetails
+  Template.gritsMap.showNodeDetails = showNodeDetails
+  Template.gritsMap.addDefaultControls = addDefaultControls
   
   
