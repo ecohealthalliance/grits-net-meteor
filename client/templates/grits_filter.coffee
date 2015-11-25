@@ -7,6 +7,14 @@ _lastFlightId = null # stores the last flight _id from the collection, used in l
 _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
 _arrivalSearch = null # onRendered will set this to a typeahead object
+_typeaheadWeights =
+  _id: 6
+  city: 5
+  name: 4
+  #countryName: 3
+  #stateName: 2
+  #notes: 1
+
 
 # returns the last flight _id, used for the [More] button in limit/offset
 #
@@ -79,6 +87,51 @@ _setArrivalSearch = (typeahead) ->
   _arrivalSearch = typeahead
   return
 
+# determines which field was matched by the typeahead into the server response 
+#
+# @param [String] input, the string used as the search
+# @param [Array] results, the server response
+_determineFieldMatchesByWeight = (input, res) ->
+  numComparator = (a, b) ->
+    a - b
+  strComparator = (a, b) ->
+    if a < b
+      return -1
+    if a > b
+      return 1
+    return 0
+  compare = (a, b) ->
+    return strComparator(a.label, b.label) || numComparator(a.weight, b.weight)
+  
+  matches = []
+  regex = new RegExp(".*?(?:^|\s)(#{input}[^\s$]*).*?", 'ig')
+  
+  for obj in res
+    for field, weight of _typeaheadWeights
+      value = obj.get(field)
+      if _.isEmpty(value)
+        continue
+      if value.match(regex) != null
+        match = _.find(matches, (m) -> m.label == obj.get('_id'))
+        if _.isUndefined(match)
+          match =
+            label: obj.get('_id')
+            value: 'Match: <b>' + field + '</b> &nbsp;&nbsp;' + obj.get('_id') + ' - ' + obj.get('name') + ' - ' + obj.get('city')
+            field: field
+            city: obj.get('city')
+            name: obj.get('name')
+            weight: weight
+          matches.push(match)
+          continue
+        else          
+          if weight > match.weight
+            match.value = obj.get('_id') + ' - ' + value
+            match.field = field
+            match.weight = weight
+  if matches.length > 0
+    return matches.sort(compare)
+  return matches
+  
 # sets an object to be used by Meteors' Blaze templating engine (views)
 Template.gritsFilter.helpers({
   loadedRecords: () ->
@@ -106,7 +159,10 @@ Template.gritsFilter.onRendered ->
         if err or _.isUndefined(res) or _.isEmpty(res)
           return
         else
-          callback(res.map( (v) -> {value: v._id + " - " + v.city, label: v._id} ))
+          matches = _determineFieldMatchesByWeight(query, res)
+          console.log 'matches: ', matches
+          # expects an array of objects with keys [label, value]
+          callback(matches)
       )
     }]
   })
@@ -163,7 +219,7 @@ Template.gritsFilter.onRendered ->
 # events
 #
 # Event handlers for the grits_filter.html template
-_events = Template.gritsFilter.events
+Template.gritsFilter.events
   'keyup #departureSearchMain-tokenfield': (event) ->
     if event.keyCode == 13
       GritsFilterCriteria.scanAll()

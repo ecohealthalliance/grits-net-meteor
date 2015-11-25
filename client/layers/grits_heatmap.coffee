@@ -26,7 +26,7 @@ class GritsHeatmapLayer extends GritsLayer
   # draws the heatmap
   #
   # @note method overrides the parent class GritsLayer clear method
-  # @overload
+  # @override
   draw: () ->
     if @_data.length == 0
       return
@@ -36,7 +36,7 @@ class GritsHeatmapLayer extends GritsLayer
   # clears the heatmap
   #
   # @note method overrides the parent class GritsLayer clear method
-  # @overload
+  # @override
   clear: () ->
     @_data = []
     @_layer.setLatLngs(@_data)
