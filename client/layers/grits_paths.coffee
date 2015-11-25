@@ -200,9 +200,13 @@ class GritsPathLayer extends GritsLayer
     _id = CryptoJS.MD5(origin._id + destination._id).toString()
     path = @_data[_id]
     if (typeof path == 'undefined' or path == null)
-      path = new GritsPath(flight, flight.totalSeats, level, origin, destination)
-      path.setEventHandlers(_eventHandlers)
-      @_data[path._id] = path
+      try
+        path = new GritsPath(flight, flight.totalSeats, level, origin, destination)
+        path.setEventHandlers(_eventHandlers)
+        @_data[path._id] = path
+      catch e
+        console.error(e.message)
+        return
     else
       path.level = level
       path.occurrances += 1
