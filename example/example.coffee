@@ -29,7 +29,7 @@ if Meteor.isClient
       return
 
   Template.gritsMap.onRendered ->
-    
+
     OpenStreetMap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       key: '1234'
       layerName: 'OpenStreetMap'
@@ -41,22 +41,32 @@ if Meteor.isClient
       subdomains: '1234')
     Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       layerName: 'Esri_WorldImagery')
-    
-    baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]    
-    view = {'zoom': 2,'latlng': [30,-20]}
-    
-    map = new GritsMap('grits-map', view, baseLayers)
-    map.init()
-    map.addLayer(new GritsHeatmapLayer(map))
-    map.addLayer(new GritsPathLayer(map))
-    map.addLayer(new GritsNodeLayer(map))
-    
+
+    baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
+    element = 'grits-map'
+    height = window.innerHeight
+    options = {
+      height: height
+      zoomControl: false
+      noWrap: true
+      maxZoom: 18
+      minZoom: 0
+      zoom: 2
+      center: L.latLng(30,-20)
+      layers: baseLayers
+    }
+
+    map = new GritsMap(element, options, baseLayers)
+    map.addGritsLayer(new GritsHeatmapLayer(map))
+    map.addGritsLayer(new GritsPathLayer(map))
+    map.addGritsLayer(new GritsNodeLayer(map))
+
     # Add the default controls to the map.
     Template.gritsMap.addDefaultControls(map)
-    
+
     # Add custom control
-    map.addControl('topleft', 'info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
+    map.addControl(new GritsControl('<b> Select a Module </b><div id="moduleSelectorDiv"></div>', 7, 'topleft', 'info'))
     Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
-    
+
     Template.gritsMap.setInstance(map)
     return
