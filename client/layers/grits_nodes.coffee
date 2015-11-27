@@ -192,9 +192,9 @@ class GritsNodeLayer extends GritsLayer
   # 'overlyadd' and 'overlayremove' methods
   _bindMapEvents: () ->
     self = this
-    if typeof self._map.getMap() == 'undefined'
+    if typeof self._map == 'undefined'
       return  
-    self._map.getMap().on(
+    self._map.on(
       overlayadd: (e) ->
         if e.name == self._name
           if Meteor.gritsUtil.debug
