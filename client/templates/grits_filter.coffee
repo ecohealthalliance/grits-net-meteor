@@ -44,7 +44,7 @@ setLastFlightId = (lastId) ->
 getOrigin = () ->
   query = GritsFilterCriteria.getQueryObject()
   if _.has(query, 'departureAirport._id')
-    # the filter has an array of airports 
+    # the filter has an array of airports
     if _.has(query['departureAirport._id'], '$in')
       origins = query['departureAirport._id']['$in']
       if _.isArray(origins) and origins.length > 0
@@ -87,7 +87,7 @@ _setArrivalSearch = (typeahead) ->
   _arrivalSearch = typeahead
   return
 
-# determines which field was matched by the typeahead into the server response 
+# determines which field was matched by the typeahead into the server response
 #
 # @param [String] input, the string used as the search
 # @param [Array] results, the server response
@@ -102,10 +102,10 @@ _determineFieldMatchesByWeight = (input, res) ->
     return 0
   compare = (a, b) ->
     return strComparator(a.label, b.label) || numComparator(a.weight, b.weight)
-  
+
   matches = []
   regex = new RegExp(".*?(?:^|\s)(#{input}[^\s$]*).*?", 'ig')
-  
+
   for obj in res
     for field, weight of _typeaheadWeights
       value = obj.get(field)
@@ -116,14 +116,14 @@ _determineFieldMatchesByWeight = (input, res) ->
         if _.isUndefined(match)
           match =
             label: obj.get('_id')
-            value: 'Match: <b>' + field + '</b> &nbsp;&nbsp;' + obj.get('_id') + ' - ' + obj.get('name') + ' - ' + obj.get('city')
+            value: '<b>' + field + '</b> &nbsp;&nbsp;' + obj.get('_id') + ' - ' + obj.get('name') + ' - ' + obj.get('city')
             field: field
             city: obj.get('city')
             name: obj.get('name')
             weight: weight
           matches.push(match)
           continue
-        else          
+        else
           if weight > match.weight
             match.value = obj.get('_id') + ' - ' + value
             match.field = field
@@ -131,7 +131,7 @@ _determineFieldMatchesByWeight = (input, res) ->
   if matches.length > 0
     return matches.sort(compare)
   return matches
-  
+
 # sets an object to be used by Meteors' Blaze templating engine (views)
 Template.gritsFilter.helpers({
   loadedRecords: () ->
@@ -152,7 +152,7 @@ Template.gritsFilter.onCreated ->
   Template.gritsFilter.getArrivalSearch = getArrivalSearch
 
 # triggered when the 'filter' template is rendered
-Template.gritsFilter.onRendered ->  
+Template.gritsFilter.onRendered ->
   departureSearchMain = $('#departureSearchMain').tokenfield({
     typeahead: [null, { source: (query, callback) ->
       Meteor.call('typeaheadAirport', query, (err, res) ->
@@ -160,38 +160,41 @@ Template.gritsFilter.onRendered ->
           return
         else
           matches = _determineFieldMatchesByWeight(query, res)
-          console.log 'matches: ', matches
           # expects an array of objects with keys [label, value]
           callback(matches)
       )
     }]
   })
   _setDepartureSearchMain(departureSearchMain)
-  
+
   departureSearch = $('#departureSearch').tokenfield({
     typeahead: [null, { source: (query, callback) ->
       Meteor.call('typeaheadAirport', query, (err, res) ->
         if err or _.isUndefined(res) or _.isEmpty(res)
           return
         else
-          callback(res.map( (v) -> {value: v._id + " - " + v.city, label: v._id} ))
+          matches = _determineFieldMatchesByWeight(query, res)
+          # expects an array of objects with keys [label, value]
+          callback(matches)
       )
     }]
   })
   _setDepartureSearch(departureSearch)
-  
+
   arrivalSearch = $('#arrivalSearch').tokenfield({
     typeahead: [null, { source: (query, callback) ->
       Meteor.call('typeaheadAirport', query, (err, res) ->
         if err or _.isUndefined(res) or _.isEmpty(res)
           return
         else
-          callback(res.map( (v) -> {value: v._id + " - " + v.city, label: v._id} ))
+          matches = _determineFieldMatchesByWeight(query, res)
+          # expects an array of objects with keys [label, value]
+          callback(matches)
       )
     }]
   })
   _setArrivalSearch(arrivalSearch)
-  
+
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
   # apply button and filterLoading indicator.
@@ -240,6 +243,9 @@ Template.gritsFilter.events
     $target = $(e.target)
     $container = $target.closest('.tokenized')
     $container.css('max-width',$target.width())
+    #the typeahead menu should be as wide as the filter at a minimum
+    $menu = $container.find('.tt-dropdown-menu')
+    $menu.css('min-width', $('#filter').width())
     id = $target.attr('id')
     $('#'+id+'-tokenfield').on('blur', (e) ->
       # only allow tokens
