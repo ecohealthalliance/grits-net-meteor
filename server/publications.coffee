@@ -52,9 +52,17 @@ Meteor.methods
   typeaheadAirport: (search, options) ->
     query = {
       $or: [
-        {_id: {$regex: new RegExp(".*?(?:^|\s)(#{search}[^\s$]*).*?", 'i')}},
-        {city: {$regex: new RegExp(".*?(?:^|\s)(#{search}[^\s$]*).*?", 'ig')}},
-        {name: {$regex: new RegExp(".*?(?:^|\s)(#{search}[^\s$]*).*?", 'ig')}},
+        #regex = new RegExp(".*?(?:^|\s)(#{search}[^\s$]*).*?", 'ig')
+        {_id: {$regex: new RegExp(search, 'i')}},
+        {name: {$regex: new RegExp(search, 'i')}},
+        {city: {$regex: new RegExp(search, 'ig')}},
+        {state: {$regex: new RegExp(search, 'ig')}},
+        {stateName: {$regex: new RegExp(search, 'ig')}},
+        {country: {$regex: new RegExp(search, 'ig')}},
+        {countryName: {$regex: new RegExp(search, 'ig')}},
+        {globalRegion: {$regex: new RegExp(search, 'ig')}},
+        {WAC: {$regex: new RegExp(search, 'ig')}}
+        {notes: {$regex: new RegExp(search, 'ig')}}
       ]
     }
     return Airports.find(query, {limit: 10, sort: {_id: 1}}).fetch()

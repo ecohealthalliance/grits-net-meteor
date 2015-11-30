@@ -7,14 +7,18 @@ _lastFlightId = null # stores the last flight _id from the collection, used in l
 _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
 _arrivalSearch = null # onRendered will set this to a typeahead object
-_typeaheadWeights =
-  _id: 6
-  city: 5
-  name: 4
-  #countryName: 3
-  #stateName: 2
-  #notes: 1
 
+_typeaheadMatcher =
+  WAC: {weight: 0, regexOpt: 'ig'}
+  notes: {weight: 1, regexOpt: 'ig'}
+  globalRegion: {weight: 2, regexOpt: 'ig'}
+  countryName: {weight: 3, regexOpt: 'ig'}
+  country: {weight: 4, regexOpt: 'ig'}
+  stateName: {weight: 5, regexOpt: 'ig'}
+  state: {weight: 6, regexOpt: 'ig'}
+  city: {weight: 7, regexOpt: 'ig'}
+  name: {weight: 8, regexOpt: 'i'}
+  _id: {weight: 9, regexOpt: 'i'}
 
 # returns the last flight _id, used for the [More] button in limit/offset
 #
@@ -104,10 +108,12 @@ _determineFieldMatchesByWeight = (input, res) ->
     return strComparator(a.label, b.label) || numComparator(a.weight, b.weight)
 
   matches = []
-  regex = new RegExp(".*?(?:^|\s)(#{input}[^\s$]*).*?", 'ig')
 
   for obj in res
-    for field, weight of _typeaheadWeights
+    for field, matcher of _typeaheadMatcher
+      #regex = new RegExp(".*?(?:^|\s)(#{input}[^\s$]*).*?", 'ig')
+      regex = new RegExp(input, matcher.regexOpt)
+      weight = matcher.weight
       value = obj.get(field)
       if _.isEmpty(value)
         continue
@@ -116,18 +122,20 @@ _determineFieldMatchesByWeight = (input, res) ->
         if _.isUndefined(match)
           match =
             label: obj.get('_id')
-            value: '<b>' + field + '</b> &nbsp;&nbsp;' + obj.get('_id') + ' - ' + obj.get('name') + ' - ' + obj.get('city')
+            value: '<b>' + field + ': ' + value + '</b> &nbsp;&nbsp; Code: ' + obj.get('_id') + ' Name: ' + obj.get('name')
             field: field
-            city: obj.get('city')
-            name: obj.get('name')
+            fieldValue: value
             weight: weight
           matches.push(match)
           continue
         else
           if weight > match.weight
-            match.value = obj.get('_id') + ' - ' + value
+            value: '<b>' + field + ': ' + value + '</b> &nbsp;&nbsp; Code: ' + obj.get('_id') + ' Name: ' + obj.get('name')
             match.field = field
+            match.fieldValue = value
             match.weight = weight
+  if Meteor.gritsUtil.debug
+    console.log('matches:', matches)
   if matches.length > 0
     return matches.sort(compare)
   return matches
