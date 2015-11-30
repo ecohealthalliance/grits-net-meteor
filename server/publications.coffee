@@ -31,6 +31,7 @@ Meteor.publish 'flightsByQuery', (query, limit, lastId) ->
     return []
 
   extendQuery(query, lastId)
+
   options = buildOptions(limit)
 
   console.log 'query: %j', query
