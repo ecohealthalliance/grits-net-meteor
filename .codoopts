@@ -1,0 +1,10 @@
+--name "grits:grits-net-meteor"
+--title "grits-net-meteor Documentation"
+--readme ./README.md  
+--private
+--quiet
+--extension coffee
+--output ./doc
+./client/models
+./client/layers
+./client/templates

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>grits-net-meteor Documentation</title>
+  <script src='../javascript/application.js'></script>
+  <script src='../javascript/search.js'></script>
+  <link rel='stylesheet' href='../stylesheets/application.css' type='text/css'>
+</head>
+  <body>
+    <div id='base' data-path='../'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='../extra/undefined.html' title='grits:grits-net-meteor'>
+      grits:grits-net-meteor
+    </a>
+    &raquo;
+    <a href='../alphabetical_index.html' title='Index'>
+      Index
+    </a>
+    &raquo;
+    <span class='title'>GritsPathLayer</span>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        Class:
+        GritsPathLayer
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td>client&#47;layers&#47;grits_paths.coffee</td>
+        </tr>
+        <tr>
+          <td>Inherits:</td>
+          <td>
+            GritsLayer
+          </td>
+        </tr>
+      </table>
+      <h2>Overview</h2>
+      <div class='docstring'>
+  <p>Creates an instance of a GritsNodeLayer, extends  GritsLayer</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>map,</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>an instance of GritsMap </span>
+    </li>
+  </ul>
+</div>
+      <h2>Instance Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#_drawCallback-dynamic'>
+        #
+(void)
+<b>_drawCallback</b><span>(selection, projection)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      The D3 callback that renders the svg elements on the map 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_getWeight-dynamic'>
+        #
+(Number)
+<b>_getWeight</b><span>(path)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      returns the path&#39;s weight based on throughput 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_getStyle-dynamic'>
+        #
+(String)
+<b>_getStyle</b><span>(path)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      returns normalized hex color code for a path 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#convertFlight-dynamic'>
+        #
+(void)
+<b>convertFlight</b><span>(flight, level, origin, destination)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      converts domain specific flight data into generic GritsNode nodes 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_bindMapEvents-dynamic'>
+        #
+(void)
+<b>_bindMapEvents</b><span>()</span>
+      </a>
+    </span>
+    <span class='desc'>
+      binds to the Tracker.gritsMap.getInstance() map event listener .on &#39;overlyadd&#39; and &#39;overlayremove&#39; methods
+
+    </span>
+  </li>
+</ul>
+      <h2>Constructor Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='constructor-dynamic'>
+      #
+(void)
+<b>constructor</b><span>(map)</span>
+      <br>
+    </p>
+    
+  </div>
+</div>
+      <h2>Instance Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='_drawCallback-dynamic'>
+      #
+(void)
+<b>_drawCallback</b><span>(selection, projection)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>The D3 callback that renders the svg elements on the map</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>selection,</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>teh array of elements pulled from the current document, also includes helper methods for filtering similar to jQuery </span>
+    </li>
+    <li>
+      <span class='name'>projection,</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>the current scale </span>
+    </li>
+  </ul>
+  <h3>See also:</h3>
+  <ul class='see'>
+    <li>
+      <a href='https://github.com/mbostock/d3/wiki/API-Reference'>https:&#47;&#47;github.com&#47;mbostock&#47;d3&#47;wiki&#47;API-Reference</a>
+    </li>
+    <li>
+      <a href='https://github.com/mbostock/d3/wiki/Selections'>https:&#47;&#47;github.com&#47;mbostock&#47;d3&#47;wiki&#47;Selections</a>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_getWeight-dynamic'>
+      #
+(Number)
+<b>_getWeight</b><span>(path)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>returns the path&#39;s weight based on throughput</p>
+</div>
+<div class='tags'>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Number</tt>
+      )
+      &mdash;
+      <span class='desc'>weight </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_getStyle-dynamic'>
+      #
+(String)
+<b>_getStyle</b><span>(path)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>returns normalized hex color code for a path</p>
+</div>
+<div class='tags'>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>String</tt>
+      )
+      &mdash;
+      <span class='desc'>normalizedColor, a hex string </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='convertFlight-dynamic'>
+      #
+(void)
+<b>convertFlight</b><span>(flight, level, origin, destination)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>converts domain specific flight data into generic GritsNode nodes</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>flight,</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>an Astronomy class &#39;Flight&#39; represending a single record from a MongoDB collection </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_bindMapEvents-dynamic'>
+      #
+(void)
+<b>_bindMapEvents</b><span>()</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>binds to the Tracker.gritsMap.getInstance() map event listener .on
+&#39;overlyadd&#39; and &#39;overlayremove&#39; methods</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+</div>
+    </div>
+    <div id='footer'>
+  November 24, 15 13:30:18 by
+  <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
+    Codo
+  </a>
+  2.0.11
+  &#10034;
+  Press H to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/netzpirat' target='_parent'>@netzpirat</a>
+  &#10034;
+  <a href='http://twitter.com/_inossidabile' target='_parent'>@_inossidabile</a>
+</div>
+<iframe id='search_frame'></iframe>
+<div id='fuzzySearch'>
+  <input type='text'>
+  <ol></ol>
+</div>
+<div id='help'>
+  <p>
+    Quickly fuzzy find classes, mixins, methods, file:
+  </p>
+  <ul>
+    <li>
+      <span>T</span>
+      Open fuzzy finder dialog
+    </li>
+  </ul>
+  <p>
+    Control the navigation frame:
+  </p>
+  <ul>
+    <li>
+      <span>L</span>
+      Toggle list view
+    </li>
+    <li>
+      <span>C</span>
+      Show class list
+    </li>
+    <li>
+      <span>I</span>
+      Show mixin list
+    </li>
+    <li>
+      <span>F</span>
+      Show file list
+    </li>
+    <li>
+      <span>M</span>
+      Show method list
+    </li>
+    <li>
+      <span>E</span>
+      Show extras list
+    </li>
+  </ul>
+  <p>
+    You can focus and blur the search input:
+  </p>
+  <ul>
+    <li>
+      <span>S</span>
+      Focus search input
+    </li>
+    <li>
+      <span>Esc</span>
+      Blur search input
+    </li>
+  </ul>
+</div>
+  </body>
+</html>

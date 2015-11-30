@@ -7,8 +7,8 @@ if Meteor.isClient
 
   Template.moduleSelector.events
     'click .a': ->
-      pathLayer = new GritsPathLayer()
-      nodeLayer = new GritsNodeLayer()
+      pathLayer = new GritsPathLayer(Template.gritsMap.getInstance())
+      nodeLayer = new GritsNodeLayer(Template.gritsMap.getInstance())
       pathLayer.clear()
       nodeLayer.clear()
 
@@ -28,6 +28,35 @@ if Meteor.isClient
     'click .e': ->
       return
 
-  Template.map.onRendered ->
-    Meteor.gritsUtil.addControl('topleft', 'info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
+  Template.gritsMap.onRendered ->
+    
+    OpenStreetMap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      key: '1234'
+      layerName: 'OpenStreetMap'
+      styleId: 22677)
+    MapQuestOpen_OSM = L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/{type}/{z}/{x}/{y}.{ext}',
+      type: 'map'
+      layerName: 'MapQuestOpen_OSM'
+      ext: 'jpg'
+      subdomains: '1234')
+    Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      layerName: 'Esri_WorldImagery')
+    
+    baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]    
+    view = {'zoom': 2,'latlng': [30,-20]}
+    
+    map = new GritsMap('grits-map', view, baseLayers)
+    map.init()
+    map.addLayer(new GritsHeatmapLayer(map))
+    map.addLayer(new GritsPathLayer(map))
+    map.addLayer(new GritsNodeLayer(map))
+    
+    # Add the default controls to the map.
+    Template.gritsMap.addDefaultControls(map)
+    
+    # Add custom control
+    map.addControl('topleft', 'info', '<b> Select a Module </b><div id="moduleSelectorDiv"></div>')
     Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
+    
+    Template.gritsMap.setInstance(map)
+    return
