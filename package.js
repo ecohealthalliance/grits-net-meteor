@@ -37,6 +37,7 @@ Package.on_use(function(api){
   api.add_files([
     'client/stylesheets/main.styl',
     'client/lib/L.D3SvgOverlay.min.js',
+    'client/lib/sorted-set.min.js',
     'client/grits_util.coffee',
     'client/layers/grits_nodes.coffee',
     'client/layers/grits_paths.coffee',    
@@ -75,6 +76,7 @@ Package.on_use(function(api){
     'Heatmap',
     'Heatmaps',
     'GritsFilterCriteria',
+    'GritsControl',
     'GritsMap',
     'GritsHeatmapLayer',
     'GritsNodeLayer',

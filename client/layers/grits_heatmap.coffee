@@ -26,7 +26,7 @@ class GritsHeatmapLayer extends GritsLayer
   # draws the heatmap
   #
   # @note method overrides the parent class GritsLayer clear method
-  # @overload
+  # @override
   draw: () ->
     if @_data.length == 0
       return
@@ -36,7 +36,7 @@ class GritsHeatmapLayer extends GritsLayer
   # clears the heatmap
   #
   # @note method overrides the parent class GritsLayer clear method
-  # @overload
+  # @override
   clear: () ->
     @_data = []
     @_layer.setLatLngs(@_data)
@@ -56,7 +56,7 @@ class GritsHeatmapLayer extends GritsLayer
   #
   # @return [Integer] zoomFactor
   _getZoomFactor: () ->
-    (@_map.getMap().getMaxZoom() - @_map.getMap().getZoom()) * 5
+    (@_map.getMaxZoom() - @_map.getZoom()) * 5
   
   # setup a Meteor Tracker.autorun function to watch the global Session object
   # 'grits-net-meteor:query' to contain departures.  If so, make a server side
@@ -102,9 +102,9 @@ class GritsHeatmapLayer extends GritsLayer
   # 'overlyadd' and 'overlayremove' methods
   _bindMapEvents: () ->
     self = this
-    if typeof self._map.getMap() == 'undefined'
+    if typeof self._map == 'undefined'
       return  
-    self._map.getMap().on(
+    self._map.on(
       overlayadd: (e) ->
         if e.name == self._name
           if Meteor.gritsUtil.debug

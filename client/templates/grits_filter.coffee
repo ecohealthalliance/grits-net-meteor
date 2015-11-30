@@ -8,6 +8,18 @@ _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
 _arrivalSearch = null # onRendered will set this to a typeahead object
 
+_typeaheadMatcher =
+  WAC: {weight: 0, regexOpt: 'ig'}
+  notes: {weight: 1, regexOpt: 'ig'}
+  globalRegion: {weight: 2, regexOpt: 'ig'}
+  countryName: {weight: 3, regexOpt: 'ig'}
+  country: {weight: 4, regexOpt: 'ig'}
+  stateName: {weight: 5, regexOpt: 'ig'}
+  state: {weight: 6, regexOpt: 'ig'}
+  city: {weight: 7, regexOpt: 'ig'}
+  name: {weight: 8, regexOpt: 'i'}
+  _id: {weight: 9, regexOpt: 'i'}
+
 # returns the last flight _id, used for the [More] button in limit/offset
 #
 # @return [String] lastFlightId, the last _id of a flight record
@@ -36,7 +48,7 @@ setLastFlightId = (lastId) ->
 getOrigin = () ->
   query = GritsFilterCriteria.getQueryObject()
   if _.has(query, 'departureAirport._id')
-    # the filter has an array of airports 
+    # the filter has an array of airports
     if _.has(query['departureAirport._id'], '$in')
       origins = query['departureAirport._id']['$in']
       if _.isArray(origins) and origins.length > 0
@@ -79,6 +91,55 @@ _setArrivalSearch = (typeahead) ->
   _arrivalSearch = typeahead
   return
 
+# determines which field was matched by the typeahead into the server response
+#
+# @param [String] input, the string used as the search
+# @param [Array] results, the server response
+_determineFieldMatchesByWeight = (input, res) ->
+  numComparator = (a, b) ->
+    a - b
+  strComparator = (a, b) ->
+    if a < b
+      return -1
+    if a > b
+      return 1
+    return 0
+  compare = (a, b) ->
+    return strComparator(a.label, b.label) || numComparator(a.weight, b.weight)
+
+  matches = []
+
+  for obj in res
+    for field, matcher of _typeaheadMatcher
+      #regex = new RegExp(".*?(?:^|\s)(#{input}[^\s$]*).*?", 'ig')
+      regex = new RegExp(input, matcher.regexOpt)
+      weight = matcher.weight
+      value = obj.get(field)
+      if _.isEmpty(value)
+        continue
+      if value.match(regex) != null
+        match = _.find(matches, (m) -> m.label == obj.get('_id'))
+        if _.isUndefined(match)
+          match =
+            label: obj.get('_id')
+            value: '<b>' + field + ': ' + value + '</b> &nbsp;&nbsp; Code: ' + obj.get('_id') + ' Name: ' + obj.get('name')
+            field: field
+            fieldValue: value
+            weight: weight
+          matches.push(match)
+          continue
+        else
+          if weight > match.weight
+            value: '<b>' + field + ': ' + value + '</b> &nbsp;&nbsp; Code: ' + obj.get('_id') + ' Name: ' + obj.get('name')
+            match.field = field
+            match.fieldValue = value
+            match.weight = weight
+  if Meteor.gritsUtil.debug
+    console.log('matches:', matches)
+  if matches.length > 0
+    return matches.sort(compare)
+  return matches
+
 # sets an object to be used by Meteors' Blaze templating engine (views)
 Template.gritsFilter.helpers({
   loadedRecords: () ->
@@ -99,43 +160,49 @@ Template.gritsFilter.onCreated ->
   Template.gritsFilter.getArrivalSearch = getArrivalSearch
 
 # triggered when the 'filter' template is rendered
-Template.gritsFilter.onRendered ->  
+Template.gritsFilter.onRendered ->
   departureSearchMain = $('#departureSearchMain').tokenfield({
     typeahead: [null, { source: (query, callback) ->
       Meteor.call('typeaheadAirport', query, (err, res) ->
         if err or _.isUndefined(res) or _.isEmpty(res)
           return
         else
-          callback(res.map( (v) -> {value: v._id + " - " + v.city, label: v._id} ))
+          matches = _determineFieldMatchesByWeight(query, res)
+          # expects an array of objects with keys [label, value]
+          callback(matches)
       )
     }]
   })
   _setDepartureSearchMain(departureSearchMain)
-  
+
   departureSearch = $('#departureSearch').tokenfield({
     typeahead: [null, { source: (query, callback) ->
       Meteor.call('typeaheadAirport', query, (err, res) ->
         if err or _.isUndefined(res) or _.isEmpty(res)
           return
         else
-          callback(res.map( (v) -> {value: v._id + " - " + v.city, label: v._id} ))
+          matches = _determineFieldMatchesByWeight(query, res)
+          # expects an array of objects with keys [label, value]
+          callback(matches)
       )
     }]
   })
   _setDepartureSearch(departureSearch)
-  
+
   arrivalSearch = $('#arrivalSearch').tokenfield({
     typeahead: [null, { source: (query, callback) ->
       Meteor.call('typeaheadAirport', query, (err, res) ->
         if err or _.isUndefined(res) or _.isEmpty(res)
           return
         else
-          callback(res.map( (v) -> {value: v._id + " - " + v.city, label: v._id} ))
+          matches = _determineFieldMatchesByWeight(query, res)
+          # expects an array of objects with keys [label, value]
+          callback(matches)
       )
     }]
   })
   _setArrivalSearch(arrivalSearch)
-  
+
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
   # apply button and filterLoading indicator.
@@ -163,7 +230,7 @@ Template.gritsFilter.onRendered ->
 # events
 #
 # Event handlers for the grits_filter.html template
-_events = Template.gritsFilter.events
+Template.gritsFilter.events
   'keyup #departureSearchMain-tokenfield': (event) ->
     if event.keyCode == 13
       GritsFilterCriteria.scanAll()
@@ -184,6 +251,9 @@ _events = Template.gritsFilter.events
     $target = $(e.target)
     $container = $target.closest('.tokenized')
     $container.css('max-width',$target.width())
+    #the typeahead menu should be as wide as the filter at a minimum
+    $menu = $container.find('.tt-dropdown-menu')
+    $menu.css('min-width', $('#filter').width())
     id = $target.attr('id')
     $('#'+id+'-tokenfield').on('blur', (e) ->
       # only allow tokens

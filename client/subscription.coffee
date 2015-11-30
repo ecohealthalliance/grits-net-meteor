@@ -37,8 +37,8 @@ Tracker.autorun ->
 #
 _processQueueCallback = (res) ->
   map = Template.gritsMap.getInstance()
-  nodeLayer = map.getLayer('Nodes')
-  pathLayer = map.getLayer('Paths')  
+  nodeLayer = map.getGritsLayer('Nodes')
+  pathLayer = map.getGritsLayer('Paths')  
   nodeLayer.clear()
   pathLayer.clear()
   
@@ -71,8 +71,8 @@ _processMoreQueueCallback = (res) ->
   count =  Session.get('grits-net-meteor:loadedRecords')
   tcount = 0
   map = Template.gritsMap.getInstance()
-  nodeLayer = map.getLayer('Nodes')
-  pathLayer = map.getLayer('Paths')  
+  nodeLayer = map.getGritsLayer('Nodes')
+  pathLayer = map.getGritsLayer('Paths')  
   
   processQueue = async.queue(((flight, callback) ->
     nodes = nodeLayer.convertFlight(flight)

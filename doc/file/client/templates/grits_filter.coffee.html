@@ -71,6 +71,55 @@
     <pre><code class='coffeescript'>null</code></pre>
     
   </dd>
+  <dt id='_typeaheadMatcher-variable'>
+    _typeaheadMatcher
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>{
+  WAC: {
+    weight: 0,
+    regexOpt: &#39;ig&#39;
+  },
+  notes: {
+    weight: 1,
+    regexOpt: &#39;ig&#39;
+  },
+  globalRegion: {
+    weight: 2,
+    regexOpt: &#39;ig&#39;
+  },
+  countryName: {
+    weight: 3,
+    regexOpt: &#39;ig&#39;
+  },
+  country: {
+    weight: 4,
+    regexOpt: &#39;ig&#39;
+  },
+  stateName: {
+    weight: 5,
+    regexOpt: &#39;ig&#39;
+  },
+  state: {
+    weight: 6,
+    regexOpt: &#39;ig&#39;
+  },
+  city: {
+    weight: 7,
+    regexOpt: &#39;ig&#39;
+  },
+  name: {
+    weight: 8,
+    regexOpt: &#39;i&#39;
+  },
+  _id: {
+    weight: 9,
+    regexOpt: &#39;i&#39;
+  }
+}</code></pre>
+    
+  </dd>
 </dl>
       <h2>Method Summary</h2>
       <ul class='summary'>
@@ -180,6 +229,18 @@
     </span>
     <span class='desc'>
       sets the typeahead object for the &#39;#departureSearchMain&#39; input 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_determineFieldMatchesByWeight-'>
+        ~
+(void)
+<b>_determineFieldMatchesByWeight</b><span>(input, res)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      determines which field was matched by the typeahead into the server response 
     </span>
   </li>
 </ul>
@@ -382,10 +443,46 @@
 <div class='tags'>
 </div>
   </div>
+  <div class='method_details'>
+    <p class='signature' id='_determineFieldMatchesByWeight-'>
+      ~
+(void)
+<b>_determineFieldMatchesByWeight</b><span>(input, res)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>determines which field was matched by the typeahead into the server response</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>input,</span>
+      <span class='type'>
+        (
+          <tt>String</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>the string used as the search </span>
+    </li>
+    <li>
+      <span class='name'>results,</span>
+      <span class='type'>
+        (
+          <tt>Array</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>the server response </span>
+    </li>
+  </ul>
+</div>
+  </div>
 </div>
     </div>
     <div id='footer'>
-  November 24, 15 13:30:19 by
+  November 30, 15 13:30:40 by
   <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
     Codo
   </a>

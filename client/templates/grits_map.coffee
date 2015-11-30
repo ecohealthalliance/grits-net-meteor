@@ -66,13 +66,16 @@ showPathDetails = (path) ->
 #
 # @param [GritsMap] map - map to apply the default controls
 addDefaultControls = (map) ->
-  map.addControl('bottomright', 'info path-detail', '')
+  pathDetail = new GritsControl('', 7, 'bottomright', 'info path-detail')
+  map.addControl(pathDetail)
   $('.path-detail').hide()
   
-  map.addControl('bottomright', 'info node-detail', '')
+  nodeDetail = new GritsControl('', 7, 'bottomright', 'info node-detail')
+  map.addControl(nodeDetail)
   $('.node-detail').hide()
   
-  map.addControl('topleft', 'info', '<div id="filterContainer">')
+  filterControl = new GritsControl('<div id="filterContainer">', 10, 'topleft', 'info')
+  map.addControl(filterControl)
   Blaze.render(Template.gritsFilter, $('#filterContainer')[0])
 
 

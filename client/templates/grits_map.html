@@ -3,5 +3,12 @@
 </template>
 
 <template name="airportPill">
-    <span class="airportPill">Airport: {{_id}} - {{name}}</span>
+    <span class="airportPill">
+      <b>{{field}}</b>:
+      {{#if _id}}
+        {{_id}} - {{city}}
+      {{ else }}
+        {{_id}} - {{value}}
+      {{/if}}
+    </span>
 </template>
