@@ -179,7 +179,7 @@ GritsPathLayer::drawCallback = (selection, projection) ->
       return weight / projection.scale
     ).attr("stroke", (path) ->
       if path.clicked
-        return 'blue'
+        return '#EEA66C'
       self.getStyle(path)
     ).attr("fill", "none")
     .attr("marker-mid":"url(#arrowhead)")
@@ -250,7 +250,7 @@ GritsPathLayer::drawCallback = (selection, projection) ->
       weight / projection.scale
     ).attr("stroke", (path) ->
       if path.clicked
-        return 'blue'
+        return '#EEA66C'
       self.getStyle(path)
     ).attr("fill", "none")
     .attr("marker-mid":"url(#arrowhead)")
@@ -325,15 +325,15 @@ GritsPathLayer::getStyle = (path) ->
     np = parseFloat(1-(1 - x))
     path.normalizedPercent = np
     if np < .20
-      color = '#fef0d9'
+      color = '#89B3FB'
     else if np < .40
-      color = '#fdcc8a'
+      color = '#A69ED5'
     else if np < .60
-      color = '#fc8d59'
+      color = '#C488AE'
     else if np < .80
-      color = '#e34a33'
+      color = '#E17288'
     else if np <= 1
-      color = '#b30000'
+      color = '#FE5D62'
   return color
 
 # convertFlight
