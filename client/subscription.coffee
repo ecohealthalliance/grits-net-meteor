@@ -38,10 +38,10 @@ Tracker.autorun ->
 _processQueueCallback = (res) ->
   map = Template.gritsMap.getInstance()
   nodeLayer = map.getGritsLayer('Nodes')
-  pathLayer = map.getGritsLayer('Paths')  
+  pathLayer = map.getGritsLayer('Paths')
   nodeLayer.clear()
   pathLayer.clear()
-  
+
   count = 0
   processQueue = async.queue(((flight, callback) ->
     nodes = nodeLayer.convertFlight(flight)
@@ -58,12 +58,13 @@ _processQueueCallback = (res) ->
   processQueue.drain = ->
     nodeLayer.draw()
     pathLayer.draw()
+    Template.gritsMap.updateFlightTable()
     Session.set('grits-net-meteor:loadedRecords', count)
     Session.set('grits-net-meteor:isUpdating', false)
 
   processQueue.push(res)
   return
-  
+
 # processMoreQueueCallback
 #
 #
@@ -72,8 +73,8 @@ _processMoreQueueCallback = (res) ->
   tcount = 0
   map = Template.gritsMap.getInstance()
   nodeLayer = map.getGritsLayer('Nodes')
-  pathLayer = map.getGritsLayer('Paths')  
-  
+  pathLayer = map.getGritsLayer('Paths')
+
   processQueue = async.queue(((flight, callback) ->
     nodes = nodeLayer.convertFlight(flight)
     pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
@@ -87,10 +88,10 @@ _processMoreQueueCallback = (res) ->
   ), 1)
 
   # callback method for when all items within the queue are processed
-  processQueue.drain = ->      
+  processQueue.drain = ->
     nodeLayer.draw()
     pathLayer.draw()
-
+    Template.gritsMap.updateFlightTable()
     Session.set('grits-net-meteor:loadedRecords', count+res.length)
     Session.set('grits-net-meteor:isUpdating', false)
 
@@ -136,7 +137,7 @@ _onMoreSubscriptionsReady = () ->
         Template.gritsFilter.setLastFlightId(res[2])
         _processMoreQueueCallback(res[0])
       return
-  
+
   tflights = Flights.find().fetch()
   Template.gritsFilter.setLastFlightId()
   _processMoreQueueCallback(tflights)

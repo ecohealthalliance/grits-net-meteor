@@ -40,9 +40,11 @@ Package.on_use(function(api){
     'client/lib/sorted-set.min.js',
     'client/grits_util.coffee',
     'client/layers/grits_nodes.coffee',
-    'client/layers/grits_paths.coffee',    
+    'client/layers/grits_paths.coffee',
     'client/layers/grits_heatmap.coffee',
     'client/models/grits_filter_criteria.coffee',
+    'client/templates/flightTable.html',
+    'client/templates/flightTableRow.html',
     'client/templates/grits_map.html',
     'client/templates/grits_map.coffee',
     'client/templates/legend.html',
@@ -52,11 +54,11 @@ Package.on_use(function(api){
     'client/templates/pathDetails.html',
     'client/subscription.coffee'
   ], 'client');
-  
+
   api.addAssets([
     'client/images/ajax-loader.gif'
   ], 'client');
-  
+
   // both client and server files
   api.add_files([
     'models/airports.coffee',
