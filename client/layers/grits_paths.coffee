@@ -125,7 +125,7 @@ class GritsPathLayer extends GritsLayer
         return weight / projection.scale
       ).attr("stroke", (path) ->
         if path.clicked
-          return 'blue'
+          return '#EEA66C'
         path.color = self._getStyle(path)
         return path.color
       ).attr("fill", "none")
@@ -166,7 +166,7 @@ class GritsPathLayer extends GritsLayer
         weight / projection.scale
       ).attr("stroke", (path) ->
         if path.clicked
-          return 'blue'
+          return '#EEA66C'
         path.color = self._getStyle(path)
         return path.color
       ).attr("fill", "none")
@@ -199,15 +199,15 @@ class GritsPathLayer extends GritsLayer
       np = parseFloat(1 - (1 - x))
       path.normalizedPercent = np
       if np < .20
-        path.color = '#fef0d9'
+        path.color = '#89B3FB'
       else if np < .40
-        path.color = '#fdcc8a'
+        path.color = '#A69ED5'
       else if np < .60
-        path.color = '#fc8d59'
+        path.color = '#C488AE'
       else if np < .80
-        path.color = '#e34a33'
+        path.color = '#E17288'
       else if np <= 1
-        path.color = '#b30000'
+        path.color = '#FE5D62'
     return path.color
 
   # converts domain specific flight data into generic GritsNode nodes

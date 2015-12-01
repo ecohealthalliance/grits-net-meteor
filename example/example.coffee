@@ -29,11 +29,11 @@ if Meteor.isClient
       return
 
   Template.gritsMap.onRendered ->
-
-    OpenStreetMap = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      key: '1234'
-      layerName: 'OpenStreetMap'
-      styleId: 22677)
+    OpenStreetMap = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+      layerName: 'CartoDB_Positron'
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+      subdomains: 'abcd'
+      maxZoom: 19)
     MapQuestOpen_OSM = L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/{type}/{z}/{x}/{y}.{ext}',
       type: 'map'
       layerName: 'MapQuestOpen_OSM'

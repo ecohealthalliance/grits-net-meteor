@@ -15,7 +15,7 @@ class GritsHeatmapLayer extends GritsLayer
     @_map = map  
     @_data = []
     
-    @_layer = L.heatLayer([], {radius: 35, blur: 55})
+    @_layer = L.heatLayer([], {radius: 30, blur: 15})
     @_layerGroup = L.layerGroup([@_layer])
     @_map.addOverlayControl(@_name, @_layerGroup)
     

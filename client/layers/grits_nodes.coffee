@@ -16,6 +16,19 @@ _eventHandlers = {
       GritsFilterCriteria.readDeparture()
       GritsFilterCriteria.apply()
 }
+# custom color scale for each marker
+_colorScale =
+  9: 'F9A839'
+  8: 'F9AF40'
+  7: 'F9B747'
+  6: 'F9BE4E'
+  5: 'F9C656'
+  4: 'F9CE5D'
+  3: 'F9D564'
+  2: 'F9DD6B'
+  1: 'F9E573'
+
+
 # Creates an instance of a GritsNodeLayer, extends  GritsLayer
 #
 # @param [Object] map, an instance of GritsMap
@@ -63,48 +76,44 @@ class GritsNodeLayer extends GritsLayer
     self._normalizedCI = _.max(sums)
   
     # select any existing circles and store data onto elements
-    markers = selection.selectAll('image').data(nodes, (node) -> node._id)
+    markers = selection.selectAll('circle').data(nodes, (node) -> node._id)
   
     #work on existing nodes
     markers
-      .attr('xlink:href', (node) ->
-        self._getMarkerHref(node)
-      )
-      .attr('x', (node) ->
+      .attr('cx', (node) ->
         x = projection.latLngToLayerPoint(node.latLng).x
         return x - ((node.marker.width/2) / projection.scale)
       )
-      .attr('y', (node) ->
+      .attr('cy', (node) ->
         y = projection.latLngToLayerPoint(node.latLng).y
-        return y - ((node.marker.height) / projection.scale)
+        return y - ((node.marker.height/2) / projection.scale)
       )
-      .attr('width', (node) ->
+      .attr('r', (node) ->
         (node.marker.width) / projection.scale
       )
-      .attr('height', (node) ->
-        (node.marker.height) / projection.scale
+      .attr('fill', (node) ->
+        '#'+self._getMarkerColor(node)
       )
+      .attr('fill-opacity', .8)
   
   
     # add new elements workflow (following https://github.com/mbostock/d3/wiki/Selections#enter )
-    markers.enter().append('image')
-      .attr('xlink:href', (node) ->
-        self._getMarkerHref(node)
-      )
-      .attr('x', (node) ->
+    markers.enter().append('circle')
+      .attr('cx', (node) ->
         x = projection.latLngToLayerPoint(node.latLng).x
         return x - ((node.marker.width/2) / projection.scale)
       )
-      .attr('y', (node) ->
+      .attr('cy', (node) ->
         y = projection.latLngToLayerPoint(node.latLng).y
-        return y - ((node.marker.height) / projection.scale)
+        return y - ((node.marker.height/2) / projection.scale)
       )
-      .attr('width', (node) ->
+      .attr('r', (node) ->
         (node.marker.width) / projection.scale
       )
-      .attr('height', (node) ->
-        (node.marker.height) / projection.scale
+      .attr('fill', (node) ->
+        '#'+self._getMarkerColor(node)
       )
+      .attr('fill-opacity', .8)
       .attr('class', (node) ->
         'marker-icon'
       )
@@ -137,7 +146,8 @@ class GritsNodeLayer extends GritsLayer
       departureNode = self._data[departure._id]
       if (typeof departureNode == "undefined" or departureNode == null)
         try
-          departureNode = new GritsNode(departure)
+          marker = new GritsMarker(7, 7, _colorScale)
+          departureNode = new GritsNode(departure, marker)
           departureNode.setEventHandlers(_eventHandlers)
           departureNode.outgoingThroughput = flight.totalSeats
         catch e
@@ -153,7 +163,8 @@ class GritsNodeLayer extends GritsLayer
       arrivalNode = self._data[arrival._id]
       if (typeof arrivalNode == "undefined" or arrivalNode == null)
         try
-          arrivalNode = new GritsNode(arrival)
+          marker = new GritsMarker(7, 7, _colorScale)
+          arrivalNode = new GritsNode(arrival, marker)
           arrivalNode.setEventHandlers(_eventHandlers)
           arrivalNode.incomingThroughput = flight.totalSeats
         catch e
@@ -183,10 +194,21 @@ class GritsNodeLayer extends GritsLayer
   _getMarkerHref: (node) ->
     v = node.marker.colorScale[@_getNormalizedThroughput(node) * 10]
     if !(typeof v == 'undefined' or v == null)
-      href = "/packages/grits_grits-net-mapper/images/marker-icon-#{v}.svg"
+      href = '/packages/grits_grits-net-mapper/images/marker-icon-#{v}.svg'
     else
       href = '/packages/grits_grits-net-mapper/images/marker-icon-B8B8B8.svg'
     return href
+
+  # returns the color to use as the marker fill
+  #
+  # @return [String] color, the marker image color
+  _getMarkerColor: (node) ->
+    v = node.marker.colorScale[@_getNormalizedThroughput(node) * 10]
+    if !(typeof v == 'undefined' or v == null)
+      color = v
+    else
+      color = 'DB943E'
+    return color 
   
   # binds to the Tracker.gritsMap.getInstance() map event listener .on
   # 'overlyadd' and 'overlayremove' methods
