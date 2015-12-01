@@ -1,3 +1,4 @@
 example/packages
 .project
 node_modules/
+doc/
