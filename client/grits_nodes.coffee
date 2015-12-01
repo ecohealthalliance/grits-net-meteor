@@ -21,8 +21,8 @@ GritsNode = (obj) ->
   @_name = 'Node'
 
   @marker =
-    height: 25
-    width: 15
+    height: 7
+    width: 7
 
   @latLng = [latitude, longitude]
 
@@ -33,17 +33,16 @@ GritsNode = (obj) ->
   @metadata = {}
   _.extend(@metadata, obj)
 
-  @grayscale =
-    9: '282828'
-    8: '383838'
-    7: '484848'
-    6: '585858'
-    5: '686868'
-    4: '787878'
-    3: '888888'
-    2: '989898'
-    1: 'A8A8A8'
-    0: 'B8B8B8'
+  @colorScale =
+    9: 'F9A839'
+    8: 'F9AF40'
+    7: 'F9B747'
+    6: 'F9BE4E'
+    5: 'F9C656'
+    4: 'F9CE5D'
+    3: 'F9D564'
+    2: 'F9DD6B'
+    1: 'F9E573'
   return
 
 GritsNode::onClickHandler = (element, selection, projection) ->
@@ -137,48 +136,43 @@ GritsNodeLayer::drawCallback = (selection, projection) ->
   self.maxValue = _.max(sums)
 
   # select any existing circles and store data onto elements
-  markers = selection.selectAll('image').data(nodes, (node) -> node._id)
+  markers = selection.selectAll('circle').data(nodes, (node) -> node._id)
 
   #work on existing nodes
   markers
-    .attr('xlink:href', (node) ->
-      self.getMarkerHref(node)
-    )
-    .attr('x', (node) ->
+    .attr('cx', (node) ->
       x = projection.latLngToLayerPoint(node.latLng).x
       return x - ((node.marker.width/2) / projection.scale)
     )
-    .attr('y', (node) ->
+    .attr('cy', (node) ->
       y = projection.latLngToLayerPoint(node.latLng).y
-      return y - ((node.marker.height) / projection.scale)
+      return y - ((node.marker.height/2) / projection.scale)
     )
-    .attr('width', (node) ->
+    .attr('r', (node) ->
       (node.marker.width) / projection.scale
     )
-    .attr('height', (node) ->
-      (node.marker.height) / projection.scale
+    .attr('fill', (node) ->
+      '#'+self.getMarkerColor(node)
     )
-
+    .attr('fill-opacity', .8)
 
   # add new elements workflow (following https://github.com/mbostock/d3/wiki/Selections#enter )
-  markers.enter().append('image')
-    .attr('xlink:href', (node) ->
-      self.getMarkerHref(node)
-    )
-    .attr('x', (node) ->
+  markers.enter().append('circle')
+    .attr('cx', (node) ->
       x = projection.latLngToLayerPoint(node.latLng).x
       return x - ((node.marker.width/2) / projection.scale)
     )
-    .attr('y', (node) ->
+    .attr('cy', (node) ->
       y = projection.latLngToLayerPoint(node.latLng).y
-      return y - ((node.marker.height) / projection.scale)
+      return y - ((node.marker.height/2) / projection.scale)
     )
-    .attr('width', (node) ->
+    .attr('r', (node) ->
       (node.marker.width) / projection.scale
     )
-    .attr('height', (node) ->
-      (node.marker.height) / projection.scale
+    .attr('fill', (node) ->
+      '#'+self.getMarkerColor(node)
     )
+    .attr('fill-opacity', .8)
     .attr('class', (node) ->
       'marker-icon'
     )
@@ -200,12 +194,20 @@ GritsNodeLayer::getRelativeThroughput = (node) ->
   return +(r).toFixed(1)
 
 GritsNodeLayer::getMarkerHref = (node) ->
-  v = node.grayscale[ @getRelativeThroughput(node) * 10]
+  v = node.colorScale[ @getRelativeThroughput(node) * 10]
   if !(typeof v == 'undefined' or v == null)
-    href = "/packages/grits_grits-net-meteor/client/images/marker-icon-#{v}.svg"
+    href = '/packages/grits_grits-net-meteor/client/images/marker-icon-#{v}.svg'
   else
     href = '/packages/grits_grits-net-meteor/client/images/marker-icon-B8B8B8.svg'
   return href
+
+GritsNodeLayer::getMarkerColor = (node) ->
+  v = node.colorScale[ @getRelativeThroughput(node) * 10]
+  if !(typeof v == 'undefined' or v == null)
+    color = v
+  else
+    color = 'DB943E'
+  return color
 
 # draw
 #

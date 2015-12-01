@@ -10,7 +10,7 @@
 GritsHeatmap = () ->
   @name = 'Heatmap'
   @Points = []
-  @layer = L.heatLayer([], {radius: 35, blur: 55})
+  @layer = L.heatLayer([], {radius: 30, blur: 14})
   @layerGroup = L.layerGroup([@layer])
   Meteor.gritsUtil.addOverlayControl(@name, @layerGroup)
   @_bindEvents()
