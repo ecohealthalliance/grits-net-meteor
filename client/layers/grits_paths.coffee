@@ -3,7 +3,7 @@ _eventHandlers = {
     if not Session.get('grits-net-meteor:isUpdating')
       oldPath = Template.gritsMap.getCurrentPath() # initialized to null
       if oldPath isnt null
-        if element is oldPath.element
+        if element is oldPath
           d3.select(element).style("cursor": "pointer")
           return
       d3.select(element).style('stroke', @color).style("cursor": "pointer")
@@ -11,23 +11,34 @@ _eventHandlers = {
     if not Session.get('grits-net-meteor:isUpdating')
       oldPath = Template.gritsMap.getCurrentPath() # initialized to null
       if oldPath isnt null
-        if element is oldPath.element
+        if element is oldPath
           d3.select(element).style("cursor": "pointer")
           return
       d3.select(element).style('stroke', 'black').style("cursor": "pointer")
   click: (element, selection, projection) ->
     if not Session.get('grits-net-meteor:isUpdating')
       oldPath = Template.gritsMap.getCurrentPath() # initialized to null
-      if oldPath isnt null
-        d3.select(oldPath.element).style('stroke', oldPath.color)
-      
-      # set the gritsPath.element to the d3 element
       @element = element
-      
+      if oldPath is element
+        d3.select(oldPath.__data__.element).style('stroke', oldPath.__data__.color)
+        oldPath.__data__.clicked = false
+        $("#" + oldPath.__data__._id + "_pathId").removeClass('activeRow')
+        Template.gritsMap.setCurrentPath(null)
+        Template.gritsMap.hidePathDetails()
+        return
+      if oldPath isnt null
+        d3.select(oldPath.__data__.element).style('stroke', oldPath.__data__.color)
+        $("#" + oldPath.__data__._id + "_pathId").removeClass('activeRow')
+        oldPath.__data__.clicked = false
+
+      # set the gritsPath.element to the d3 element
+
       # temporarily set the path color
+      $("#" + element.__data__._id + "_pathId").addClass('activeRow')
       d3.select(element).style('stroke', 'blue')
       # set the currentPath to this gritsPath
-      Template.gritsMap.setCurrentPath(this)
+      Template.gritsMap.setCurrentPath(element)
+      Template.gritsMap.setCurrentRow($("#" + element.__data__._id + "_pathId")[0])
       # show the pathDetails template
       Template.gritsMap.showPathDetails(this)
 }
@@ -43,15 +54,15 @@ class GritsPathLayer extends GritsLayer
     if !map instanceof GritsMap
       throw new Error('A layer requires a valid map instance')
       return
-    
+
     @_name = 'Paths'
     @_map = map
-    
+
     @_layer = L.d3SvgOverlay(_.bind(@_drawCallback, this), {})
-    
+
     @_bindMapEvents()
     return
-    
+
   # The D3 callback that renders the svg elements on the map
   #
   # @see https://github.com/mbostock/d3/wiki/API-Reference
@@ -77,15 +88,15 @@ class GritsPathLayer extends GritsLayer
       .append('path')
       .attr('d', 'M0,-5L10,0L0,5')
       .attr('class', 'arrowHead')
-  
+
     paths = _.sortBy(_.values(self._data, (path) ->
       return path.destination.latLng[0]
     ))
-  
+
     pathCount = paths.length
     if pathCount <= 0
       return
-  
+
     lines = selection.selectAll('path').data(paths, (path) -> path._id)
     #work on existing nodes
     lines
@@ -94,15 +105,15 @@ class GritsPathLayer extends GritsLayer
         d[0] = {}
         d[0].x = projection.latLngToLayerPoint(path.origin.latLng).x
         d[0].y = projection.latLngToLayerPoint(path.origin.latLng).y
-  
+
         d[1] = {}
         d[1].x = projection.latLngToLayerPoint(path.midPoint).x
         d[1].y = projection.latLngToLayerPoint(path.midPoint).y
-  
+
         d[2] = {}
         d[2].x = projection.latLngToLayerPoint(path.destination.latLng).x
         d[2].y = projection.latLngToLayerPoint(path.destination.latLng).y
-  
+
         newLineFunction = d3.svg.line().x((d) ->
           d.x).y((d) ->
             d.y
@@ -115,26 +126,35 @@ class GritsPathLayer extends GritsLayer
       ).attr("stroke", (path) ->
         if path.clicked
           return 'blue'
-        path.color = self._getStyle(path)      
+        path.color = self._getStyle(path)
         return path.color
       ).attr("fill", "none")
-      .attr("marker-mid":"url(#arrowhead)")
-      
+      .attr("id", (path) ->
+        return path._id
+      ).attr("marker-mid": "url(#arrowhead)")
+      .on('mouseover', (path) ->
+        path.eventHandlers.mouseover(this, selection, projection)
+      ).on('mouseout', (path) ->
+        path.eventHandlers.mouseout(this, selection, projection)
+      ).on('click', (path) ->
+        path.eventHandlers.click(this, selection, projection)
+      )
+
     lines.enter().append('path')
       .attr('d', (path) ->
         d = []
         d[0] = {}
         d[0].x = projection.latLngToLayerPoint(path.origin.latLng).x
         d[0].y = projection.latLngToLayerPoint(path.origin.latLng).y
-  
+
         d[1] = {}
         d[1].x = projection.latLngToLayerPoint(path.midPoint).x
         d[1].y = projection.latLngToLayerPoint(path.midPoint).y
-  
+
         d[2] = {}
         d[2].x = projection.latLngToLayerPoint(path.destination.latLng).x
         d[2].y = projection.latLngToLayerPoint(path.destination.latLng).y
-  
+
         newLineFunction = d3.svg.line().x((d) ->
           d.x).y((d) ->
             d.y
@@ -147,15 +167,17 @@ class GritsPathLayer extends GritsLayer
       ).attr("stroke", (path) ->
         if path.clicked
           return 'blue'
-        path.color = self._getStyle(path)      
+        path.color = self._getStyle(path)
         return path.color
       ).attr("fill", "none")
-      .attr("marker-mid":"url(#arrowhead)")
+      .attr("id", (path) ->
+        return path._id
+      ).attr("marker-mid": "url(#arrowhead)")
       .on('mouseover', (path) ->
         path.eventHandlers.mouseover(this, selection, projection)
       ).on('mouseout', (path) ->
         path.eventHandlers.mouseout(this, selection, projection)
-      ).on('click', (path)->
+      ).on('click', (path) ->
         path.eventHandlers.click(this, selection, projection)
       )
     lines.exit()
@@ -166,30 +188,30 @@ class GritsPathLayer extends GritsLayer
   # @return [Number] weight
   _getWeight: (path) ->
     path.weight = path.throughput / 250  + 2
-  
+
   # returns normalized hex color code for a path
   #
   # @return [String] normalizedColor, a hex string
   _getStyle: (path) ->
-    color = '#fef0d9'
+    path.color = '#fef0d9'
     if @_normalizedCI > 0
       x = path.throughput / @_normalizedCI
-      np = parseFloat(1-(1 - x))
+      np = parseFloat(1 - (1 - x))
       path.normalizedPercent = np
       if np < .20
-        color = '#fef0d9'
+        path.color = '#fef0d9'
       else if np < .40
-        color = '#fdcc8a'
+        path.color = '#fdcc8a'
       else if np < .60
-        color = '#fc8d59'
+        path.color = '#fc8d59'
       else if np < .80
-        color = '#e34a33'
+        path.color = '#e34a33'
       else if np <= 1
-        color = '#b30000'
-    return color
-    
+        path.color = '#b30000'
+    return path.color
+
   # converts domain specific flight data into generic GritsNode nodes
-  # 
+  #
   # @param [Object] flight, an Astronomy class 'Flight' represending a single
   #   record from a MongoDB collection
   convertFlight: (flight, level, origin, destination) ->
@@ -220,7 +242,7 @@ class GritsPathLayer extends GritsLayer
   _bindMapEvents: () ->
     self = this
     if typeof self._map == 'undefined'
-      return  
+      return
     self._map.on(
       overlayadd: (e) ->
         if e.name == self._name
