@@ -31,6 +31,7 @@ Meteor.publish 'flightsByQuery', (query, limit, lastId) ->
     return []
 
   extendQuery(query, lastId)
+
   options = buildOptions(limit)
 
   console.log 'query: %j', query
@@ -51,6 +52,7 @@ Meteor.methods
   typeaheadAirport: (search, options) ->
     query = {
       $or: [
+        #regex = new RegExp(".*?(?:^|\s)(#{search}[^\s$]*).*?", 'ig')
         {_id: {$regex: new RegExp(search, 'i')}},
         {name: {$regex: new RegExp(search, 'i')}},
         {city: {$regex: new RegExp(search, 'ig')}},
@@ -190,3 +192,9 @@ Meteor.methods
       return {}
     heatmap = Heatmaps.findOne({'_id': code})
     return heatmap
+  findHeatmapsByCodes: (codes) ->
+    console.log('findHeatmapsByCodes: %j', codes)
+    if _.isUndefined(codes) or _.isEmpty(codes)
+      return []
+    heatmaps = Heatmaps.find({'_id': {'$in': codes}}).fetch()
+    return heatmaps

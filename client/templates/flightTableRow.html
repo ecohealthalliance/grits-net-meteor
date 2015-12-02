@@ -1,0 +1,16 @@
+<template name="flightTableRow">
+  <tr onClick="Template.gritsMap.clickRow(this,'{{this._id}}');" class="flightTableRow" id="{{this._id}}_pathId">
+    <td>
+      {{this.origin._id}}
+    </td>
+    <td>
+      {{this.destination._id}}
+    </td>
+    <td>
+      {{this.occurrances}}
+    </td>
+    <td>
+      {{this.throughput}}
+    </td>
+  </tr>
+</template>

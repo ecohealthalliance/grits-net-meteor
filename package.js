@@ -1,5 +1,5 @@
 Package.describe({
-  summary: 'Exposes {{ >map }} template as the interface to grits-net-mapper',
+  summary: 'Exposes {{ >gritsMap }} template as the interface to grits-net-mapper',
   version: '0.0.1',
   name: 'grits:grits-net-meteor',
   git: ''
@@ -14,16 +14,17 @@ Package.on_use(function(api){
     'reactive-dict',
     'jagi:astronomy@1.2.2',
     'jagi:astronomy-validators@1.1.1',
-    'peerlibrary:async',
-    'twbs:bootstrap',
-    'mquandalle:stylus',
-    'jparker:crypto-md5',
+    'peerlibrary:async@0.9.2_1',
+    'twbs:bootstrap@3.3.5',
+    'mquandalle:stylus@1.1.1',
+    'jparker:crypto-md5@0.1.1',
     'bevanhunt:leaflet@0.3.18',
     'brylie:leaflet-heat@0.1.0',
-    'fortawesome:fontawesome',
-    'd3js:d3',
-    'sergeyt:typeahead',
-    'ajduke:bootstrap-tokenfield'
+    'fortawesome:fontawesome@4.4.0',
+    'd3js:d3@3.5.5',
+    'sergeyt:typeahead@0.0.11',
+    'ajduke:bootstrap-tokenfield@0.2.0',
+    'grits:grits-net-mapper@0.2.2'
   ]);
   // client only packages
   api.use([
@@ -36,34 +37,28 @@ Package.on_use(function(api){
   api.add_files([
     'client/stylesheets/main.styl',
     'client/lib/L.D3SvgOverlay.min.js',
-    'client/grits_nodes.coffee',
-    'client/grits_paths.coffee',
+    'client/lib/sorted-set.min.js',
     'client/grits_util.coffee',
-    'client/grits_heatmap.coffee',
-    'client/templates/map.html',
-    'client/templates/map.coffee',
+    'client/layers/grits_nodes.coffee',
+    'client/layers/grits_paths.coffee',
+    'client/layers/grits_heatmap.coffee',
+    'client/models/grits_filter_criteria.coffee',
+    'client/templates/flightTable.html',
+    'client/templates/flightTableRow.html',
+    'client/templates/grits_map.html',
+    'client/templates/grits_map.coffee',
     'client/templates/legend.html',
-    'client/templates/filter.html',
-    'client/templates/filter.coffee',
+    'client/templates/grits_filter.html',
+    'client/templates/grits_filter.coffee',
     'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
     'client/subscription.coffee'
   ], 'client');
-  
+
   api.addAssets([
-    'client/images/ajax-loader.gif',
-    'client/images/marker-icon-282828.svg',
-    'client/images/marker-icon-383838.svg',
-    'client/images/marker-icon-484848.svg',
-    'client/images/marker-icon-585858.svg',
-    'client/images/marker-icon-787878.svg',
-    'client/images/marker-icon-686868.svg',
-    'client/images/marker-icon-888888.svg',
-    'client/images/marker-icon-989898.svg',
-    'client/images/marker-icon-A8A8A8.svg',
-    'client/images/marker-icon-B8B8B8.svg'
+    'client/images/ajax-loader.gif'
   ], 'client');
-  
+
   // both client and server files
   api.add_files([
     'models/airports.coffee',
@@ -82,11 +77,11 @@ Package.on_use(function(api){
     'Flights',
     'Heatmap',
     'Heatmaps',
-    'GritsHeatmap',
-    'GritsNode',
+    'GritsFilterCriteria',
+    'GritsControl',
+    'GritsMap',
+    'GritsHeatmapLayer',
     'GritsNodeLayer',
-    'GritsPath',
-    'GritsPaths',
     'GritsPathLayer'
   ], ['client', 'server']);
 });
