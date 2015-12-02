@@ -7,6 +7,7 @@ _lastFlightId = null # stores the last flight _id from the collection, used in l
 _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
 _arrivalSearch = null # onRendered will set this to a typeahead object
+_suggestionTemplate = _.template('<span><%= obj.field %>: <%= obj.value %> (<%= obj.airport.get("_id") %> - <%= obj.airport.get("name") %>)</span>')
 
 _typeaheadMatcher =
   WAC: {weight: 0, regexOpt: 'ig'}
