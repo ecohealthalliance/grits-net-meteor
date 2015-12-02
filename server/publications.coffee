@@ -26,18 +26,19 @@ buildOptions = (limit) ->
     _.extend options, limitClause
   return options
 
-Meteor.publish 'flightsByQuery', (query, limit, lastId) ->
-  if _.isUndefined(query) or _.isEmpty(query)
-    return []
-
-  extendQuery(query, lastId)
-
-  options = buildOptions(limit)
-
-  console.log 'query: %j', query
-  console.log 'options: %j', options
-
-  return Flights.find(query, options);
+Meteor.methods
+  flightsByQuery: (query, limit, lastId) ->
+    if _.isUndefined(query) or _.isEmpty(query)
+      return []
+  
+    extendQuery(query, lastId)
+  
+    options = buildOptions(limit)
+  
+    console.log 'query: %j', query
+    console.log 'options: %j', options
+  
+    return Flights.find(query, options).fetch()
 
 Meteor.methods
   countFlightsByQuery: (query) ->
