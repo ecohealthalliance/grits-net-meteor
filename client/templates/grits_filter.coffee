@@ -167,7 +167,7 @@ Template.gritsFilter.onRendered ->
       display: (match) ->
         return match.label
       templates:
-        suggestion: _.template('<span><%= obj.field %>: <%= obj.value %> (<%= obj.airport.get("_id") %> - <%= obj.airport.get("name") %>)</span>')
+        suggestion: _suggestionTemplate
       source: (query, callback) ->
         Meteor.call('typeaheadAirport', query, (err, res) ->
           if err or _.isUndefined(res) or _.isEmpty(res)
@@ -186,7 +186,7 @@ Template.gritsFilter.onRendered ->
       display: (match) ->
         return match.label
       templates:
-        suggestion: _.template('<span><%= obj.value %></span>')
+        suggestion: _suggestionTemplate
       source: (query, callback) ->
         Meteor.call('typeaheadAirport', query, (err, res) ->
           if err or _.isUndefined(res) or _.isEmpty(res)
@@ -205,7 +205,7 @@ Template.gritsFilter.onRendered ->
       display: (match) ->
         return match.label
       templates:
-        suggestion: _.template('<span><%= obj.value %></span>')
+        suggestion: _suggestionTemplate
       source: (query, callback) ->
         Meteor.call('typeaheadAirport', query, (err, res) ->
           if err or _.isUndefined(res) or _.isEmpty(res)
