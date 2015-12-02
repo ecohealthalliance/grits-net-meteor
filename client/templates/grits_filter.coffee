@@ -31,17 +31,10 @@ getLastFlightId = () ->
 #
 # @param [String] lastId, the last _id of a flight record
 setLastFlightId = (lastId) ->
-  if !_.isUndefined(lastId)
-    _lastFlightId = lastId
+  if _.isUndefined(lastId)
     return
-  lastFlight = null
-  if Flights.find().count() > 0
-    options =
-      sort:
-        _id: -1
-    lastFlight = Flights.find({}, options).fetch()[0];
-  if lastFlight
-    _lastFlightId = lastFlight._id
+  _lastFlightId = lastId
+  
 
 # returns the first origin within GritsFilterCriteria
 #
@@ -166,6 +159,8 @@ Template.gritsFilter.onRendered ->
   departureSearchMain = $('#departureSearchMain').tokenfield({
     typeahead: [{hint:false, highlight:true}, {
       display: (match) ->
+        if _.isUndefined(match)
+          return
         return match.label
       templates:
         suggestion: _suggestionTemplate
@@ -173,10 +168,9 @@ Template.gritsFilter.onRendered ->
         Meteor.call('typeaheadAirport', query, (err, res) ->
           if err or _.isUndefined(res) or _.isEmpty(res)
             return
-          else
-            matches = _determineFieldMatchesByWeight(query, res)
-            # expects an array of objects with keys [label, value]
-            callback(matches)
+          matches = _determineFieldMatchesByWeight(query, res)
+          # expects an array of objects with keys [label, value]
+          callback(matches)
       )
     }]
   })
@@ -250,6 +244,9 @@ Template.gritsFilter.onRendered ->
 Template.gritsFilter.events
   'keyup #departureSearchMain-tokenfield': (event) ->
     if event.keyCode == 13
+      if GritsFilterCriteria.readDeparture() <= 0
+        # do not apply without any departures
+        return
       GritsFilterCriteria.scanAll()
       GritsFilterCriteria.apply()
   'click #toggleFilter': (e) ->

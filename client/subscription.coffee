@@ -7,35 +7,38 @@ Tracker.autorun ->
   lastId = Session.get('grits-net-meteor:lastId')
   Session.set 'grits-net-meteor:isUpdating', true
 
-  Meteor.subscribe 'flightsByQuery', query, limit, lastId,
-    onError: ->
-      if Meteor.gritsUtil.debug
-        console.log 'subscription.flightsByQuery.onError: ', this
-      Session.set('grits-net-meteor:isUpdating',false)
+  Meteor.call('flightsByQuery', query, limit, lastId, (err, flights) ->
+    if (err)
+      console.error(err)
+      Session.set('grits-net-meteor:isUpdating', false)
       return
-    onStop: ->
-      if Meteor.gritsUtil.debug
-        console.log 'subscription.flightsByQuery.onStop: ', this
+    
+    if _.isUndefined(flights)
+      Session.set('grits-net-meteor:isUpdating', false)
       return
-    onReady: ->
+    
+    Meteor.call 'countFlightsByQuery', query, (err, totalRecords) ->
+      if (err)
+        console.error(err)
+        Session.set('grits-net-meteor:isUpdating', false)
+        return
+    
       if Meteor.gritsUtil.debug
-        console.log 'subscription.flightsByQuery.onReady: ', this
-        console.log 'subscription.query: ', query
-      totalRecords = Meteor.call 'countFlightsByQuery', query, (err, res) ->
-        if Meteor.gritsUtil.debug
-          console.log 'totalRecords: ', res
-        if lastId is null
-          Session.set 'grits-net-meteor:totalRecords', res
-          _onSubscriptionReady()
-        else
-          _onMoreSubscriptionsReady()
-      return
+        console.log 'totalRecords: ', totalRecords
+    
+      if lastId is null
+        Session.set 'grits-net-meteor:totalRecords', totalRecords
+        _process(flights, limit)
+      else
+        _processLimit(flights, limit, lastId)
+    return
+  )
   return
 
-# processQueueCallback
+# processQueue
 #
 #
-_processQueueCallback = (res) ->
+_processQueue = (res) ->
   map = Template.gritsMap.getInstance()
   nodeLayer = map.getGritsLayer('Nodes')
   pathLayer = map.getGritsLayer('Paths')
@@ -65,10 +68,10 @@ _processQueueCallback = (res) ->
   processQueue.push(res)
   return
 
-# processMoreQueueCallback
+# processLimitQueue
 #
 #
-_processMoreQueueCallback = (res) ->
+_processLimitQueue = (res) ->
   count =  Session.get('grits-net-meteor:loadedRecords')
   tcount = 0
   map = Template.gritsMap.getInstance()
@@ -98,46 +101,50 @@ _processMoreQueueCallback = (res) ->
   processQueue.push(res)
   return
 
-# onSubscriptionReady
+# _process
 #
-# This method is triggered with the 'flightsByQuery' subscription onReady
-# callback.  It gets the new flights from the collection and updates the
-# existing nodes (airports) and paths (flights).
-_onSubscriptionReady = () ->
-  if parseInt($("#connectednessLevels").val()) > 1
+# This method is triggered with the 'flightsByQuery' callback returns.
+_process = (flights, limit) ->
+  levels = parseInt($("#connectednessLevels").val(), 10)
+  if levels > 1
     query = GritsFilterCriteria.getQueryObject()
     origin = Template.gritsFilter.getOrigin()
     if !_.isNull(origin)
-      Meteor.call 'getFlightsByLevel', query, parseInt($("#connectednessLevels").val()), origin, Session.get('grits-net-meteor:limit'), (err, res) ->
+      Meteor.call 'getFlightsByLevel', query, levels, origin, limit, (err, res) ->
         if Meteor.gritsUtil.debug
           console.log 'levelRecs: ', res[0]
         Session.set 'grits-net-meteor:totalRecords', res[1]
         if !_.isUndefined(res[2]) and !_.isEmpty(res[2])
           Template.gritsFilter.setLastFlightId(res[2])
-        _processQueueCallback(res[0])
+        _processQueue(res[0])
       return
+  else
+    if flights.length > 0      
+      lastFlight = flights[flights.length-1]
+      Template.gritsFilter.setLastFlightId(lastFlight.get('_id'))
+      _processQueue(flights)
+  return
 
-  tflights = Flights.find().fetch()
-  Template.gritsFilter.setLastFlightId()
-  _processQueueCallback(tflights)
-
-# _onMoreSubscriptionsReady
+# _processLimit
 #
 # This method is triggered when the [More..] button is pressed in continuation
 # of a limit/offset query
-_onMoreSubscriptionsReady = () ->
-  if parseInt($("#connectednessLevels").val()) > 1
+_processLimit = (flights, limit, lastId) ->
+  levels = parseInt($("#connectednessLevels").val(), 10)
+  if levels > 1
     query = GritsFilterCriteria.getQueryObject()
     origin = Template.gritsFilter.getOrigin()
     if !_.isNull(origin)
-      Meteor.call 'getMoreFlightsByLevel', query, parseInt($("#connectednessLevels").val()), origin, Session.get('grits-net-meteor:limit'), Session.get('grits-net-meteor:lastId'), (err, res) ->
+      Meteor.call 'getMoreFlightsByLevel', query, levels, origin, limit, lastId, (err, res) ->
         if Meteor.gritsUtil.debug
           console.log 'levelRecs: ', res[0]
         Session.set 'grits-net-meteor:totalRecords', res[1]
         Template.gritsFilter.setLastFlightId(res[2])
-        _processMoreQueueCallback(res[0])
+        _processLimitQueue(res[0])
       return
-
-  tflights = Flights.find().fetch()
-  Template.gritsFilter.setLastFlightId()
-  _processMoreQueueCallback(tflights)
+  else
+    if flights.length > 0      
+      lastFlight = flights[flights.length-1]
+      Template.gritsFilter.setLastFlightId(lastFlight.get('_id'))
+      _processLimitQueue(flights)
+  return
