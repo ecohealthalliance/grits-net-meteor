@@ -75,23 +75,20 @@ class GritsHeatmapLayer extends GritsLayer
         # the filter has an array of airports 
         if _.has(query['departureAirport._id'], '$in')
           departures = query['departureAirport._id']['$in']
-          Meteor.call('findHeatmapByCode', departures[0], (err, res) ->
+          Meteor.call('findHeatmapsByCodes', departures, (err, heatmaps) ->
             if err
               console.error err
               return
                       
-            if _.isUndefined(res)
+            if _.isUndefined(heatmaps)
               return
             
             self.clear()
-            _.each(res.data, (a) ->
-              # if the node exists on the map, add to the heat map
-              #node = Meteor.gritsUtil.nodeLayer.Nodes[a[3]]
-              #if _.isUndefined(node)
-              #  return
-              intensity = a[2] * self._getCellSize() * self._getZoomFactor()
-              self._data.push([a[0], a[1], intensity])
-            )
+            for heatmap in heatmaps
+              _.each(heatmap.data, (a) ->
+                intensity = a[2] * self._getCellSize() * self._getZoomFactor()
+                self._data.push([a[0], a[1], intensity])
+              )
             self.draw()
           )
       else

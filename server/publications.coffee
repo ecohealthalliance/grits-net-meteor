@@ -192,3 +192,9 @@ Meteor.methods
       return {}
     heatmap = Heatmaps.findOne({'_id': code})
     return heatmap
+  findHeatmapsByCodes: (codes) ->
+    console.log('findHeatmapsByCodes: %j', codes)
+    if _.isUndefined(codes) or _.isEmpty(codes)
+      return []
+    heatmaps = Heatmaps.find({'_id': {'$in': codes}}).fetch()
+    return heatmaps
