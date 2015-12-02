@@ -122,15 +122,16 @@ _determineFieldMatchesByWeight = (input, res) ->
         if _.isUndefined(match)
           match =
             label: obj.get('_id')
-            value: '<b>' + field + ': ' + value + '</b> &nbsp;&nbsp; Code: ' + obj.get('_id') + ' Name: ' + obj.get('name')
+            value: value
             field: field
             fieldValue: value
             weight: weight
+            airport: obj
           matches.push(match)
           continue
         else
           if weight > match.weight
-            value: '<b>' + field + ': ' + value + '</b> &nbsp;&nbsp; Code: ' + obj.get('_id') + ' Name: ' + obj.get('name')
+            match.value = value            
             match.field = field
             match.fieldValue = value
             match.weight = weight
@@ -162,42 +163,57 @@ Template.gritsFilter.onCreated ->
 # triggered when the 'filter' template is rendered
 Template.gritsFilter.onRendered ->
   departureSearchMain = $('#departureSearchMain').tokenfield({
-    typeahead: [null, { source: (query, callback) ->
-      Meteor.call('typeaheadAirport', query, (err, res) ->
-        if err or _.isUndefined(res) or _.isEmpty(res)
-          return
-        else
-          matches = _determineFieldMatchesByWeight(query, res)
-          # expects an array of objects with keys [label, value]
-          callback(matches)
+    typeahead: [{hint:false, highlight:true}, {
+      display: (match) ->
+        return match.label
+      templates:
+        suggestion: _.template('<span><%= obj.field %>: <%= obj.value %> (<%= obj.airport.get("_id") %> - <%= obj.airport.get("name") %>)</span>')
+      source: (query, callback) ->
+        Meteor.call('typeaheadAirport', query, (err, res) ->
+          if err or _.isUndefined(res) or _.isEmpty(res)
+            return
+          else
+            matches = _determineFieldMatchesByWeight(query, res)
+            # expects an array of objects with keys [label, value]
+            callback(matches)
       )
     }]
   })
   _setDepartureSearchMain(departureSearchMain)
 
   departureSearch = $('#departureSearch').tokenfield({
-    typeahead: [null, { source: (query, callback) ->
-      Meteor.call('typeaheadAirport', query, (err, res) ->
-        if err or _.isUndefined(res) or _.isEmpty(res)
-          return
-        else
-          matches = _determineFieldMatchesByWeight(query, res)
-          # expects an array of objects with keys [label, value]
-          callback(matches)
+    typeahead: [{hint:false, highlight:true}, {
+      display: (match) ->
+        return match.label
+      templates:
+        suggestion: _.template('<span><%= obj.value %></span>')
+      source: (query, callback) ->
+        Meteor.call('typeaheadAirport', query, (err, res) ->
+          if err or _.isUndefined(res) or _.isEmpty(res)
+            return
+          else
+            matches = _determineFieldMatchesByWeight(query, res)
+            # expects an array of objects with keys [label, value]
+            callback(matches)
       )
     }]
   })
   _setDepartureSearch(departureSearch)
 
   arrivalSearch = $('#arrivalSearch').tokenfield({
-    typeahead: [null, { source: (query, callback) ->
-      Meteor.call('typeaheadAirport', query, (err, res) ->
-        if err or _.isUndefined(res) or _.isEmpty(res)
-          return
-        else
-          matches = _determineFieldMatchesByWeight(query, res)
-          # expects an array of objects with keys [label, value]
-          callback(matches)
+    typeahead: [{hint:false, highlight:true}, {
+      display: (match) ->
+        return match.label
+      templates:
+        suggestion: _.template('<span><%= obj.value %></span>')
+      source: (query, callback) ->
+        Meteor.call('typeaheadAirport', query, (err, res) ->
+          if err or _.isUndefined(res) or _.isEmpty(res)
+            return
+          else
+            matches = _determineFieldMatchesByWeight(query, res)
+            # expects an array of objects with keys [label, value]
+            callback(matches)
       )
     }]
   })
