@@ -110,6 +110,15 @@ body
 	width 36px
 	height 36px
 
+.leaflet-top.leaflet-left
+  z-index 1004
+.leaflet-top.leaflet-right
+  z-index 1003
+.leaflet-bottom.leaflet-left
+  z-index 1002
+.leaflet-bottom.leaflet-right
+  z-index 1001
+
 #mapLegendPanel
 	width 180px
 
@@ -234,4 +243,7 @@ thead, tbody tr
   font-style italic
 
 .activeRow
-  background-color #d9fafe  
+  background-color #d9fafe
+
+.leaflet-heatmap-layer
+  z-index -1
