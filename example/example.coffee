@@ -32,15 +32,13 @@ if Meteor.isClient
     mapLayers = []
     for ml of Meteor.settings.public.mapLayers
       newLayer = L.tileLayer(Meteor.settings.public.mapLayers[ml].url,
+        subdomains: Meteor.settings.public.mapLayers[ml].subdomains
         layerName: Meteor.settings.public.mapLayers[ml].layerName
         type: Meteor.settings.public.mapLayers[ml].type
         ext: Meteor.settings.public.mapLayers[ml].ext
-        tileSize: Meteor.settings.public.mapLayers[ml].tileSize
-        zoomOffset: Meteor.settings.public.mapLayers[ml].zoomOffset
-        subdomains: Meteor.settings.public.mapLayers[ml].subdomains
-        id: Meteor.settings.public.mapLayers[ml].id
-        accessToken: Meteor.settings.public.mapLayers[ml].accessToken
-        maxZoom: Meteor.settings.public.mapLayers[ml].maxZoom)
+        mapId: Meteor.settings.public.mapLayers[ml].mapId
+        maxZoom: Meteor.settings.public.mapLayers[ml].maxZoom
+        accessToken: Meteor.settings.public.mapLayers[ml].accessToken)
       mapLayers.push(newLayer)
 
     baseLayers = mapLayers
