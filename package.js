@@ -23,7 +23,7 @@ Package.on_use(function(api){
     'fortawesome:fontawesome@4.4.0',
     'd3js:d3@3.5.5',
     'sergeyt:typeahead@0.0.11',
-    'ajduke:bootstrap-tokenfield@0.2.0',
+    'ajduke:bootstrap-tokenfield@0.5.0',
     'grits:grits-net-mapper@0.2.2'
   ]);
   // client only packages
@@ -37,7 +37,6 @@ Package.on_use(function(api){
   api.add_files([
     'client/stylesheets/main.styl',
     'client/lib/L.D3SvgOverlay.min.js',
-    'client/lib/sorted-set.min.js',
     'client/grits_util.coffee',
     'client/layers/grits_nodes.coffee',
     'client/layers/grits_paths.coffee',
