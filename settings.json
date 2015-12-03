@@ -5,16 +5,16 @@
         "name" : "world-bright",
         "url" : "https://a.tiles.mapbox.com/v3/mapbox.world-bright/{z}/{x}/{y}.png",
         "layerName" : "world-bright",
-        "id" : "cihdhnpks00esrom40zy18lly",
         "accessToken": "pk.eyJ1IjoiZWhhdGVjaCIsImEiOiJjaWhkaGljOTEwYmxudXdtYTVxOHBtb21lIn0.ZLJrEd_L2aBBYmQ3A6UICg",
         "subdomains" : "abcd",
+        "zoomOffset": "0",
         "maxZoom" : "19"
       },
       "layer_1":  {
         "name" : "ehatech",
-        "url" : "https://api.mapbox.com/styles/v1/ehatech/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
+        "url" : "https://api.mapbox.com/styles/v1/ehatech/{mapId}/tiles/{z}/{x}/{y}?access_token={accessToken}",
         "layerName" : "flirt_light",
-        "id" : "cihdhnpks00esrom40zy18lly",
+        "mapId" : "cihdhnpks00esrom40zy18lly",
         "accessToken": "pk.eyJ1IjoiZWhhdGVjaCIsImEiOiJjaWhkaGljOTEwYmxudXdtYTVxOHBtb21lIn0.ZLJrEd_L2aBBYmQ3A6UICg",
         "subdomains" : "abcd",
         "maxZoom" : "19",
@@ -26,6 +26,7 @@
         "url" : "http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
         "layerName" : "CartoDB_Positron",
         "subdomains" : "abcd",
+        "zoomOffset": "0",
         "maxZoom" : "19"
       },
       "layer_3":  {
@@ -35,6 +36,7 @@
         "layerName" : "MapQuestOpen_OSM",
         "subdomains" : "1234",
         "ext" : "jpg",
+        "zoomOffset": "0",
         "maxZoom" : "19"
       },
       "layer_4":  {
@@ -42,6 +44,7 @@
         "url" : "http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         "layerName" : "Esri_WorldImagery",
         "subdomains" : "1234",
+        "zoomOffset": "0",
         "maxZoom" : "19"
       }
     }
