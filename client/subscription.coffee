@@ -5,6 +5,8 @@ Tracker.autorun ->
 
   limit = Session.get('grits-net-meteor:limit')
   lastId = Session.get('grits-net-meteor:lastId')
+  levels = Session.get('grits-net-meteor:levels')
+  
   Session.set 'grits-net-meteor:isUpdating', true
 
   Meteor.call('flightsByQuery', query, limit, lastId, (err, flights) ->
@@ -26,11 +28,13 @@ Tracker.autorun ->
       if Meteor.gritsUtil.debug
         console.log 'totalRecords: ', totalRecords
     
-      if lastId is null
+      if levels <= 1
         Session.set 'grits-net-meteor:totalRecords', totalRecords
-        _process(flights, limit)
+    
+      if lastId is null        
+        _process(flights, limit, levels)
       else
-        _processLimit(flights, limit, lastId)
+        _processLimit(flights, limit, lastId, levels)
     return
   )
   return
@@ -104,8 +108,7 @@ _processLimitQueue = (res) ->
 # _process
 #
 # This method is triggered with the 'flightsByQuery' callback returns.
-_process = (flights, limit) ->
-  levels = parseInt($("#connectednessLevels").val(), 10)
+_process = (flights, limit, levels) ->
   if levels > 1
     query = GritsFilterCriteria.getQueryObject()
     origin = Template.gritsFilter.getOrigin()
@@ -129,8 +132,7 @@ _process = (flights, limit) ->
 #
 # This method is triggered when the [More..] button is pressed in continuation
 # of a limit/offset query
-_processLimit = (flights, limit, lastId) ->
-  levels = parseInt($("#connectednessLevels").val(), 10)
+_processLimit = (flights, limit, lastId, levels) ->
   if levels > 1
     query = GritsFilterCriteria.getQueryObject()
     origin = Template.gritsFilter.getOrigin()

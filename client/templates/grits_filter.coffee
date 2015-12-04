@@ -34,7 +34,7 @@ setLastFlightId = (lastId) ->
   if _.isUndefined(lastId)
     return
   _lastFlightId = lastId
-  
+
 
 # returns the first origin within GritsFilterCriteria
 #
@@ -125,7 +125,7 @@ _determineFieldMatchesByWeight = (input, res) ->
           continue
         else
           if weight > match.weight
-            match.value = value            
+            match.value = value
             match.field = field
             match.fieldValue = value
             match.weight = weight
@@ -213,6 +213,15 @@ Template.gritsFilter.onRendered ->
     }]
   })
   _setArrivalSearch(arrivalSearch)
+
+  $('#fodStart').datetimepicker()
+  $('#fodEnd').datetimepicker()
+  $('#fodStart').on 'dp.change', (e) ->
+    $('#fodEnd').data('DateTimePicker').minDate e.date
+    return
+  $('#fodEnd').on 'dp.change', (e) ->
+    $('#fodStart').data('DateTimePicker').maxDate e.date
+    return
 
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
