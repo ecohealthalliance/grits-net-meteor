@@ -47,8 +47,10 @@ Meteor.methods
 
     extendQuery(query, null)
     buildOptions(null)
-
-    return Flights.find(query).count()
+    
+    count = Flights.find(query).count()
+    console.log('countFlightsByQuery: %j', count)
+    return count
 
   typeaheadAirport: (search, options) ->
     query = {
@@ -81,7 +83,9 @@ Meteor.methods
     origin = [origin]
     originsByLevel[1] = origin
     while ctr < levels
-      flights = Flights.find(query, buildOptions(null)).fetch()
+      console.log('getFlightsByLevel:query# %j: %j', ctr, query)
+      flights = Flights.find({'$query':query, '$hint': 'idxFlights_Default', '$orderBy': {'_id': 1}}, {'limit': limit}).fetch()
+      #flights = Flights.find(query, buildOptions(null)).fetch()
       flightsByLevel[ctr] = flights
       originsByLevel[ctr+1] = []
       for flight of flights
@@ -100,7 +104,9 @@ Meteor.methods
       Array::push.apply allOrigins, originsByLevel[origins]
     query['departureAirport._id'] = {'$in':allOrigins}
     nullOpts = buildOptions(null)
-    allFlights = Flights.find(query, nullOpts).fetch()
+    console.log('allFlights:query: %j', query)
+    #allFlights = Flights.find(query, nullOpts).fetch()    
+    allFlights = Flights.find({'$query':query, '$hint': 'idxFlights_Default', '$orderBy': {'_id': 1}}).fetch() #no limit
     if limit is null or limit is 0 #no limit specified
       return [allFlights, allFlights.length]
     else
@@ -124,7 +130,9 @@ Meteor.methods
         remainderOPTS = buildOptions(limitRemainder)
         cpol = originsByLevel[retFlightByLevIndex]
         query['departureAirport._id'] = {'$in':cpol}
-        trailingFlights = Flights.find(query, remainderOPTS).fetch()
+        console.log('trailingFlights:query: %j', query)
+        #trailingFlights = Flights.find(query, remainderOPTS).fetch()
+        trailingFlights = Flights.find({'$query':query, '$hint': 'idxFlights_Default', '$orderBy': {'_id': 1}}, {'limit': limitRemainder}).fetch()
         Array::push.apply flightsToReturn, trailingFlights
         lastId = flightsToReturn[flightsToReturn.length-1]._id
       return [flightsToReturn, allFlights.length, lastId]
@@ -143,7 +151,9 @@ Meteor.methods
     originsByLevel[1] = origin
     totalFlights = 0
     while ctr <= levels
-      flights = Flights.find(query, buildOptions(null)).fetch()
+      console.log('getMoreFlightsByLevel:query# %j: %j', ctr, query)
+      flights = Flights.find({'$query':query, '$hint': 'idxFlights_DepartureAirportStopsTotalSeatsWeeklyFrequency', '$orderBy': {'_id': 1}}, {'limit': limit}).fetch()
+      #flights = Flights.find(query, buildOptions(null)).fetch()
       totalFlights += flights.length
       flightsByLevel[ctr] = flights
       originsByLevel[ctr+1] = []
