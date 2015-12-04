@@ -246,13 +246,12 @@ class FilterCriteria
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
     if _.isNull(value)
-      GritsFilterCriteria.remove('levels')
-      $("#connectednessLevels").val(null)
+      Session.set('grits-net-meteor:levels', null)
       return
     val = Math.floor(parseInt(value, 10))
     if isNaN(val) or val < 1
-      throw new Error('Level must be positive')    
-    GritsFilterCriteria.createOrUpdate('levels', {key: 'flightNumber', operator: '$ne', value: -val})
+      throw new Error('Level must be positive') 
+    Session.set('grits-net-meteor:levels', val)
     $("#connectednessLevels").val(val)
     return
   
@@ -279,13 +278,15 @@ class FilterCriteria
         method()
     return
   
-  # scans (reads) the 'levels' input currently displayed on the filter UI,
-  # then creates and/or updates the underlying FilterCriteria
+  # scans (reads) the 'levels' input currently displayed on the filter UI
+  # then calls the setter to set the Session variable
+  # @note: we do not add to the underlying FilterCriteria
   readLevels : () ->
     val = $("#connectednessLevels").val()
-    GritsFilterCriteria.remove('levels')
-    if val isnt '' and val isnt '0'
-      GritsFilterCriteria.createOrUpdate('levels', {key: 'flightNumber', operator:'$ne', value:-val})
+    try
+      GritsFilterCriteria.setLevels(val)
+    catch e
+      console.error(e)
     return
   
   # scans (reads) the 'seats' input currently displayed on the filter UI,
