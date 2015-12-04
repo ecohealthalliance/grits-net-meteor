@@ -209,3 +209,7 @@ Meteor.methods
       return []
     heatmaps = Heatmaps.find({'_id': {'$in': codes}}).fetch()
     return heatmaps
+  findAirportById: (id) ->
+    if _.isUndefined(id) or _.isEmpty(id)
+      return []
+    return Airports.findOne({'_id': id})
