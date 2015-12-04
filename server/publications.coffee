@@ -1,13 +1,8 @@
 extendQuery = (query, lastId) ->
   # all flights are filtered by current date being past the discontinuedDate
   # or before the effectiveDate
-  now = new Date()
-  activeFilter =
-    $and: [
-      effectiveDate: {$lt: now}, # effectiveDate is less than now
-      discontinuedDate: {$gte: now} # discontinuedDate is greater-equal than now
-    ]
-  _.extend query, activeFilter
+  query.effectiveDate.$lt = new Date(query.effectiveDate.$lt)
+  query.discontinuedDate.$gte = new Date(query.discontinuedDate.$gte)
   # offset
   if !(_.isUndefined(lastId) or _.isNull(lastId))
     offsetFilter = _id: $gt: lastId
@@ -30,14 +25,14 @@ Meteor.methods
   flightsByQuery: (query, limit, lastId) ->
     if _.isUndefined(query) or _.isEmpty(query)
       return []
-  
+
     extendQuery(query, lastId)
-  
+
     options = buildOptions(limit)
-  
+
     console.log 'query: %j', query
     console.log 'options: %j', options
-  
+
     return Flights.find(query, options).fetch()
 
 Meteor.methods

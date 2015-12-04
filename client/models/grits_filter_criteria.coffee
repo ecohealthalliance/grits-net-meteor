@@ -154,8 +154,8 @@ class FilterCriteria
     else
       GritsFilterCriteria.createOrUpdate('weeklyFrequency', {key: 'weeklyFrequency', operator: operator, value: value})
 
-    $('#weekly-frequency-operand').val(operator);
-    $("#weeklyFrequencyInput").val(value);
+    $('#weekly-frequency-operand').val(operator)
+    $("#weeklyFrequencyInput").val(value)
     return
 
   # sets the stops input on the UI to the 'operator' and 'value'
@@ -163,7 +163,7 @@ class FilterCriteria
   #
   # @param [String] operator, one of '$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in'
   # @param [Integer] value
-  setStops : (operator, value) ->
+  setStops: (operator, value) ->
     if _.indexOf(_validOperators, operator) < 0
       throw new Error('Invalid operator: ', operator)
     if _.isUndefined(value)
@@ -174,8 +174,8 @@ class FilterCriteria
     else
       GritsFilterCriteria.createOrUpdate('stops', {key: 'stops', operator: operator, value: value})
 
-    $('#stops-operand').val(operator);
-    $("#stopsInput").val(value);
+    $('#stops-operand').val(operator)
+    $("#stopsInput").val(value)
     return
 
   # sets the seats input on the UI to the 'operator' and 'value'
@@ -194,8 +194,8 @@ class FilterCriteria
     else
       GritsFilterCriteria.createOrUpdate('seats', {key: 'totalSeats', operator: operator, value: value})
 
-    $('#seats-operand').val(operator);
-    $("#seatsInput").val(value);
+    $('#seats-operand').val(operator)
+    $("#seatsInput").val(value)
     return
 
   # sets the departure input on the UI to the 'code'
@@ -284,14 +284,21 @@ class FilterCriteria
     GritsFilterCriteria.remove('discontinuedDate')
     fodStart = $("#fodStart").data('date')
     fodEnd = $("#fodEnd").data('date')
-    if _.isUndefined(fodStart)
+    if _.isUndefined(fodStart) && _.isUndefined(fodEnd)
+      # all flights are filtered by current date being past the discontinuedDate
+      # or before the effectiveDate
+      now = new Date().toISOString()
+      GritsFilterCriteria.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lt', value: now})
+      GritsFilterCriteria.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: now})
       return
-    if fodStart isnt '' and fodStart isnt '0'
+
+    if !_.isUndefined(fodStart)
+      fodStart = new Date(fodStart).toISOString()
       GritsFilterCriteria.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lt', value: fodStart})
-    if _.isUndefined(fodEnd)
-      return
-    if fodEnd isnt '' and fodEnd isnt '0'
+    if !_.isUndefined(fodEnd)
+      fodEnd = new Date(fodEnd).toISOString()
       GritsFilterCriteria.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: fodEnd})
+    return
 
   # scans (reads) the 'levels' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
