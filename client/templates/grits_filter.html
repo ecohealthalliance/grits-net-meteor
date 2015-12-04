@@ -1,4 +1,4 @@
-<template name="filter">
+<template name="gritsFilter">
   <div>
     <div class="pull-left">
       <button class="btn btn-sm fa fa-bars" id="toggleFilter"></button>
@@ -7,7 +7,7 @@
       <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="filterLoading"/>
     </div>
     <div class="searchBar">
-      <div class="tokenized">
+      <div class="tokenized departureSearchMainContainer">
         <input id="departureSearchMain" class="form-control input-sm" name="departureSearchMain" placeholder="Type to search" />
       </div>
     </div>
@@ -97,7 +97,7 @@
       </div>
       <div class="col-xs-8">
         <div class="tokenized">
-          <input id="departureSearch" class="form-control input-sm" name="departureSearch" placeholder="Type to search" />
+          <input id="departureSearch" class="input-sm" name="departureSearch" placeholder="Type to search" />
         </div>
       </div>
     </div>
@@ -107,7 +107,7 @@
       </div>
       <div class="col-xs-8">
         <div class="tokenized">
-          <input type="text" id="arrivalSearch" class="form-control input-sm" name="arrivalSearch" placeholder="Type to search"/>
+          <input type="text" id="arrivalSearch" class="input-sm" name="arrivalSearch" placeholder="Type to search"/>
         </div>
       </div>
     </div>
@@ -124,7 +124,7 @@
         <span class="filter-label">Limit:</span>
       </div>
       <div class="col-xs-4">
-        <input type="number" id="limit" class="form-control input-sm">
+        <input type="number" id="limit" class="form-control input-sm" value="1000">
       </div>
       <div class="col-xs-4">
         <button id="loadMore" class="btn btn-sm btn-default pull-right" disabled="true">
