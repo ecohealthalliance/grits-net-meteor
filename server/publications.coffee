@@ -213,3 +213,25 @@ Meteor.methods
     if _.isUndefined(id) or _.isEmpty(id)
       return []
     return Airports.findOne({'_id': id})
+  findNearbyAirports: (id, miles) ->
+    if _.isUndefined(id) or _.isEmpty(id)
+      return []
+    miles = parseInt(miles, 10)
+    if _.isUndefined(miles) or _.isNaN(miles)
+      return []
+    metersToMiles = 1609.344
+    airport = Airports.findOne({'_id': id})
+    if _.isUndefined(airport) or _.isEmpty(airport)
+      return []
+    coordinates = airport.loc.coordinates
+    value =
+      $geometry:
+        type: 'Point'
+        coordinates: coordinates
+      $minDistance: 0
+      $maxDistance: metersToMiles * miles
+    query =
+      loc: {$near: value}
+    console.log('findNearbyAirports:query: %j', query)
+    airports = Airports.find(query).fetch()
+    return airports
