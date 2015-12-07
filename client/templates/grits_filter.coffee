@@ -7,6 +7,7 @@ _lastFlightId = null # stores the last flight _id from the collection, used in l
 _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
 _arrivalSearch = null # onRendered will set this to a typeahead object
+_nearbyAirportsSwitch = null # onRendered will set this to a bootstrap-switch object
 _suggestionTemplate = _.template('<span><%= obj.field %>: <%= obj.value %> (<%= obj.airport.get("_id") %> - <%= obj.airport.get("name") %>)</span>')
 
 _typeaheadMatcher =
@@ -84,6 +85,22 @@ getArrivalSearch = () ->
 _setArrivalSearch = (typeahead) ->
   _arrivalSearch = typeahead
   return
+
+# restricts a tokenfield max-height and applies an overflow-y scroll
+#
+# @param [Object] tokenField, a jQuery element / tokenfield
+_restrictTokenizedHeight = (tokenField) ->
+  $container = tokenField.closest('.tokenized')
+  $container.css('max-height', (tokenField.height() * 2) - 2)
+  $container.css('overflow-y', 'scroll')
+
+# un-restricts a tokenfield max-height and removes the overflow-y scroll
+#
+# @param [Object] tokenField, a jQuery element / tokenfield
+_unrestrictTokenizedHeight = (tokenField) ->
+  $container = tokenField.closest('.tokenized')
+  $container.css('max-height', '')
+  $container.css('overflow-y', '')
 
 # determines which field was matched by the typeahead into the server response
 #
@@ -176,44 +193,17 @@ Template.gritsFilter.onRendered ->
   })
   _setDepartureSearchMain(departureSearchMain)
 
-  departureSearch = $('#departureSearch').tokenfield({
-    typeahead: [{hint:false, highlight:true}, {
-      display: (match) ->
-        return match.label
-      templates:
-        suggestion: _suggestionTemplate
-      source: (query, callback) ->
-        Meteor.call('typeaheadAirport', query, (err, res) ->
-          if err or _.isUndefined(res) or _.isEmpty(res)
-            return
-          else
-            matches = _determineFieldMatchesByWeight(query, res)
-            # expects an array of objects with keys [label, value]
-            callback(matches)
-      )
-    }]
-  })
+  departureSearch = $('#departureSearch').tokenfield({})
   _setDepartureSearch(departureSearch)
 
-  arrivalSearch = $('#arrivalSearch').tokenfield({
-    typeahead: [{hint:false, highlight:true}, {
-      display: (match) ->
-        return match.label
-      templates:
-        suggestion: _suggestionTemplate
-      source: (query, callback) ->
-        Meteor.call('typeaheadAirport', query, (err, res) ->
-          if err or _.isUndefined(res) or _.isEmpty(res)
-            return
-          else
-            matches = _determineFieldMatchesByWeight(query, res)
-            # expects an array of objects with keys [label, value]
-            callback(matches)
-      )
-    }]
-  })
+  arrivalSearch = $('#arrivalSearch').tokenfield({})
   _setArrivalSearch(arrivalSearch)
 
+  toastr.options = {
+    positionClass: 'toast-bottom-center',
+    preventDuplicates: true,
+  }
+  
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
   # apply button and filterLoading indicator.
@@ -242,6 +232,38 @@ Template.gritsFilter.onRendered ->
 #
 # Event handlers for the grits_filter.html template
 Template.gritsFilter.events
+  'click #includeNearbyAirports': (event) ->
+    miles = parseInt($("#includeNearbyAirportsRadius").val(), 10)
+    departures = GritsFilterCriteria.readDeparture()
+    if departures.length <= 0
+      event.preventDefault()
+      event.stopPropagation()
+      toastr.error('Include Nearby requires a Departure')
+      return false
+    
+    if $('#includeNearbyAirports').is(':checked')
+      Session.set('grits-net-meteor:isUpdating', true)
+      Meteor.call('findNearbyAirports', departures[0], miles, (err, airports) ->
+        if err
+          event.preventDefault()
+          event.stopPropagation()
+          Session.set('grits-net-meteor:isUpdating', false)
+          console.error(err)
+          if err.hasOwnProperty('message')
+            toastr.error(err.message)
+          return
+        for airport in airports
+          departures.push(airport.get('_id'))
+        _.uniq(departures)
+        _restrictTokenizedHeight(getDepartureSearch())
+        GritsFilterCriteria.setDeparture(departures)
+        Session.set('grits-net-meteor:isUpdating', false)
+      )
+    else
+      departureSearch = getDepartureSearch()
+      departureSearch.tokenfield('setTokens', [])
+      _unrestrictTokenizedHeight(departureSearch)
+      
   'keyup #departureSearchMain-tokenfield': (event) ->
     if event.keyCode == 13
       if GritsFilterCriteria.readDeparture() <= 0
@@ -264,7 +286,8 @@ Template.gritsFilter.events
     #will avoid the filter div expanding horizontally
     $target = $(e.target)
     $container = $target.closest('.tokenized')
-    $container.css('max-width',$target.width())
+    width = parseInt($('#departureSearchMain').width() *.75, 10)
+    $container.css('max-width', width)
     #the typeahead menu should be as wide as the filter at a minimum
     $menu = $container.find('.tt-dropdown-menu')
     $menu.css('min-width', $('#filter').width())
@@ -295,3 +318,6 @@ Template.gritsFilter.events
     tokens = $target.tokenfield('getTokens')
     if tokens.length == 0
       $target.closest('.tokenized').find('.token-input.tt-input').attr('placeholder', 'Type to search')
+      console.log('$target', $target)
+      if $target.attr('id') in ['departureSearch', 'departureSearchMain']
+        $('#includeNearbyAirports').prop('checked', false)
