@@ -1,7 +1,6 @@
-_ignoreFields = ['includeNearbyAirports']
-_validFields = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels', 'includeNearbyAirports']
+_validFields = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels']
 _validDays = ['SUN','MON','TUE','WED','THU','FRI','SAT']
-_validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in', '$near']
+_validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in']
 # local/private minimongo collection
 _Collection = new (Mongo.Collection)(null)
 # local/private Astronomy model for maintaining filter criteria
@@ -78,32 +77,14 @@ class FilterCriteria
     result = {}
     criteria.forEach((filter) ->
       value = {}
-      k = filter.get('key')
       o = filter.get('operator')
       v = filter.get('value')
       if _.indexOf(['$eq'], o) >= 0
         value = v
       else
         value[o] = v
-      if _.indexOf(_ignoreFields, filter.get('_id')) >= 0
-        return
-      result[k] = value
+      result[filter.get('key')] = value
     )
-    return result
-  
-  # returns the includeNearbyFlights query
-  #
-  # @return [Object] query, the stand-alone includeNearbyFlights query
-  getIncludeNearbyAirports: () ->
-    criteria = _Collection.findOne({_id: 'includeNearbyAirports'})
-    result = {}
-    if !_.isUndefined(criteria)
-      value = {}
-      k = criteria.get('key')
-      o = criteria.get('operator')
-      v = criteria.get('value')
-      value[o] = v      
-      result[k] = value
     return result
   
   # sets the global Session 'grits-net-meteor:query' object to the current
@@ -155,33 +136,6 @@ class FilterCriteria
       setField('day6')
     else if day == 'SAT'
       setField('day7')
-    return
-  
-  # sets the corresponding checkbox on the UI to the 'includedNearbyAirports'
-  # and 'miles' specified, as well as, updating the underlying FilterCriteria.
-  #
-  # @param [Boolean] checked, true or false
-  # @param [Integer] miles, number of miles 1 - 500
-  # @param [Array] geoJSON point array, [longitude, latitude]
-  setIncludeNearbyAirports : (checked, miles, coordinates) ->
-    if _.isUndefined(coordinates)
-      throw new Error('coordinates must be defined')
-    metersToMiles = 1609.344
-    name = 'includeNearbyAirports'
-    if checked
-      $('#includeNearbyAirports').prop('checked', true)
-      value =
-        $geometry:
-          type: 'Point'
-          coordinates: coordinates
-        $minDistance: metersToMiles
-        $maxDistance: metersToMiles * miles
-      GritsFilterCriteria.createOrUpdate(name, {key: 'departureAirport.loc', operator: '$near', 'value': value})
-      $('#includeNearbyAirportsRadius').val(miles)
-    else
-      $('#includeNearbyAirports').prop('checked', false)
-      $('#includeNearbyAirportsRadius').val(miles)
-      GritsFilterCriteria.remove(name)
     return
   
   # sets the weeklyFrequency input on the UI to the 'operator' and 'value'
@@ -318,80 +272,39 @@ class FilterCriteria
   
   # convenience method for reading all the filter UI inputs and creating and/or
   # updating the underlying FilterCriteria
-  # @note using async.each for a timing issue with the async network call in
-  # readIncludeNearbyAirports
   scanAll : () ->
-    methods = []
     for name, method of this
       if name.indexOf('read') >= 0
-        methods.push(method)
-    async.each(methods,
-      (method, callback) ->
-        method(callback)
-      (err) ->
-        if err
-          console.error(err)
-    )
+        method()
     return
   
   # scans (reads) the 'levels' input currently displayed on the filter UI
   # then calls the setter to set the Session variable
   # @note: we do not add to the underlying FilterCriteria
-  readLevels : (cb) ->
+  readLevels : () ->
     val = $("#connectednessLevels").val()
     try
       GritsFilterCriteria.setLevels(val)
     catch e
-      if _.isFunction(cb)
-        cb(e)
-      return
-    if _.isFunction(cb)
-      cb()
-    return
-
-  readIncludeNearbyAirports: (cb) ->
-    miles = $("#includeNearbyAirportsRadius").val()
-    if $('#includeNearbyAirports').is(':checked')
-      departures = GritsFilterCriteria.readDeparture()
-      if departures.length >= 0
-        Meteor.call('findAirportById', departures[0], (err, airport) ->
-          GritsFilterCriteria.setIncludeNearbyAirports(true, miles, airport.loc.coordinates)
-          if _.isFunction(cb)
-            cb()
-        )
-    return
-  
-  # scans (reads) the 'levels' input currently displayed on the filter UI,
-  # then creates and/or updates the underlying FilterCriteria
-  readLevels : (cb) ->
-    val = $("#connectednessLevels").val()
-    GritsFilterCriteria.remove('levels')
-    if val isnt '' and val isnt '0'
-      GritsFilterCriteria.createOrUpdate('levels', {key: 'flightNumber', operator:'$ne', value:-val})
-    if _.isFunction(cb)
-      cb()
+      console.error(e)
     return
   
   # scans (reads) the 'seats' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
-  readSeats : (cb) ->
+  readSeats : () ->
     val = parseInt($("#seatsInput").val())
     op = $('#seats-operand').val();
     if _.isUndefined(op)
-      if _.isFunction(cb)
-        cb()
       return
     if _.isUndefined(val) or isNaN(val)
       GritsFilterCriteria.remove('seats')
     else
       GritsFilterCriteria.createOrUpdate('seats', {key: 'totalSeats', operator: op, value: val})
-    if _.isFunction(cb)
-      cb()
     return
   
   # scans (reads) the 'stops' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
-  readStops : (cb) ->
+  readStops : () ->
     val = parseInt($("#stopsInput").val())
     op = $('#stops-operand').val();
     if _.isUndefined(op)
@@ -400,16 +313,11 @@ class FilterCriteria
       GritsFilterCriteria.remove('stops')
     else
       GritsFilterCriteria.createOrUpdate('stops', {key: 'stops', operator: op, value: val})
-    
-    if _.isFunction(cb)
-      cb()
     return
   
   # scans (reads) the 'departure' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
-  #
-  # @return [Array] combined, departures from #departureSearchMain and #departureSearch inputs
-  readDeparture : (cb) ->
+  readDeparture : () ->
     combined = []
       
     if typeof Template.gritsFilter.getDepartureSearchMain() != 'undefined'
@@ -426,14 +334,11 @@ class FilterCriteria
       GritsFilterCriteria.remove('departure')
     else
       GritsFilterCriteria.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: combined})
-    
-    if _.isFunction(cb)
-      cb()
     return combined
   
   # scans (reads) the 'arrival' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
-  readArrival : (cb) ->
+  readArrival : () ->
     if typeof Template.gritsFilter.getDepartureSearch() != 'undefined'
       tokens =  Template.gritsFilter.getArrivalSearch().tokenfield('getTokens')
       codes = _.pluck(tokens, 'label')
@@ -441,14 +346,11 @@ class FilterCriteria
       GritsFilterCriteria.remove('arrival')
     else
       GritsFilterCriteria.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: codes})
-      
-    if _.isFunction(cb)
-      cb()
     return
   
   # scans (reads) the 'days Of Week' checkboxes currently displayed on the
   # filter UI, then creates and/or updates the underlying FilterCriteria
-  readDaysOfWeek : (cb) ->
+  readDaysOfWeek : () ->
     day = 'day1'
     if $('#dowSUN').is(':checked')      
       GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
@@ -490,26 +392,19 @@ class FilterCriteria
       GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
     else if !$('#dowSAT').is(':checked')
       GritsFilterCriteria.remove(day)
-      
-    if _.isFunction(cb)
-      cb()
     return
   
   # scans (reads) the 'weeklyFrequency' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
-  readWeeklyFrequency : (cb) ->
+  readWeeklyFrequency : () ->
       val = parseInt($("#weeklyFrequencyInput").val())
       op = $('#weekly-frequency-operand').val();
       if _.isUndefined(op)
-        if _.isFunction(cb)
-          cb()
         return
       if _.isUndefined(val) or isNaN(val)
         GritsFilterCriteria.remove('weeklyFrequency')
       else
         GritsFilterCriteria.createOrUpdate('weeklyFrequency', {key: 'weeklyFrequency', operator: op, value: val})
-      if _.isFunction(cb)
-        cb()
       return
   
 GritsFilterCriteria = new FilterCriteria() #GritsFilterCriteria exports as a singleton
