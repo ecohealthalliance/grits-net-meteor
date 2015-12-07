@@ -24,6 +24,7 @@ Package.on_use(function(api){
     'd3js:d3@3.5.5',
     'sergeyt:typeahead@0.0.11',
     'ajduke:bootstrap-tokenfield@0.5.0',
+    'flawless:meteor-toastr@1.0.1',
     'grits:grits-net-mapper@0.2.2'
   ]);
   // client only packages
