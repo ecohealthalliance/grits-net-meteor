@@ -10,7 +10,7 @@ html, body
 
 body
 	font-family arial
-
+  
 #nodeDetailsDiv, #pathDetailsDiv
   font-size small
   background-color white
@@ -53,9 +53,7 @@ body
   overflow-y scroll
   
 #filterLoading
-  position relative
   display none
-  vertical-align middle
 
 #filterFooter
   position absolute
@@ -137,13 +135,14 @@ body
 .spinner
   position absolute
   right 15px
-  float right
-  margin 5px 0px 0px 0px
-
+  top 17px
+  font-size 16px
+  color #666
+  z-index 2000
+  
 .searchBar
   margin 5px 5px 5px 60px
   width 100%
-
 
 .leaflet-container
   background-color #CDD2D4
@@ -325,7 +324,6 @@ thead, tbody tr
     font-style italic
   > span
     text-transform capitalize
-
 
 .tt-suggestion
   position relative
