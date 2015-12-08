@@ -10,3 +10,4 @@ coffeescript
 reactive-var
 grits:grits-net-meteor@0.0.1
 xolvio:cucumber@0.19.4_1
+tsega:bootstrap3-datetimepicker
