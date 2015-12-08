@@ -7,7 +7,16 @@ _lastFlightId = null # stores the last flight _id from the collection, used in l
 _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
 _arrivalSearch = null # onRendered will set this to a typeahead object
-_suggestionTemplate = _.template('<span><%= obj.field %>: <%= obj.value %> (<%= obj.airport.get("_id") %> - <%= obj.airport.get("name") %>)</span>')
+_suggestionTemplate = _.template('
+  <span class="airport-code"><%= obj.airport.get("_id") %></span>
+  <span class="airport-info">
+    <%= obj.airport.get("name") %>
+    <% if (obj.field == "notes" || obj.field == "stateName" || obj.field == "globalRegion") { %>
+      <span class="additional-info">
+        <span><%= obj.field %>:</span> <%= obj.value %>
+      <span>
+    <% } %>
+  </span>')
 
 _typeaheadMatcher =
   WAC: {weight: 0, regexOpt: 'ig'}
@@ -132,7 +141,7 @@ _determineFieldMatchesByWeight = (input, res) ->
           continue
         else
           if weight > match.weight
-            match.value = value            
+            match.value = value
             match.field = field
             match.fieldValue = value
             match.weight = weight
