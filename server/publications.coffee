@@ -2,7 +2,7 @@ extendQuery = (query, lastId) ->
   # all flights are filtered by current date being past the discontinuedDate
   # or before the effectiveDate
   if !_.isUndefined(query.effectiveDate)
-    query.effectiveDate.$lt = new Date(query.effectiveDate.$lt)
+    query.effectiveDate.$lte = new Date(query.effectiveDate.$lte)
   if !_.isUndefined(query.discontinuedDate)
     query.discontinuedDate.$gte = new Date(query.discontinuedDate.$gte)
   # offset

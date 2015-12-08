@@ -287,16 +287,16 @@ class FilterCriteria
       # all flights are filtered by current date being past the discontinuedDate
       # or before the effectiveDate
       now = new Date().toISOString()
-      GritsFilterCriteria.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lt', value: now})
+      GritsFilterCriteria.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: now})
       GritsFilterCriteria.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: now})
       return
 
-    if !_.isUndefined(fodStart)
-      fodStart = new Date(fodStart).toISOString()
-      GritsFilterCriteria.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lt', value: fodStart})
     if !_.isUndefined(fodEnd)
       fodEnd = new Date(fodEnd).toISOString()
-      GritsFilterCriteria.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: fodEnd})
+      GritsFilterCriteria.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: fodEnd})
+    if !_.isUndefined(fodEnd)
+      fodStart = new Date(fodStart).toISOString()
+      GritsFilterCriteria.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: fodStart})
     return
 
   # scans (reads) the 'levels' input currently displayed on the filter UI
