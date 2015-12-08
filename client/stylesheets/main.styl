@@ -295,3 +295,49 @@ thead, tbody tr
 
 .leaflet-heatmap-layer
   z-index -1
+
+.searchBar
+  position relative
+
+.twitter-typeahead
+  position static !important // Overides typeahead's inline styling
+
+.tt-dropdown-menu
+  border-top-left-radius 0
+  border-top-right-radius 0
+  border 0
+
+.airport-code
+  position absolute
+  left 10px
+  top 50%
+  transform translate(0, -50%)
+  min-width 15%
+  font-size 110%
+
+.airport-info
+  color #666
+  font-size 95%
+  .additional-info
+    display block
+    font-size 85%
+    color #999
+    font-style italic
+  > span
+    text-transform capitalize
+
+
+.tt-suggestion
+  position relative
+  padding 5px 10px 5px 20%
+  border-bottom 1px solid #f9f9f9
+  &:last-child
+    border-bottom 0
+
+.tt-suggestion
+.tt-suggestion
+  &.tt-cursor
+  &.tt-is-under-cursor
+    background lighten(#DDD, 10%)
+    &.airport-name
+      color #555
