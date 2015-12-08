@@ -8,7 +8,16 @@ _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
 _arrivalSearch = null # onRendered will set this to a typeahead object
 _sharedTokens = [] # container for tokens that are shared from departureSearchMain input
-_suggestionTemplate = _.template('<span><%= obj.field %>: <%= obj.value %> (<%= obj.airport.get("_id") %> - <%= obj.airport.get("name") %>)</span>')
+_suggestionTemplate = _.template('
+  <span class="airport-code"><%= obj.airport.get("_id") %></span>
+  <span class="airport-info">
+    <%= obj.airport.get("name") %>
+    <% if (obj.field == "notes" || obj.field == "stateName" || obj.field == "globalRegion") { %>
+      <span class="additional-info">
+        <span><%= obj.field %>:</span> <%= obj.value %>
+      <span>
+    <% } %>
+  </span>')
 
 _typeaheadMatcher =
   WAC: {weight: 0, regexOpt: 'ig'}
