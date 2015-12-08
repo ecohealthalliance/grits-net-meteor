@@ -8,27 +8,15 @@ _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
 _arrivalSearch = null # onRendered will set this to a typeahead object
 _suggestionTemplate = _.template('
-  <span class="airport-code"><%= obj.airport.get("_id") %></span>
+  <span class="airport-code"><%= raw._id %></span>
   <span class="airport-info">
-    <%= obj.airport.get("name") %>
-    <% if (obj.field == "notes" || obj.field == "stateName" || obj.field == "globalRegion") { %>
+    <%= raw.name %>
+    <% if (display) { %>
       <span class="additional-info">
-        <span><%= obj.field %>:</span> <%= obj.value %>
+        <span><%= display %>:</span> <%= value %>
       <span>
     <% } %>
   </span>')
-
-_typeaheadMatcher =
-  WAC: {weight: 0, regexOpt: 'ig'}
-  notes: {weight: 1, regexOpt: 'ig'}
-  globalRegion: {weight: 2, regexOpt: 'ig'}
-  countryName: {weight: 3, regexOpt: 'ig'}
-  country: {weight: 4, regexOpt: 'ig'}
-  stateName: {weight: 5, regexOpt: 'ig'}
-  state: {weight: 6, regexOpt: 'ig'}
-  city: {weight: 7, regexOpt: 'ig'}
-  name: {weight: 8, regexOpt: 'i'}
-  _id: {weight: 9, regexOpt: 'i'}
 
 # returns the last flight _id, used for the [More] button in limit/offset
 #
@@ -105,6 +93,7 @@ _setArrivalSearch = (typeahead) ->
 #
 # @param [String] input, the string used as the search
 # @param [Array] results, the server response
+# @return [Array] array of matches, extends the raw document of the base Astro class.  This allows all properties of the model to be available in the suggestion template.
 _determineFieldMatchesByWeight = (input, res) ->
   numComparator = (a, b) ->
     a - b
@@ -118,33 +107,43 @@ _determineFieldMatchesByWeight = (input, res) ->
     return strComparator(a.label, b.label) || numComparator(a.weight, b.weight)
 
   matches = []
-
   for obj in res
-    for field, matcher of _typeaheadMatcher
-      #regex = new RegExp(".*?(?:^|\s)(#{input}[^\s$]*).*?", 'ig')
-      regex = new RegExp(input, matcher.regexOpt)
-      weight = matcher.weight
-      value = obj.get(field)
+    # get the typeahead matcher from the Astro Class, contains weight, display
+    # and regexOptions
+    typeaheadMatcher = obj.typeaheadMatcher()
+    # get the raw document from Astro, this will also be used for the
+    # _suggestionTemplate
+    object = _.extend(obj.raw()) 
+    for field, matcher of typeaheadMatcher
+      regex = new RegExp(input, matcher.regexOptions)
+      value = object[field]
+      # cannot match on an empty value
       if _.isEmpty(value)
         continue
+      # apply the regex to the value
       if value.match(regex) != null
-        match = _.find(matches, (m) -> m.label == obj.get('_id'))
+        # determine if its a previous match
+        match = _.find(matches, (m) -> m.label == object._id)
+        # if not, create a new object and assign the properties
+        # note: prefix is added to avoid possible confict with the class fields
+        # that are extended.
         if _.isUndefined(match)
           match =
-            label: obj.get('_id')
+            label: object._id
             value: value
             field: field
-            fieldValue: value
-            weight: weight
-            airport: obj
+            weight: matcher.weight
+            display: matcher.display
+            raw: object
           matches.push(match)
           continue
         else
-          if weight > match.weight
+          # Previous match exists, update the values if its of heigher weight
+          if matcher.weight > match.weight
             match.value = value
             match.field = field
-            match.fieldValue = value
-            match.weight = weight
+            match.weight = matcher.weight
+            match.display = matcher.display   
   if Meteor.gritsUtil.debug
     console.log('matches:', matches)
   if matches.length > 0
