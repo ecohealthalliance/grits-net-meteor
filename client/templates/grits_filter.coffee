@@ -391,7 +391,8 @@ Template.gritsFilter.events
   'tokenfield:initialize': (e) ->
     $target = $(e.target)
     $container = $target.closest('.tokenized')
-    width = parseInt($('#filter').width() *.80, 10)
+    #width = parseInt($('#filter').width() *.80, 10)
+    width = parseInt($('#departureSearchMain').width() *.80, 10)
     $container.css('max-width', width)
     #the typeahead menu should be as wide as the filter at a minimum
     $menu = $container.find('.tt-dropdown-menu')
