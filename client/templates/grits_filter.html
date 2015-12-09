@@ -1,4 +1,9 @@
 <template name="gritsFilter">
+<style>
+  .bootstrap-datetimepicker-widget table td.day {
+    width: 28px;
+  }
+</style>
   <div>
     <div class="pull-left">
       <button class="btn btn-sm fa fa-bars" id="toggleFilter"></button>
@@ -17,6 +22,33 @@
     <div class="row filter-row">
       <div class="col-xs-12">
         <h3><span class="filter-label">Advanced Filter</span></h3>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-12">
+        <span class="filter-label">Flight Operating Date Range:</span>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class='col-xs-12'>
+          <div class="filter-group">
+            <span class="filter-label">Start:</span>
+              <div class='input-group date' id='fodStart' style="max-width: 300px;">
+                  <input type='text' class="date-button form-control" />
+                  <span class="input-group-addon">
+                      <span class="glyphicon glyphicon-calendar"></span>
+                  </span>
+              </div>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">End:</span>
+              <div class='input-group date' id='fodEnd' style="max-width: 300px;">
+                  <input type='text' class="date-button form-control" />
+                  <span class="input-group-addon">
+                      <span class="glyphicon glyphicon-calendar"></span>
+                  </span>
+              </div>
+          </div>
       </div>
     </div>
     <div class="row filter-row">
