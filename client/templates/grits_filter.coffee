@@ -7,6 +7,7 @@ _lastFlightId = null # stores the last flight _id from the collection, used in l
 _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
 _arrivalSearch = null # onRendered will set this to a typeahead object
+_sharedTokens = [] # container for tokens that are shared from departureSearchMain input
 _suggestionTemplate = _.template('<span><%= obj.field %>: <%= obj.value %> (<%= obj.airport.get("_id") %> - <%= obj.airport.get("name") %>)</span>')
 
 _typeaheadMatcher =
@@ -21,6 +22,37 @@ _typeaheadMatcher =
   name: {weight: 8, regexOpt: 'i'}
   _id: {weight: 9, regexOpt: 'i'}
 
+
+# provides one-way synchroniziation between tokens in departureSearchMain and
+# departureSearch when a token is created
+#
+# @param [String] newToken, a new token label
+# @param [String] id, the element id that triggered the tokenfield:createdtoken event
+_syncCreatedSharedToken = (newToken, id) ->    
+  if id == 'departureSearchMain'
+    rawTokens = _departureSearch.tokenfield('getTokens')
+    tokens = _.pluck(rawTokens, 'label')
+    if _.indexOf(tokens, newToken) >= 0
+      return    
+    _sharedTokens = _.union(tokens, [newToken])
+    _departureSearch.tokenfield('createToken', newToken)
+
+# provides one-way synchroniziation between tokens in departureSearchMain and
+# departureSearch when a token is removed
+#
+# @param [String] newToken, a new token label
+# @param [String] id, the element id that triggered the tokenfield:removetoken event
+_syncRemovedSharedToken = (newToken, id) ->    
+  if id == 'departureSearchMain'
+    rawTokens = _departureSearch.tokenfield('getTokens')
+    tokens = _.pluck(rawTokens, 'label')
+    if _.indexOf(tokens, newToken) < 0
+      return
+    tokens.splice(_.indexOf(tokens, newToken), 1)
+    _sharedTokens = tokens
+    _departureSearch.tokenfield('setTokens', tokens)
+
+  
 # returns the last flight _id, used for the [More] button in limit/offset
 #
 # @return [String] lastFlightId, the last _id of a flight record
@@ -184,7 +216,7 @@ Template.gritsFilter.onRendered ->
         Meteor.call('typeaheadAirport', query, (err, res) ->
           if err or _.isUndefined(res) or _.isEmpty(res)
             return
-          matches = _determineFieldMatchesByWeight(query, res)
+          matches = _determineFieldMatchesByWeight(query, res)          
           # expects an array of objects with keys [label, value]
           callback(matches)
       )
@@ -225,8 +257,7 @@ Template.gritsFilter.onRendered ->
     else
       $('#applyFilter').prop('disabled', false)
       $('#filterLoading').hide()
-
-
+      
 # events
 #
 # Event handlers for the grits_filter.html template
@@ -234,6 +265,7 @@ Template.gritsFilter.events
   'click #includeNearbyAirports': (event) ->
     miles = parseInt($("#includeNearbyAirportsRadius").val(), 10)
     departures = GritsFilterCriteria.readDeparture()
+    
     if departures.length <= 0
       event.preventDefault()
       event.stopPropagation()
@@ -251,18 +283,19 @@ Template.gritsFilter.events
           if err.hasOwnProperty('message')
             toastr.error(err.message)
           return
-        for airport in airports
-          departures.push(airport.get('_id'))
-        _.uniq(departures)
-        _restrictTokenizedHeight(getDepartureSearch())
-        GritsFilterCriteria.setDeparture(departures)
+        
+        nearbyTokens = _.pluck(airports, '_id')
+        union = _.union(_sharedTokens, nearbyTokens)
+                
+        _restrictTokenizedHeight(_departureSearch)                
+        _departureSearch.tokenfield('setTokens', union)
+        
         Session.set('grits-net-meteor:isUpdating', false)
       )
     else
-      departureSearch = getDepartureSearch()
-      departureSearch.tokenfield('setTokens', [])
+      departureSearch = getDepartureSearch()      
+      departureSearch.tokenfield('setTokens', _sharedTokens)
       _unrestrictTokenizedHeight(departureSearch)
-      
   'keyup #departureSearchMain-tokenfield': (event) ->
     if event.keyCode == 13
       if GritsFilterCriteria.readDeparture() <= 0
@@ -305,18 +338,27 @@ Template.gritsFilter.events
       $target.closest('.tokenized').find('.token-input.tt-input').val("")
       e.preventDefault()
       return
-  'tokenfield:createdtoken': (e) ->
-    $target = $(e.target)
-    $container = $target.closest('.tokenized')
+  'tokenfield:createdtoken': (e) ->    
+    $target = $(e.target)    
     tokens = $target.tokenfield('getTokens')
+    # remove the placeholder text
     if tokens.length > 0
       $target.closest('.tokenized').find('.token-input.tt-input').attr('placeholder', '')
+    
+    token = e.attrs.label
+    _syncCreatedSharedToken(token, $target.attr('id'))
+    return false
+      
   'tokenfield:removedtoken': (e) ->
     $target = $(e.target)
-    $container = $target.closest('.tokenized')
-    tokens = $target.tokenfield('getTokens')
+    tokens = $target.tokenfield('getTokens')        
+    # determine if the remaining tokens is empty, then show the placeholder text
     if tokens.length == 0
       $target.closest('.tokenized').find('.token-input.tt-input').attr('placeholder', 'Type to search')
-      console.log('$target', $target)
       if $target.attr('id') in ['departureSearch', 'departureSearchMain']
         $('#includeNearbyAirports').prop('checked', false)
+    
+    token = e.attrs.label
+    _syncRemovedSharedToken(token, $target.attr('id'))
+    return false
+      
