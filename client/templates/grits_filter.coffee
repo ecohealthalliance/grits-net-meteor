@@ -90,7 +90,7 @@ _setArrivalSearch = (typeahead) ->
 # @param [Object] tokenField, a jQuery element / tokenfield
 _restrictTokenizedHeight = (tokenField) ->
   $container = tokenField.closest('.tokenized')
-  $container.css('max-height', (tokenField.height() * 2) - 2)
+  $container.css('max-height', (tokenField.height() * 4) - 4)
   $container.css('overflow-y', 'scroll')
 
 # un-restricts a tokenfield max-height and removes the overflow-y scroll
