@@ -1,6 +1,6 @@
 _validFields = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels', 'effectiveDate', 'discontinuedDate']
 _validDays = ['SUN','MON','TUE','WED','THU','FRI','SAT']
-_validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in']
+_validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in', '$near']
 # local/private minimongo collection
 _Collection = new (Mongo.Collection)(null)
 # local/private Astronomy model for maintaining filter criteria
@@ -77,13 +77,14 @@ class FilterCriteria
     result = {}
     criteria.forEach((filter) ->
       value = {}
+      k = filter.get('key')
       o = filter.get('operator')
       v = filter.get('value')
       if _.indexOf(['$eq'], o) >= 0
         value = v
       else
-        value[o] = v
-      result[filter.get('key')] = value
+        value[o] = v      
+      result[k] = value
     )
     return result
 
@@ -308,6 +309,26 @@ class FilterCriteria
       GritsFilterCriteria.setLevels(val)
     catch e
       console.error(e)
+      return
+    return
+
+  readIncludeNearbyAirports: () ->
+    miles = $("#includeNearbyAirportsRadius").val()
+    if $('#includeNearbyAirports').is(':checked')
+      departures = GritsFilterCriteria.readDeparture()
+      if departures.length >= 0
+        Meteor.call('findAirportById', departures[0], (err, airport) ->
+          GritsFilterCriteria.setIncludeNearbyAirports(true, miles, airport.loc.coordinates)
+        )
+    return
+  
+  # scans (reads) the 'levels' input currently displayed on the filter UI,
+  # then creates and/or updates the underlying FilterCriteria
+  readLevels : () ->
+    val = $("#connectednessLevels").val()
+    GritsFilterCriteria.remove('levels')
+    if val isnt '' and val isnt '0'
+      GritsFilterCriteria.createOrUpdate('levels', {key: 'flightNumber', operator:'$ne', value:-val})
     return
 
   # scans (reads) the 'seats' input currently displayed on the filter UI,
@@ -338,6 +359,8 @@ class FilterCriteria
 
   # scans (reads) the 'departure' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
+  #
+  # @return [Array] combined, departures from #departureSearchMain and #departureSearch inputs
   readDeparture: () ->
     combined = []
 
@@ -355,6 +378,7 @@ class FilterCriteria
       GritsFilterCriteria.remove('departure')
     else
       GritsFilterCriteria.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: combined})
+    return combined
 
   # scans (reads) the 'arrival' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
@@ -420,7 +444,7 @@ class FilterCriteria
     val = parseInt($("#weeklyFrequencyInput").val())
     op = $('#weekly-frequency-operand').val()
     if _.isUndefined(op)
-      return
+        return
     if _.isUndefined(val) or isNaN(val)
       GritsFilterCriteria.remove('weeklyFrequency')
     else
