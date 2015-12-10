@@ -23,7 +23,7 @@ test:
   override:
     - chmod +x continuous_integration.sh
     - ./continuous_integration.sh
-    - CHIMP_OPTIONS='--browser=phantomjs' VELOCITY_CI=1 DEBUG=1 meteor run --settings settings.json --test:
+    - CHIMP_OPTIONS='--browser=phantomjs' VELOCITY_CI=1 DEBUG=1 meteor run --settings ./settings.json --test:
         pwd:
           example
 
