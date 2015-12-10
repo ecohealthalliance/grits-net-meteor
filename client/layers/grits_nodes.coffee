@@ -39,6 +39,7 @@ _eventHandlers = {
                   pathLayer.draw()
                   departureSearch.tokenfield('createToken', self._id)
                   #update the counters
+                  processed = flights.length
                   totalRecords = parseInt(Session.get('grits-net-meteor:totalRecords'), 10)
                   loadedRecords = parseInt(Session.get('grits-net-meteor:loadedRecords'), 10)
                   Session.set('grits-net-meteor:loadedRecords', loadedRecords + processed)
