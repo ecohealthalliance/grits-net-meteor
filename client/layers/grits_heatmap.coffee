@@ -95,6 +95,20 @@ class GritsHeatmapLayer extends GritsLayer
         # if a departure airport is not specified, clear the heatmap
         self.clear()
   
+  # append a single heatmap to the existing layer, does not clear existing data
+  #
+  # @param [Object] heatmap, Astro.class representation of 'Heatmap' model
+  add: (heatmap) ->
+    if _.isUndefined(heatmap)
+      return
+    self = this
+    _.each(heatmap.data, (a) ->
+      intensity = a[2] * self._getCellSize() * self._getZoomFactor()
+      self._data.push([a[0], a[1], intensity])
+    )
+    self.draw()
+    return
+  
   # binds to the Tracker.gritsMap.getInstance() map event listener .on
   # 'overlyadd' and 'overlayremove' methods
   _bindMapEvents: () ->
