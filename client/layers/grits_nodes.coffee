@@ -3,18 +3,73 @@ _eventHandlers = {
   #  if not Session.get('grits-net-meteor:isUpdating')
   #    Template.gritsMap.showNodeDetails(this)
   click: (element, selection, projection) ->
+    self = this
     if not Session.get('grits-net-meteor:isUpdating')
-      Template.gritsMap.showNodeDetails(this)
-      if typeof Template.gritsFilter.getDepartureSearch() != 'undefined'
-        tokens =  Template.gritsFilter.getDepartureSearch().tokenfield('getTokens')
-        match = _.find(tokens, (t) -> t.label == this._id)
+      departureSearch = Template.gritsFilter.getDepartureSearch()
+      if typeof departureSearch != 'undefined'
+        rawTokens =  departureSearch.tokenfield('getTokens')
+        tokens = _.pluck(rawTokens, 'label')
+        match = _.find(tokens, (t) -> t == self._id)
         if match
-          return false
+          # this token was already used in the query
+          Template.gritsMap.showNodeDetails(this)
+          return
         else
-          tokens.push({label: this._id, value: this._id + " - " + this.metadata.name})
-          Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', tokens)
-      GritsFilterCriteria.readDeparture()
-      GritsFilterCriteria.apply()
+          query = GritsFilterCriteria.getQueryObject()
+          # override the query to only fetch self._id
+          query['departureAirport._id'] = {$in: [self._id]}                    
+          # setup our map instance to be used later
+          map = Template.gritsMap.getInstance()
+          
+          Session.set('grits-net-meteor:isUpdating', true)
+          # use a bit of async.auto for flow-control
+          async.auto({
+            'flights': (callback, results) ->
+              Meteor.call('flightsByQuery', query, null, null, (err, flights) ->
+                if err
+                  callback(err)
+                  return
+                if _.isArray(flights) && flights.length > 0
+                  nodeLayer = map.getGritsLayer('Nodes')
+                  pathLayer = map.getGritsLayer('Paths')                
+                  for flight in flights
+                    nodes = nodeLayer.convertFlight(flight)
+                    pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
+                  nodeLayer.draw()
+                  pathLayer.draw()
+                  departureSearch.tokenfield('createToken', self._id)
+                  #update the counters
+                  totalRecords = parseInt(Session.get('grits-net-meteor:totalRecords'), 10)
+                  loadedRecords = parseInt(Session.get('grits-net-meteor:loadedRecords'), 10)
+                  Session.set('grits-net-meteor:loadedRecords', loadedRecords + processed)
+                  Session.set('grits-net-meteor:totalRecords', totalRecords + processed)
+                  callback(null, flights)
+                else
+                  callback(null, [])
+              )
+              return
+            'heatmap': (callback, results) ->
+              Meteor.call('findHeatmapByCode', self._id, (err, heatmap) ->
+                if err
+                  callback(err)
+                  return
+                if typeof heatmap != 'undefined'
+                  heatmapLayer = map.getGritsLayer('Heatmap')
+                  if typeof heatmapLayer != 'undefined'
+                    heatmapLayer.add(heatmap)
+                    callback(null, true)
+                    return
+                callback(null, false)
+              )
+              return
+          }, (err, results) ->
+            if err
+              Meteor.gritsUtil.errorHandler(err)
+              return
+            Template.gritsMap.showNodeDetails(self)            
+            Session.set('grits-net-meteor:isUpdating', false)
+          ) # end async.auto
+    return
 }
 # custom color scale for each marker
 _colorScale =
