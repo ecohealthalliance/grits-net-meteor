@@ -1,7 +1,7 @@
 _validFields = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels', 'effectiveDate', 'discontinuedDate']
 _validDays = ['SUN','MON','TUE','WED','THU','FRI','SAT']
 _validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in', '$near']
-_state = null # keeps track of  the query string state
+_state = null # keeps track of the query string state
 # local/private minimongo collection
 _Collection = new (Mongo.Collection)(null)
 # local/private Astronomy model for maintaining filter criteria
@@ -92,16 +92,19 @@ class FilterCriteria
     return result
 
   # compares the current state vs. the original/previous state
-  #
-  # @return [Boolean] stateChanged, true if states are different 
   compareStates: () ->
-    current = @getCurrentState()
-    if current != _state
-      stateChanged.set(true)
-      return true
-    else
-      stateChanged.set(false)
-      return false
+    self = this
+    # timeout to avoid 'flash' affect for those who quickly change the UI 
+    setTimeout(() ->
+      current = self.getCurrentState()
+      if current != _state
+        if current == "{}" # do not notifiy on an empty query object
+          self.stateChanged.set(false)  
+        else
+          self.stateChanged.set(true)
+      else
+        self.stateChanged.set(false)
+    , 500)
 
   # gets the current state of the filter
   #
