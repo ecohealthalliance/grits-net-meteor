@@ -101,7 +101,7 @@ addDefaultControls = (map) ->
   map.addControl(flightTableControl)
   Blaze.render(Template.flightTable, $('#flightTableContainer')[0])
 
-  $('#flightTableElement').bootstrapTable({data: []})
+  #$('#flightTableElement').bootstrapTable({data: []})
 
   $('.exportData').click ->
     fileType = $(this).attr("data-type")
