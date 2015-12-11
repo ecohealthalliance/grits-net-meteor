@@ -254,13 +254,9 @@ Template.gritsFilter.onRendered ->
     format: 'MM/DD/YYYY'
   $('#fodStart').on 'dp.change', (e) ->
     $('#fodEnd').data('DateTimePicker').minDate e.date
-    # compare the state of the filter so that a indicator may be shown to the user
-    GritsFilterCriteria.compareStates()
     return
   $('#fodEnd').on 'dp.change', (e) ->
     $('#fodStart').data('DateTimePicker').maxDate e.date
-    # compare the state of the filter so that a indicator may be shown to the user
-    GritsFilterCriteria.compareStates()
     return
 
   $(".bootstrap-datetimepicker-widget table td.day").css('width': '30px')
@@ -297,15 +293,13 @@ Template.gritsFilter.onRendered ->
 #
 # Event handlers for the grits_filter.html template
 Template.gritsFilter.events
-  'change .advanced-filter': (event) ->
+  'change .advanced-filter-status': (event) ->
+    # compare the state of the filter so that a indicator may be shown to the user
     state = GritsFilterCriteria.compareStates()
-  ###
   'dp.change': (event) ->
-    event.preventDefault();
-    event.stopPropagation();
+    # compare the state of the filter so that a indicator may be shown to the user
     state = GritsFilterCriteria.compareStates()
-    return false
-  ###
+    return
   'click #includeNearbyAirports': (event) ->
     miles = parseInt($("#includeNearbyAirportsRadius").val(), 10)
     departures = GritsFilterCriteria.readDeparture()
