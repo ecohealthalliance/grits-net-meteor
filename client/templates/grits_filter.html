@@ -9,7 +9,7 @@
       <button class="btn btn-sm fa fa-bars" id="toggleFilter">
       </button>
       {{#if state }}
-        <i class="fa fa-exclamation-circle filter-status"></i>
+        <i class="fa fa-exclamation-circle filter-status" title="Recent changes have not been applied"></i>
       {{/if}}
     </div>
     <div class="spinner">
@@ -37,7 +37,7 @@
           <div class="filter-group">
             <span class="filter-label">Start:</span>
               <div class='input-group date' id='fodStart' style="max-width: 300px;">
-                  <input type='text' class="date-button form-control" />
+                  <input type='text' class="date-button form-control input-sm" />
                   <span class="input-group-addon">
                       <span class="glyphicon glyphicon-calendar"></span>
                   </span>
@@ -46,7 +46,7 @@
           <div class="filter-group">
             <span class="filter-label">End:</span>
               <div class='input-group date' id='fodEnd' style="max-width: 300px;">
-                  <input type='text' class="date-button form-control" />
+                  <input type='text' class="date-button form-control input-sm" />
                   <span class="input-group-addon">
                       <span class="glyphicon glyphicon-calendar"></span>
                   </span>
@@ -174,26 +174,36 @@
       <div class="col-xs-3">
         <span class="filter-label">Limit:</span>
       </div>
-      <div class="col-xs-3">
+      <div class="col-xs-4">
         <input type="number" id="limit" class="form-control input-sm advanced-filter-status" value="1000">
       </div>
-      <div class="col-xs-6">
+      <div class="col-xs-5">
         <button id="loadMore" class="btn btn-sm btn-default pull-right" disabled="true">
           <span class="filter-label">More...</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="moreLoading" style="display: none;"/>
         </button>
       </div>
     </div>
-    <div class="row filter-row">
-      <div class="col-xs-12">
-        <button id="applyFilter" class="btn btn-sm btn-default">
-          <span class="filter-label">Apply</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="filterLoading"/>          
-        </button>
-        {{#if state }}
-          <i class="fa fa-exclamation-circle filter-status"></i><span class="filter-status-message">You have changes that have not been applied</span>
-        {{/if}}
-        <hr class="filter-horizontal-rule clearfix" />
-        <span class="pull-left" style="margin-left:10px;"><span class="filter-label">Loaded Records: </span><span>{{ loadedRecords }}</span></span>
-        <span class="pull-right" style="margin-right:10px;"><span class="filter-label">Total Records: </span><span>{{ totalRecords }}</span></span>
+    <div id="filterFooter">
+      <hr class="filter-horizontal-rule">
+      <div class="row filter-row">
+        <div class="col-xs-12">
+          <button id="applyFilter" class="btn btn-sm btn-default">
+            <span class="filter-label">Apply</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="filterLoading"/>          
+          </button>        
+          {{#if state }}
+            <span class="filter-status-message">Recent changes have not been applied</span><i class="fa fa-exclamation-circle filter-status"></i>
+          {{/if}}          
+        </div>
+      </div>
+      <div class="row row-status-bar">
+        <div class="col-xs-6 col-status-bar">
+          <span class="status-bar-text">Loaded Records:</span>
+          <span class="status-bar-text status-bar-counter">{{ loadedRecords }}</span>
+        </div>
+        <div class="col-xs-6 col-status-bar">
+          <span class="status-bar-text">Total Records:</span>
+          <span class="status-bar-text status-bar-counter">{{ totalRecords }}</span>
+        </div>
       </div>
     </div>
   </div>
