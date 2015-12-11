@@ -120,22 +120,6 @@ _setArrivalSearch = (typeahead) ->
   _arrivalSearch = typeahead
   return
 
-# restricts a tokenfield max-height and applies an overflow-y scroll
-#
-# @param [Object] tokenField, a jQuery element / tokenfield
-_restrictTokenizedHeight = (tokenField) ->
-  $container = tokenField.closest('.tokenized')
-  $container.css('max-height', (tokenField.height() * 4) - 4)
-  $container.css('overflow-y', 'scroll')
-
-# un-restricts a tokenfield max-height and removes the overflow-y scroll
-#
-# @param [Object] tokenField, a jQuery element / tokenfield
-_unrestrictTokenizedHeight = (tokenField) ->
-  $container = tokenField.closest('.tokenized')
-  $container.css('max-height', '')
-  $container.css('overflow-y', '')
-
 # determines which field was matched by the typeahead into the server response
 #
 # @param [String] input, the string used as the search
@@ -284,8 +268,6 @@ Template.gritsFilter.events
     departures = GritsFilterCriteria.readDeparture()
     
     if departures.length <= 0
-      event.preventDefault()
-      event.stopPropagation()
       toastr.error('Include Nearby requires a Departure')
       return false
     
@@ -293,26 +275,17 @@ Template.gritsFilter.events
       Session.set('grits-net-meteor:isUpdating', true)
       Meteor.call('findNearbyAirports', departures[0], miles, (err, airports) ->
         if err
-          event.preventDefault()
-          event.stopPropagation()
-          Session.set('grits-net-meteor:isUpdating', false)
-          console.error(err)
-          if err.hasOwnProperty('message')
-            toastr.error(err.message)
+          Meteor.gritsUtil.errorHandler(err)
           return
         
         nearbyTokens = _.pluck(airports, '_id')
-        union = _.union(_sharedTokens, nearbyTokens)
-                
-        _restrictTokenizedHeight(_departureSearch)                
+        union = _.union(_sharedTokens, nearbyTokens)              
         _departureSearch.tokenfield('setTokens', union)
-        
         Session.set('grits-net-meteor:isUpdating', false)
       )
     else
       departureSearch = getDepartureSearch()      
       departureSearch.tokenfield('setTokens', _sharedTokens)
-      _unrestrictTokenizedHeight(departureSearch)
   'keyup #departureSearchMain-tokenfield': (event) ->
     if event.keyCode == 13
       if GritsFilterCriteria.readDeparture() <= 0
