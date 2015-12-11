@@ -101,6 +101,28 @@ addDefaultControls = (map) ->
   map.addControl(flightTableControl)
   Blaze.render(Template.flightTable, $('#flightTableContainer')[0])
 
+  $('#flightTableElement').bootstrapTable({data: []})
+
+  $('.exportData').click ->
+    fileType = $(this).attr("data-type")
+    switch fileType
+      when 'json'
+        $("#flightTableElement").tableExport
+          type: 'json'
+      when 'xml'
+        $("#flightTableElement").tableExport
+          type: 'xml'
+      when 'csv'
+        $("#flightTableElement").tableExport
+          type: 'csv'
+      when 'excel'
+        $("#flightTableElement").tableExport
+          type: 'excel'
+      else
+        return
+
+
+
 clickRow = (row, id) ->
   $(_currentRow).removeClass('activeRow')
   oldPath = Template.gritsMap.getCurrentPath()
