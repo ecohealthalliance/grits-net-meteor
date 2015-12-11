@@ -295,10 +295,10 @@ Template.gritsFilter.onRendered ->
 Template.gritsFilter.events
   'change .advanced-filter-status': (event) ->
     # compare the state of the filter so that a indicator may be shown to the user
-    state = GritsFilterCriteria.compareStates()
+    GritsFilterCriteria.compareStates()
   'dp.change': (event) ->
     # compare the state of the filter so that a indicator may be shown to the user
-    state = GritsFilterCriteria.compareStates()
+    GritsFilterCriteria.compareStates()
     return
   'click #includeNearbyAirports': (event) ->
     miles = parseInt($("#includeNearbyAirportsRadius").val(), 10)
@@ -356,7 +356,7 @@ Template.gritsFilter.events
     #will avoid the filter div expanding horizontally
     $target = $(e.target)
     $container = $target.closest('.tokenized')
-    width = parseInt($('#departureSearchMain').width() *.80, 10)
+    width = parseInt($('#filter').width() *.80, 10)
     $container.css('max-width', width)
     #the typeahead menu should be as wide as the filter at a minimum
     $menu = $container.find('.tt-dropdown-menu')
