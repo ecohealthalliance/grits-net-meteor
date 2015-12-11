@@ -105,23 +105,9 @@ addDefaultControls = (map) ->
 
   $('.exportData').click ->
     fileType = $(this).attr("data-type")
-    switch fileType
-      when 'json'
-        $("#flightTableElement").tableExport
-          type: 'json'
-      when 'xml'
-        $("#flightTableElement").tableExport
-          type: 'xml'
-      when 'csv'
-        $("#flightTableElement").tableExport
-          type: 'csv'
-      when 'excel'
-        $("#flightTableElement").tableExport
-          type: 'excel'
-      else
-        return
-
-
+    $("#flightTableElement").tableExport
+      type: fileType
+    return
 
 clickRow = (row, id) ->
   $(_currentRow).removeClass('activeRow')
