@@ -11,43 +11,6 @@ html, body
 body
 	font-family arial
 
-.tokenized
-  word-wrap normal
-  
-.tokenized.departure
-  max-height: 60px;
-  overflow-y: scroll;
-
-.hamburger
-  float left
-  margin 2px
-
-.filter-status
-  position relative
-  margin-right 5px
-  left -2px
-  bottom -8px
-  vertical-align middle
-  color darkorange
-  
-.filter-status-message
-  position relative
-  left -2px
-  bottom -8px
-  font-size smaller
-  font-weight bold
-  color #333
-  
-.spinner
-  position relative
-  right 15px
-  float right
-  margin 5px 0px 0px 0px
-
-.searchBar
-  width 300px
-  margin 5px 5px 5px 50px
-
 #nodeDetailsDiv, #pathDetailsDiv
   font-size small
   background-color white
@@ -75,25 +38,35 @@ body
 
 #filterContainer
   font-size small
-
-	background-color white
-	padding 15px
-	border-radius 5px
-
-#filterLoading
-	position relative
-	display none
-	vertical-align middle
-
-.applyFilter
-	padding 5px
+  background-color white
+  padding 0px
+  border-radius 5px
+  width 315px
 
 #filter
   font-size small
-	margin-top 0
+  margin-top 0
+  margin-bottom 85px  
+  max-height 400px
+  width 315px
+  overflow-x hidden
+  overflow-y scroll
+  
+#filterLoading
+  position relative
+  display none
+  vertical-align middle
+
+#filterFooter
+  position absolute
+  width 100%
+  height 85px
+  bottom 0
+  left 0
+  padding 5px 5px 5px 5px
 
 .filter-horizontal-rule
-  margin 2px 0 2px 0
+  margin 0px 0 0px 0
 
 .filter-row
 	margin 2px -15px 2px -15px
@@ -117,9 +90,60 @@ body
 	white-space nowrap
 	padding 2px
 
-.airportPill
-	font-size small
-	color #343434
+.applyFilter
+	padding 5px
+
+.tokenized
+  word-wrap normal
+
+.tokenized.departure
+  max-height: 60px;
+  overflow-y: scroll;
+
+.hamburger
+  float left
+  margin 2px
+
+.row-status-bar  
+  margin 15px 5px 0 5px
+  
+.col-status-bar  
+  padding 0
+  
+.status-bar-text
+  color #333
+  font-style italic
+
+.status-bar-counter  
+  margin 0px 5px 0 5px
+
+.filter-status
+  position relative
+  margin-right 5px
+  left -2px
+  bottom -8px
+  vertical-align middle
+  color darkorange
+  
+.filter-status-message
+  position relative
+  left -2px
+  bottom -8px
+  font-size smaller
+  font-weight bold
+  color #333
+  margin 0 3px 0 3px
+  
+.spinner
+  position absolute
+  right 15px
+  float right
+  margin 5px 0px 0px 0px
+
+.searchBar
+  margin 5px 5px 5px 60px
+  width 100%
+
 
 .leaflet-container
   background-color #CDD2D4
