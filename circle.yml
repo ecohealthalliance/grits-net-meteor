@@ -14,6 +14,13 @@ checkout:
     - git clone git@github.com:ecohealthalliance/grits-net-mapper.git && cd grits-net-mapper:
         pwd:
           example/packages
+    - cd
+    - mongo gritsAction1 --eval 'use grits-cucumber'
+    - mongo gritsAction2 --eval 'db.createCollection("airports")'
+    - mongo gritsAction3 --eval 'db.createCollection("flights")'
+    - mongo gritsAction4 --eval 'exit'      
+    - mongoimport --db grits-cucumber --collection airports --file grits-net-meteor/example/tests/mongo/airports.json
+    - mongoimport --db grits-cucumber --collection flights --file grits-net-meteor/example/tests/mongo/flights.json
 
 dependencies:
   override:
