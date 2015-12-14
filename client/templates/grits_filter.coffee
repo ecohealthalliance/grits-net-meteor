@@ -333,12 +333,8 @@ Template.gritsFilter.events
   'click #loadMore': () ->
     Session.set 'grits-net-meteor:lastId',  Template.gritsFilter.getLastFlightId()
   'tokenfield:initialize': (e) ->
-    #do not let tokenfields grow beyond their initialized width, this
-    #will avoid the filter div expanding horizontally
     $target = $(e.target)
     $container = $target.closest('.tokenized')
-    width = parseInt($('#departureSearchMain').width() *.80, 10)
-    $container.css('max-width', width)
     #the typeahead menu should be as wide as the filter at a minimum
     $menu = $container.find('.tt-dropdown-menu')
     $menu.css('min-width', $('#filter').width())
