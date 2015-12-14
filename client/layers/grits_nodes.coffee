@@ -67,6 +67,11 @@ _eventHandlers = {
             if err
               Meteor.gritsUtil.errorHandler(err)
               return
+            
+            # mark the filter as current
+            GritsFilterCriteria.setState()
+            GritsFilterCriteria.compareStates()
+            
             Template.gritsMap.showNodeDetails(self)            
             Session.set('grits-net-meteor:isUpdating', false)
           ) # end async.auto

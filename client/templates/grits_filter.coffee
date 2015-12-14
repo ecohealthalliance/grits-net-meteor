@@ -176,6 +176,15 @@ Template.gritsFilter.helpers({
     return Session.get 'grits-net-meteor:loadedRecords'
   totalRecords: () ->
     return Session.get 'grits-net-meteor:totalRecords'
+  state: () ->
+    # GritsFilterCriteria.stateChanged is a reactive-var
+    state = GritsFilterCriteria.stateChanged.get()
+    if _.isNull(state)
+      return
+    if state
+      return true
+    else
+      return false
 })
 
 Template.gritsFilter.onCreated ->
@@ -217,6 +226,7 @@ Template.gritsFilter.onRendered ->
   arrivalSearch = $('#arrivalSearch').tokenfield({})
   _setArrivalSearch(arrivalSearch)
   
+  # Toast notification options
   toastr.options = {
     positionClass: 'toast-bottom-center',
     preventDuplicates: true,
@@ -234,6 +244,10 @@ Template.gritsFilter.onRendered ->
     return
 
   $(".bootstrap-datetimepicker-widget table td.day").css('width': '30px')
+  
+  # set the originals state of the filter on document ready
+  GritsFilterCriteria.setState()
+  
 
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
@@ -263,6 +277,13 @@ Template.gritsFilter.onRendered ->
 #
 # Event handlers for the grits_filter.html template
 Template.gritsFilter.events
+  'change .advanced-filter-status': (event) ->
+    # compare the state of the filter so that a indicator may be shown to the user
+    GritsFilterCriteria.compareStates()
+  'dp.change': (event) ->
+    # compare the state of the filter so that a indicator may be shown to the user
+    GritsFilterCriteria.compareStates()
+    return
   'click #includeNearbyAirports': (event) ->
     miles = parseInt($("#includeNearbyAirportsRadius").val(), 10)
     departures = GritsFilterCriteria.readDeparture()
@@ -308,7 +329,7 @@ Template.gritsFilter.events
     #will avoid the filter div expanding horizontally
     $target = $(e.target)
     $container = $target.closest('.tokenized')
-    width = parseInt($('#departureSearchMain').width() *.75, 10)
+    width = parseInt($('#filter').width() *.80, 10)
     $container.css('max-width', width)
     #the typeahead menu should be as wide as the filter at a minimum
     $menu = $container.find('.tt-dropdown-menu')

@@ -1,6 +1,7 @@
 _validFields = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels', 'effectiveDate', 'discontinuedDate']
 _validDays = ['SUN','MON','TUE','WED','THU','FRI','SAT']
 _validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in', '$near']
+_state = null # keeps track of the query string state
 # local/private minimongo collection
 _Collection = new (Mongo.Collection)(null)
 # local/private Astronomy model for maintaining filter criteria
@@ -22,6 +23,8 @@ _Filter = Astro.Class(
     value: Validators.required()
   }
 )
+
+stateChanged = new ReactiveVar(null)
 
 # GritsFilterCriteria, this object provides the interface for
 # accessing the UI filter box.
@@ -88,6 +91,46 @@ class FilterCriteria
     )
     return result
 
+  # compares the current state vs. the original/previous state
+  compareStates: () ->
+    self = this
+    # timeout to avoid 'flash' affect for those who quickly change the UI 
+    setTimeout(() ->
+      current = self.getCurrentState()
+      if current != _state
+        if current == "{}" # do not notifiy on an empty query object
+          self.stateChanged.set(false)  
+        else
+          self.stateChanged.set(true)
+      else
+        self.stateChanged.set(false)
+    , 500)
+
+  # gets the current state of the filter
+  #
+  # @return [String] the query object JSON.strigify
+  getCurrentState: () ->
+    @scanAll()
+    query = @getQueryObject()
+    return JSON.stringify(query)
+  
+  # get the original/previous state of the filter
+  #
+  # @return [String] the query object JSON.strigify
+  getState: () ->
+    _state
+  
+  # sets the original/previous state of the filter, this method will read the
+  # current query object and store is as a JSON string
+  setState: () ->
+    @scanAll()
+    query = @getQueryObject()
+    _state = JSON.stringify(query)
+    return
+  
+  # reactive var used to update the UI when the query state has changed
+  stateChanged: stateChanged
+  
   # sets the global Session 'grits-net-meteor:query' object to the current
   # getQueryObject.  This will trigger an update of the map through the
   # server-side publication
@@ -95,7 +138,11 @@ class FilterCriteria
     query = GritsFilterCriteria.getQueryObject()
     if _.isUndefined(query) or _.isEmpty(query)
       return
-
+    
+    # set the state
+    @setState()
+    @compareStates()
+    
     # re-enable the loadMore button when a new filter is applied
     $('#loadMore').prop('disabled', false)
 
@@ -279,28 +326,25 @@ class FilterCriteria
         method()
     return
 
-  readOperatingDateRange: () ->
-    GritsFilterCriteria.remove('effectiveDate')
-    GritsFilterCriteria.remove('discontinuedDate')
+  # reads the 'start' date from the filter and updates the filter criteria
+  readOperatingDateRangeStart: () ->
     fodStart = $("#fodStart").data('date')
-    fodEnd = $("#fodEnd").data('date')
-    if _.isUndefined(fodStart) && _.isUndefined(fodEnd)
-      # all flights are filtered by current date being past the discontinuedDate
-      # or before the effectiveDate
-      now = new Date().toISOString()
-      GritsFilterCriteria.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: now})
-      GritsFilterCriteria.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: now})
+    if _.isUndefined(fodStart) || _.isEmpty(fodStart)
+      GritsFilterCriteria.remove('discontinuedDate')
       return
-
-    if !_.isUndefined(fodEnd)
-      fodEnd = new Date(fodEnd).toISOString()
-      GritsFilterCriteria.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: fodEnd})
-    if !_.isUndefined(fodEnd)
-      fodStart = new Date(fodStart).toISOString()
-      GritsFilterCriteria.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: fodStart})
+    GritsFilterCriteria.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: fodStart})
     return
-
-  # scans (reads) the 'levels' input currently displayed on the filter UI
+  
+  # reads the 'end' date from the filter and updates the filter criteria
+  readOperatingDateRangeEnd: () ->
+    fodEnd = $("#fodEnd").data('date')
+    if _.isUndefined(fodEnd) || _.isEmpty(fodEnd)
+      GritsFilterCriteria.remove('effectiveDate')
+      return
+    GritsFilterCriteria.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: fodEnd})
+    return
+  
+  # reads the 'levels' input currently displayed on the filter UI
   # then calls the setter to set the Session variable
   # @note: we do not add to the underlying FilterCriteria
   readLevels: () ->
@@ -320,15 +364,6 @@ class FilterCriteria
         Meteor.call('findAirportById', departures[0], (err, airport) ->
           GritsFilterCriteria.setIncludeNearbyAirports(true, miles, airport.loc.coordinates)
         )
-    return
-  
-  # scans (reads) the 'levels' input currently displayed on the filter UI,
-  # then creates and/or updates the underlying FilterCriteria
-  readLevels : () ->
-    val = $("#connectednessLevels").val()
-    GritsFilterCriteria.remove('levels')
-    if val isnt '' and val isnt '0'
-      GritsFilterCriteria.createOrUpdate('levels', {key: 'flightNumber', operator:'$ne', value:-val})
     return
 
   # scans (reads) the 'seats' input currently displayed on the filter UI,
