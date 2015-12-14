@@ -64,9 +64,14 @@ if Meteor.isClient
     # Add the default controls to the map.
     Template.gritsMap.addDefaultControls(map)
 
-    # Add custom control
-    map.addControl(new GritsControl('<b> Select a Module </b><div id="moduleSelectorDiv"></div>', 7, 'topleft', 'info'))
-    Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
-
+    # Add test control
+    Meteor.call('isTestEnvironment', (err, result) ->
+      if err
+        return
+      if result
+        map.addControl(new GritsControl('<b> Select a Module </b><div id="moduleSelectorDiv"></div>', 7, 'topleft', 'info'))
+        Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
+    )
+     
     Template.gritsMap.setInstance(map)
     return
