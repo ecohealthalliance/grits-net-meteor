@@ -239,3 +239,5 @@ Meteor.methods
     console.log('findNearbyAirports:query: %j', query)
     airports = Airports.find(query).fetch()
     return airports
+  isTestEnvironment: () ->    
+    return process.env.hasOwnProperty('VELOCITY_MAIN_APP_PATH')
