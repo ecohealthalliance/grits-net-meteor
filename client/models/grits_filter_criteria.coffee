@@ -159,17 +159,21 @@ class FilterCriteria
   # specified, as well as, updating the underlying FilterCriteria.
   #
   # @param [String] day, one of 'SUN','MON','TUE','WED','THU','FRI','SAT'
-  # @param [Boolean] value, true or false
+  # @param [Boolean] value, true, false or null
   setDayOfWeek: (day, value) ->
     if _.indexOf(_validDays, day.toUpperCase()) < 0
-      throw new Error('Invalid day: ' + day)
+      throw new Error('Invalid day: ' + day)    
+    if !(_.isBoolean(value) || _.isNull(value))
+      throw new Error('Invalid value: ', + value)
+    
     setField = (field) ->
-      if value
-        $('#dow' + day).prop('checked', true)
-        GritsFilterCriteria.createOrUpdate(field, {key: field, operator: '$eq', 'value': true})
+      if _.isBoolean(value)
+        $('#dow' + day).val(value.toString())
+        GritsFilterCriteria.createOrUpdate(field, {key: field, operator: '$eq', 'value': value})
       else
-        $('#dow' + day).prop('checked', false)
+        $('#dow' + day).val('')
         GritsFilterCriteria.remove(field)
+        
     if day == 'SUN'
       setField('day1')
     else if day == 'MON'
@@ -366,7 +370,7 @@ class FilterCriteria
         )
     return
 
-  # scans (reads) the 'seats' input currently displayed on the filter UI,
+  # reads the 'seats' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
   readSeats: () ->
     val = parseInt($("#seatsInput").val())
@@ -379,7 +383,7 @@ class FilterCriteria
       GritsFilterCriteria.createOrUpdate('seats', {key: 'totalSeats', operator: op, value: val})
     return
 
-  # scans (reads) the 'stops' input currently displayed on the filter UI,
+  # reads the 'stops' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
   readStops: () ->
     val = parseInt($("#stopsInput").val())
@@ -392,7 +396,7 @@ class FilterCriteria
       GritsFilterCriteria.createOrUpdate('stops', {key: 'stops', operator: op, value: val})
     return
 
-  # scans (reads) the 'departure' input currently displayed on the filter UI,
+  # reads the 'departure' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
   #
   # @return [Array] combined, departures from #departureSearchMain and #departureSearch inputs
@@ -415,7 +419,7 @@ class FilterCriteria
       GritsFilterCriteria.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: combined})
     return combined
 
-  # scans (reads) the 'arrival' input currently displayed on the filter UI,
+  # reads the 'arrival' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
   readArrival: () ->
     if typeof Template.gritsFilter.getDepartureSearch() != 'undefined'
@@ -427,53 +431,26 @@ class FilterCriteria
       GritsFilterCriteria.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: codes})
     return
 
-  # scans (reads) the 'days Of Week' checkboxes currently displayed on the
+  # reads the 'days Of Week' checkboxes currently displayed on the
   # filter UI, then creates and/or updates the underlying FilterCriteria
   readDaysOfWeek: () ->
-    day = 'day1'
-    if $('#dowSUN').is(':checked')
-      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-    else if !$('#dowSUN').is(':checked')
-      GritsFilterCriteria.remove(day)
-
-    day = 'day2'
-    if $('#dowMON').is(':checked')
-      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-    else if !$('#dowMON').is(':checked')
-      GritsFilterCriteria.remove(day)
-
-    day = 'day3'
-    if $('#dowTUE').is(':checked')
-      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-    else if !$('#dowTUE').is(':checked')
-      GritsFilterCriteria.remove(day)
-
-    day = 'day4'
-    if $('#dowWED').is(':checked')
-      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-    else if !$('#dowWED').is(':checked')
-      GritsFilterCriteria.remove(day)
-
-    day = 'day5'
-    if $('#dowTHU').is(':checked')
-      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-    else if !$('#dowTHU').is(':checked')
-      GritsFilterCriteria.remove(day)
-
-    day = 'day6'
-    if $('#dowFRI').is(':checked')
-      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-    else if !$('#dowFRI').is(':checked')
-      GritsFilterCriteria.remove(day)
-
-    day = 'day7'
-    if $('#dowSAT').is(':checked')
-      GritsFilterCriteria.createOrUpdate(day, {key: day, operator: '$eq', 'value': true})
-    else if !$('#dowSAT').is(':checked')
-      GritsFilterCriteria.remove(day)
+    readDow = (day, field) ->
+      v = $('#dow' + day).val()
+      if v == true.toString()
+        GritsFilterCriteria.createOrUpdate(field, {key: field, operator: '$eq', 'value': true})
+      else if v == false.toString()
+        GritsFilterCriteria.createOrUpdate(field, {key: field, operator: '$eq', 'value': true})
+      else
+        GritsFilterCriteria.remove(field)
+    
+    fields = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7']
+    idx = 0
+    _.each(fields, (field) -> 
+      readDow(_validDays[idx++], field)
+    )
     return
 
-  # scans (reads) the 'weeklyFrequency' input currently displayed on the filter UI,
+  # reads the 'weeklyFrequency' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
   readWeeklyFrequency: () ->
     val = parseInt($("#weeklyFrequencyInput").val())
