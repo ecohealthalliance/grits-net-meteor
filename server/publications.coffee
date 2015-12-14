@@ -239,6 +239,7 @@ Meteor.methods
     console.log('findNearbyAirports:query: %j', query)
     airports = Airports.find(query).fetch()
     return airports
+<<<<<<< HEAD
   # finds the min and max date range of a 'Date' key to the flights collection
   #
   # @param [String] the key of the flight documents the contains a date value
