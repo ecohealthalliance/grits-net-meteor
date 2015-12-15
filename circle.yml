@@ -16,9 +16,6 @@ checkout:
         pwd:
           example/packages
     - cd
-    - mongo < example/tests/mongo/mongo.js
-    - mongoimport --db grits-cucumber --collection airports --file example/tests/mongo/airports.json
-    - mongoimport --db grits-cucumber --collection flights --file example/tests/mongo/flights.json
 
 dependencies:
   override:
@@ -26,6 +23,9 @@ dependencies:
 
 test:
   override:
+    - mongo < example/tests/mongo/mongo.js
+    - mongoimport --db grits-cucumber --collection airports --file example/tests/mongo/airports.json
+    - mongoimport --db grits-cucumber --collection flights --file example/tests/mongo/flights.json
     - chmod +x continuous_integration.sh
     - ./continuous_integration.sh
     - CHIMP_OPTIONS='--browser=phantomjs' VELOCITY_CI=1 DEBUG=1 meteor run --test:
