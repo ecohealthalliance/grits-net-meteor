@@ -131,6 +131,52 @@ class FilterCriteria
   # reactive var used to update the UI when the query state has changed
   stateChanged: stateChanged
   
+  # applies the filter directly, without using the global session 'query' object
+  # and allows binding an anonymous function to be called at the end of the
+  # asynchronous comunication with the server
+  #
+  # @param [Function] cb, the callback function
+  applyWithCallback: (cb) ->
+    query = GritsFilterCriteria.getQueryObject()
+    if _.isUndefined(query) or _.isEmpty(query)
+      return
+    
+    # set the state
+    @setState()
+    @compareStates()
+    
+    # re-enable the loadMore button when a new filter is applied
+    $('#loadMore').prop('disabled', false)
+    limit = parseInt($('#limit').val(), 10)    
+    
+    Session.set('grits-net-meteor:isUpdating', true)
+    Meteor.call('flightsByQuery', query, limit, null, (err, flights) ->
+      if (err)
+        Meteor.gritsUtil.errorHandler(err)
+        return
+      
+      if _.isUndefined(flights) || _.isEmpty(flights)
+        Session.set('grits-net-meteor:isUpdating', false)
+        toastr.info('No data was returned')
+        return
+      
+      Meteor.call 'countFlightsByQuery', query, (err, totalRecords) ->
+        if (err)
+          Meteor.gritsUtil.errorHandler(err)
+          return
+      
+        if Meteor.gritsUtil.debug
+          console.log 'totalRecords: ', totalRecords
+      
+        Session.set 'grits-net-meteor:totalRecords', totalRecords
+        Meteor.gritsUtil.process(flights, limit, null)
+        
+        if cb && _.isFunction(cb)
+          cb(null, flights)
+      return
+    )
+    return
+  
   # sets the global Session 'grits-net-meteor:query' object to the current
   # getQueryObject.  This will trigger an update of the map through the
   # server-side publication
