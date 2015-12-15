@@ -53,9 +53,7 @@ body
   overflow-y scroll
   
 #filterLoading
-  position relative
   display none
-  vertical-align middle
 
 #filterFooter
   position absolute
@@ -137,13 +135,14 @@ body
 .spinner
   position absolute
   right 15px
-  float right
-  margin 5px 0px 0px 0px
-
+  top 17px
+  font-size 16px
+  color #666
+  z-index 2000
+  
 .searchBar
   margin 5px 5px 5px 60px
   width 100%
-
 
 .leaflet-container
   background-color #CDD2D4
@@ -272,8 +271,8 @@ p.intro
   width 370px
 
 #flightTableBody
-  display:block;
-  overflow:auto;
+  display block
+  overflow auto
   max-height 200px
   text-align center
 
@@ -295,3 +294,52 @@ thead, tbody tr
 
 .leaflet-heatmap-layer
   z-index -1
+
+.searchBar
+  position relative
+
+.twitter-typeahead
+  position static !important // Overides typeahead's inline styling
+
+.tt-dropdown-menu
+  border-top-left-radius 0
+  border-top-right-radius 0
+  border 0
+
+.airport-code
+  position absolute
+  left 10px
+  top 5px
+  min-width 15%
+  font-size 115%
+  font-weight bold
+  font-weight 800
+  color #666
+
+.airport-info
+  color #666
+  font-size 95%
+  .additional-info
+    display block
+    font-size 85%
+    color #999
+    font-style italic
+  > span
+    text-transform capitalize
+
+.tt-suggestion
+  position relative
+  padding 5px 10px 5px 20%
+  border-bottom 1px solid #f9f9f9
+  &:last-child
+    border-bottom 0
+
+.tt-suggestion
+.tt-suggestion
+  &.tt-cursor
+  &.tt-is-under-cursor
+    background lighten(#DDD, 10%)
+    &.airport-name
+      color #555
+  strong
+    color #000
