@@ -38,6 +38,7 @@ Package.on_use(function(api){
   api.add_files([
     'client/stylesheets/main.styl',
     'client/lib/L.D3SvgOverlay.min.js',
+    'client/lib/tableExport.min.js',
     'client/grits_util.coffee',
     'client/layers/grits_nodes.coffee',
     'client/layers/grits_paths.coffee',
