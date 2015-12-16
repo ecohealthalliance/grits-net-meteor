@@ -374,20 +374,26 @@ class FilterCriteria
 
   # reads the 'start' date from the filter and updates the filter criteria
   readOperatingDateRangeStart: () ->
-    fodStart = $("#fodStart").data('date')
-    if _.isUndefined(fodStart) || _.isEmpty(fodStart)
+    discontinuedDatePicker = Template.gritsFilter.getDiscontinuedDatePicker()
+    if _.isNull(discontinuedDatePicker)
+      return
+    discontinuedDate = discontinuedDatePicker.data('DateTimePicker').date()
+    if _.isUndefined(discontinuedDate) || _.isEmpty(discontinuedDate)
       GritsFilterCriteria.remove('discontinuedDate')
       return
-    GritsFilterCriteria.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: fodStart})
+    GritsFilterCriteria.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: discontinuedDate})
     return
   
   # reads the 'end' date from the filter and updates the filter criteria
   readOperatingDateRangeEnd: () ->
-    fodEnd = $("#fodEnd").data('date')
-    if _.isUndefined(fodEnd) || _.isEmpty(fodEnd)
+    effectiveDatePicker = Template.gritsFilter.getEffectiveDatePicker()
+    if _.isNull(effectiveDatePicker)
+      return
+    effectiveDate = effectiveDatePicker.data('DateTimePicker').date()
+    if _.isUndefined(effectiveDate) || _.isEmpty(effectiveDate)
       GritsFilterCriteria.remove('effectiveDate')
       return
-    GritsFilterCriteria.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: fodEnd})
+    GritsFilterCriteria.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: effectiveDate})
     return
   
   # reads the 'levels' input currently displayed on the filter UI
