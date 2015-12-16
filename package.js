@@ -25,6 +25,7 @@ Package.on_use(function(api){
     'sergeyt:typeahead@0.0.11',
     'ajduke:bootstrap-tokenfield@0.5.0',
     'flawless:meteor-toastr@1.0.1',
+    'meteorhacks:aggregate@1.3.0',
     'grits:grits-net-mapper@0.2.2'
   ]);
   // client only packages
