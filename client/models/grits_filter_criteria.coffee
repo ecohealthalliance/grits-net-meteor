@@ -190,7 +190,14 @@ class FilterCriteria
   apply: () ->
     query = GritsFilterCriteria.getQueryObject()
     if _.isUndefined(query) or _.isEmpty(query)
+      toastr.error('The filter requires at least one Departure')
+      Session.set('grits-net-meteor:isUpdating', false)
       return
+    
+    if !query.hasOwnProperty('departureAirport._id')
+      toastr.error('The filter requires at least one Departure')
+      Session.set('grits-net-meteor:isUpdating', false)
+      return    
     
     # set the state
     @setState()
