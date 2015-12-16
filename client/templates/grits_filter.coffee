@@ -119,26 +119,26 @@ _setArrivalSearch = (typeahead) ->
   _arrivalSearch = typeahead
   return
 
-# returns the datetime picker object for the '#fodStart' input
+# returns the datetime picker object for the '#effectiveDate' input  with the label 'End'
 #
 # @see http://eonasdan.github.io/bootstrap-datetimepicker/Functions/
 # @return [Object] datetimePicker object
 getEffectiveDatePicker = () ->
   return _effectiveDatePicker
 
-# sets the datetime picker object for the '#fodStart' input
+# sets the datetime picker object for the '#effectiveDate' input with the label 'End'
 _setEffectiveDatePicker = (datetimePicker) ->
   _effectiveDatePicker = datetimePicker
   return
 
-# returns the datetime picker object for the '#fodStart' input
+# returns the datetime picker object for the '#discontinuedDate' input with the label 'Start'
 #
 # @see http://eonasdan.github.io/bootstrap-datetimepicker/Functions/
 # @return [Object] datetimePicker object
 getDiscontinuedDatePicker = () ->
   return _discontinuedDatePicker
 
-# sets the datetime picker object for the '#fodStart' input
+# sets the datetime picker object for the '#discontinuedDate' input with the label 'Start'
 _setDiscontinuedDatePicker = (datetimePicker) ->
   _discontinuedDatePicker = datetimePicker
   return

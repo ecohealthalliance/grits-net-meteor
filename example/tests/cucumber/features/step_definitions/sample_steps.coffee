@@ -36,8 +36,8 @@ do ->
       @client.addValue('#seatsInput', seats)
 
     @When /^I enter ([^"]*) into the startDate$/, (startDate) ->
-      @client.waitForVisible('#fodStart')
-      @client.addValue('#fodStart .form-control', startDate)
+      @client.waitForVisible('#discontinuedDate')
+      @client.addValue('#discontinuedDate .form-control', startDate)
 
     @When /^I click on module ([^"]*)$/, (module) ->
       @client.waitForVisible('#moduleA').click('#moduleA')
