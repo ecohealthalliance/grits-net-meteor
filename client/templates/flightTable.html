@@ -1,0 +1,33 @@
+<template name="flightTable">
+  <div id="flightTableDiv">
+    <div class="export btn-group pull-right">
+      <button class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown" type="button">
+        <i class="fa fa-cloud-download icon-share"></i>
+        <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" role="menu">
+        <li class="exportData" data-type="json"><a href="javascript:void(0)">JSON</a></li>
+        <li class="exportData" data-type="xml"><a href="javascript:void(0)">XML</a></li>
+        <li class="exportData" data-type="csv"><a href="javascript:void(0)">CSV</a></li>
+        <li class="exportData" data-type="excel"><a href="javascript:void(0)">MS-Excel</a></li>
+      </ul>
+    </div>
+    <table id="flightTableElement" class="table">
+      <thead>
+        <tr>
+          <th>Origin</th>
+          <th>Destination</th>
+          <th>Occurrances</th>
+          <th>Throughput</th>
+        </tr>
+      </thead>
+      <tbody id="flightTableBody">
+        <tr class="flightTableRow">
+          <td id="noFlights" colspan="4">
+            No Flights
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>

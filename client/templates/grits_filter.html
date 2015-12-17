@@ -1,0 +1,210 @@
+<template name="gritsFilter">
+<style>
+  .bootstrap-datetimepicker-widget table td.day {
+    width: 28px;
+  }
+</style>
+  <div>
+    <div class="hamburger">
+      <button class="btn btn-sm fa fa-bars" id="toggleFilter">
+      </button>
+      {{#if state }}
+        <i class="fa fa-exclamation-circle filter-status" title="Recent changes have not been applied"></i>
+      {{/if}}
+    </div>
+    <div class="spinner">
+      <i id="filterLoading" class="fa fa-spinner fa-spin"></i>
+    </div>
+    <div class="searchBar">
+      <div class="tokenized departureSearchMainContainer">
+        <input id="departureSearchMain" class="form-control input-sm advanced-filter-status" name="departureSearchMain" placeholder="Type to search" />
+      </div>
+    </div>
+  </div>
+  <div id="filter" class="clearfix" style="display:none;">
+    <div class="row filter-row">
+      <div class="col-xs-12">
+        <h3><span class="filter-label">Advanced Filter</span></h3>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-12">
+        <span class="filter-label">Flight Operating Date Range:</span>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class='col-xs-12'>
+          <div class="filter-group">
+            <span class="filter-label">Start:</span>
+              <div class='input-group date' id='discontinuedDate' style="max-width: 300px;">
+                  <input type='text' class="date-button form-control input-sm" />
+                  <span class="input-group-addon">
+                      <span class="glyphicon glyphicon-calendar"></span>
+                  </span>
+              </div>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">End:</span>
+              <div class='input-group date' id='effectiveDate' style="max-width: 300px;">
+                  <input type='text' class="date-button form-control input-sm" />
+                  <span class="input-group-addon">
+                      <span class="glyphicon glyphicon-calendar"></span>
+                  </span>
+              </div>
+          </div>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-12">
+        <span class="filter-label">Flight days of week:</span>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-12">
+        <div class="filter-group">
+          <input type="checkbox" id="dowSUN" class="advanced-filter-status"> Sun
+          <input type="checkbox" id="dowMON" class="advanced-filter-status"> Mon
+          <input type="checkbox" id="dowTUE" class="advanced-filter-status"> Tue
+          <input type="checkbox" id="dowWED" class="advanced-filter-status"> Wed
+          <input type="checkbox" id="dowTHU" class="advanced-filter-status"> Thu
+          <input type="checkbox" id="dowFRI" class="advanced-filter-status"> Fri
+          <input type="checkbox" id="dowSAT" class="advanced-filter-status"> Sat
+        </div>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-3">
+        <span class="filter-label">Weekly Frequency:</span>
+      </div>
+      <div class="col-xs-3">
+        <select id="weekly-frequency-operand" class="form-control input-sm advanced-filter-status">
+          <option value="$gte"><span> &gt;= </span></option>
+          <option value="$gt"><span> &gt; </span></option>
+          <option value="$lte"><span> &lt;= </span></option>
+          <option value="$lt"><span> &lt; </span></option>
+          <option value="$eq"><span> == </span></option>
+          <option value="$ne"><span> != </span></option>
+        </select>
+      </div>
+      <div class="col-xs-6">
+        <input type="number" id="weeklyFrequencyInput" class="form-control input-sm advanced-filter-status" min="0" max="7">
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-3">
+        <span class="filter-label">Stops:</span>
+      </div>
+      <div class="col-xs-3">
+        <select id="stops-operand" class="form-control input-sm advanced-filter-status">
+          <option value="$gte"><span> &gt;= </span></option>
+          <option value="$gt"><span> &gt; </span></option>
+          <option value="$lte"><span> &lt;= </span></option>
+          <option value="$lt"><span> &lt; </span></option>
+          <option value="$eq"><span> == </span></option>
+          <option value="$ne"><span> != </span></option>
+        </select>
+      </div>
+      <div class="col-xs-6">
+        <input type="number" id="stopsInput" class="form-control input-sm advanced-filter-status" min="0" max="5">
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-3">
+        <span class="filter-label">Seats:</span>
+      </div>
+      <div class="col-xs-3">
+        <select id="seats-operand" class="form-control input-sm advanced-filter-status">
+          <option value="$gte"><span> &gt;= </span></option>
+          <option value="$gt"><span> &gt; </span></option>
+          <option value="$lte"><span> &lt;= </span></option>
+          <option value="$lt"><span> &lt; </span></option>
+          <option value="$eq"><span> == </span></option>
+          <option value="$ne"><span> != </span></option>
+        </select>
+      </div>
+      <div class="col-xs-6">
+        <input type="number" id="seatsInput" class="form-control input-sm advanced-filter-status" min="0" max="525">
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-3">
+        <span class="filter-label">Departure:</span>
+      </div>
+      <div class="col-xs-9">
+        <div class="tokenized departure">
+          <input id="departureSearch" class="input-sm advanced-filter-status" name="departureSearch" />
+        </div>
+      </div>
+    </div>
+    <div class="row row-fliter">
+      <div class="col-xs-8" style="text-align: right;">
+        <span class="filter-label">Include Nearby:</span>
+      </div>
+      <div class="col-xs-4" style="padding: 2px 15px 2px 15px;">
+        <input type="checkbox" name="includeNearbyAirports" id="includeNearbyAirports">
+      </div>
+    </div>
+    <div class="row row-filter">
+      <div class="col-xs-8" style="text-align: right;">
+        <span class="filter-label">Miles:</span>
+      </div>
+      <div class="col-xs-4">
+        <input type="number" id="includeNearbyAirportsRadius" class="form-control input-sm" min="1" max="500" value="50">
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-3">
+        <span class="filter-label">Arrival:</span>
+      </div>
+      <div class="col-xs-9">
+        <div class="tokenized">
+          <input type="text" id="arrivalSearch" class="input-sm advanced-filter-status" name="arrivalSearch" />
+        </div>
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-3">
+        <span class="filter-label">Levels:</span>
+      </div>
+      <div class="col-xs-3">
+        <input type="number" id="connectednessLevels" min="1" value="1" class="form-control input-sm advanced-filter-status">
+      </div>
+    </div>
+    <div class="row filter-row">
+      <div class="col-xs-3">
+        <span class="filter-label">Limit:</span>
+      </div>
+      <div class="col-xs-4">
+        <input type="number" id="limit" class="form-control input-sm advanced-filter-status" value="1000">
+      </div>
+      <div class="col-xs-5">
+        <button id="loadMore" class="btn btn-sm btn-default pull-right" disabled="true">
+          <span class="filter-label">More...</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="moreLoading" style="display: none;"/>
+        </button>
+      </div>
+    </div>
+    <div id="filterFooter">
+      <hr class="filter-horizontal-rule">
+      <div class="row filter-row">
+        <div class="col-xs-12">
+          <button id="applyFilter" class="btn btn-sm btn-default">
+            <span class="filter-label">Apply</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="filterLoading"/>          
+          </button>        
+          {{#if state }}
+            <span class="filter-status-message">Recent changes have not been applied</span><i class="fa fa-exclamation-circle filter-status"></i>
+          {{/if}}          
+        </div>
+      </div>
+      <div class="row row-status-bar">
+        <div class="col-xs-6 col-status-bar">
+          <span class="status-bar-text">Loaded Records:</span>
+          <span class="status-bar-text status-bar-counter">{{ loadedRecords }}</span>
+        </div>
+        <div class="col-xs-6 col-status-bar">
+          <span class="status-bar-text">Total Records:</span>
+          <span class="status-bar-text status-bar-counter">{{ totalRecords }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

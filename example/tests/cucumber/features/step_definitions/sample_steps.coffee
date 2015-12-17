@@ -21,8 +21,23 @@ do ->
       title = @client.getTitle()
       expect(title).toEqual(expectedTitle)
 
-    @When /^I click on toggleFilter$/, (module) ->
-      @client.waitForVisible('#toggleFilter').click('#toggleFilter')
+    @When /^I search for ([^"]*)$/, (airportCode) ->
+      @client.waitForVisible('#departureSearchMain-tokenfield')
+      @client.addValue('#departureSearchMain-tokenfield', airportCode)
+      @client.keys('Enter')
+
+    @When /^I search for ([^"]*)$/, (airportCode) ->
+      @client.waitForVisible('#departureSearchMain-tokenfield')
+      @client.addValue('#departureSearchMain-tokenfield', airportCode)
+      @client.keys('Enter')
+
+    @When /^I enter ([^"]*) into the seat filter$/, (seats) ->
+      @client.waitForVisible('#seatsInput')
+      @client.addValue('#seatsInput', seats)
+
+    @When /^I enter ([^"]*) into the startDate$/, (startDate) ->
+      @client.waitForVisible('#discontinuedDate')
+      @client.addValue('#discontinuedDate .form-control', startDate)
 
     @When /^I click on module ([^"]*)$/, (module) ->
       @client.waitForVisible('#moduleA').click('#moduleA')
@@ -36,10 +51,17 @@ do ->
       elements = @client.elements('.marker-icon')
       expect(elements.value.length).toEqual(parseInt(numMarkers, 10))
 
+    @Then /^I should see some map markers$/, ->
+      @client.waitForVisible('.marker-icon', 10000)
+      elements = @client.elements('.marker-icon')
+      expect(elements.value.length > 0).toEqual(true)
+
     @Then /^I should see paths between them$/, ->
       @client.waitForExist('path')
       elements = @client.elements('path')
       expect(elements.value.length).toBeGreaterThan(0)
 
+    @Then /^true$/, ->
+      expect(true).toEqual(true)
     return
   return
