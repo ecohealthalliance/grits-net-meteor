@@ -7,6 +7,8 @@ _lastFlightId = null # stores the last flight _id from the collection, used in l
 _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
 _arrivalSearch = null # onRendered will set this to a typeahead object
+_effectiveDatePicker = null # onRendered will set this to a datetime picker object
+_discontinuedDatePicker = null # onRendered will set this to a datetime picker object
 _sharedTokens = [] # container for tokens that are shared from departureSearchMain input
 _suggestionTemplate = _.template('
   <span class="airport-code"><%= raw._id %></span>
@@ -117,6 +119,30 @@ _setArrivalSearch = (typeahead) ->
   _arrivalSearch = typeahead
   return
 
+# returns the datetime picker object for the '#effectiveDate' input  with the label 'End'
+#
+# @see http://eonasdan.github.io/bootstrap-datetimepicker/Functions/
+# @return [Object] datetimePicker object
+getEffectiveDatePicker = () ->
+  return _effectiveDatePicker
+
+# sets the datetime picker object for the '#effectiveDate' input with the label 'End'
+_setEffectiveDatePicker = (datetimePicker) ->
+  _effectiveDatePicker = datetimePicker
+  return
+
+# returns the datetime picker object for the '#discontinuedDate' input with the label 'Start'
+#
+# @see http://eonasdan.github.io/bootstrap-datetimepicker/Functions/
+# @return [Object] datetimePicker object
+getDiscontinuedDatePicker = () ->
+  return _discontinuedDatePicker
+
+# sets the datetime picker object for the '#discontinuedDate' input with the label 'Start'
+_setDiscontinuedDatePicker = (datetimePicker) ->
+  _discontinuedDatePicker = datetimePicker
+  return
+
 # determines which field was matched by the typeahead into the server response
 #
 # @param [String] input, the string used as the search
@@ -205,6 +231,8 @@ Template.gritsFilter.onCreated ->
   Template.gritsFilter.getDepartureSearchMain = getDepartureSearchMain
   Template.gritsFilter.getDepartureSearch = getDepartureSearch
   Template.gritsFilter.getArrivalSearch = getArrivalSearch
+  Template.gritsFilter.getEffectiveDatePicker = getEffectiveDatePicker
+  Template.gritsFilter.getDiscontinuedDatePicker = getDiscontinuedDatePicker
 
 # triggered when the 'filter' template is rendered
 Template.gritsFilter.onRendered ->
@@ -240,23 +268,51 @@ Template.gritsFilter.onRendered ->
     preventDuplicates: true,
   }
 
-  $('#fodStart').datetimepicker
-    format: 'MM/DD/YYYY'
-  $('#fodEnd').datetimepicker
-    format: 'MM/DD/YYYY'
-  $('#fodStart').on 'dp.change', (e) ->
-    $('#fodEnd').data('DateTimePicker').minDate e.date
-    return
-  $('#fodEnd').on 'dp.change', (e) ->
-    $('#fodStart').data('DateTimePicker').maxDate e.date
-    return
+  # set the effectiveDatePicker and options
+  Meteor.call('findMinMaxDateRange', 'effectiveDate', (err, minMax) ->
+    if (err)
+      Meteor.gritsUtil.errorHandler(err)
+      return
+    if Meteor.gritsUtil.debug
+      console.log('effectiveDate:minMax: ', minMax)
+    min = minMax[0]
+    max = minMax[1]
+    options = {
+      format: 'MM/DD/YY'
+    }
+    if !_.isNull(min)
+      options.minDate = min
+    if !_.isNull(max)
+      options.maxDate = max
+    effectiveDatePicker = $('#effectiveDate').datetimepicker(options)
+    _setEffectiveDatePicker(effectiveDatePicker)
+    $(".bootstrap-datetimepicker-widget table td.day").css('width': '30px')
+  )
 
-  $(".bootstrap-datetimepicker-widget table td.day").css('width': '30px')
+  # set the discontinuedDatePicker and options
+  Meteor.call('findMinMaxDateRange', 'discontinuedDate', (err, minMax) ->
+    if (err)
+      Meteor.gritsUtil.errorHandler(err)
+      return
+    if Meteor.gritsUtil.debug
+      console.log('discontinuedDate:minMax: ', minMax)
+    min = minMax[0]
+    max = minMax[1]    
+    options = {
+      format: 'MM/DD/YY'
+    }
+    if !_.isNull(min)
+      options.minDate = min
+    if !_.isNull(max)
+      options.maxDate = max    
+    discontinuedDatePicker = $('#discontinuedDate').datetimepicker(options)
+    _setDiscontinuedDatePicker(discontinuedDatePicker)
+    $(".bootstrap-datetimepicker-widget table td.day").css('width': '30px')
+  )  
   
   # set the originals state of the filter on document ready
   GritsFilterCriteria.setState()
   
-
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
   # apply button and filterLoading indicator.
@@ -286,10 +342,10 @@ Template.gritsFilter.onRendered ->
 # Event handlers for the grits_filter.html template
 Template.gritsFilter.events
   'change .advanced-filter-status': (event) ->
-    # compare the state of the filter so that a indicator may be shown to the user
+    # compare the state of the filter so that an indicator may be shown to the user
     GritsFilterCriteria.compareStates()
   'dp.change': (event) ->
-    # compare the state of the filter so that a indicator may be shown to the user
+    # compare the state of the filter so that an indicator may be shown to the user
     GritsFilterCriteria.compareStates()
     return
   'click #includeNearbyAirports': (event) ->

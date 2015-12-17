@@ -239,3 +239,31 @@ Meteor.methods
     console.log('findNearbyAirports:query: %j', query)
     airports = Airports.find(query).fetch()
     return airports
+  # finds the min and max date range of a 'Date' key to the flights collection
+  #
+  # @param [String] the key of the flight documents the contains a date value
+  # @return [Array] array of two dates, defaults to 'null' if not found [min, max]
+  findMinMaxDateRange: (key) ->
+    # determine minimum date by sort ascending
+    minDate = null
+    minPipeline = [
+      {$sort: {"#{key}": 1}},
+      {$limit: 1}
+    ]
+    minResults = Flights.aggregate(minPipeline)
+    if !(_.isUndefined(minResults) || _.isEmpty(minResults))
+      min = minResults[0]
+      if min.hasOwnProperty(key)
+        minDate = min[key]
+    # determine maximum date by sort descending
+    maxDate = null
+    maxPipeline = [
+      {$sort: {"#{key}": -1}},
+      {$limit: 1}
+    ]
+    maxResults = Flights.aggregate(maxPipeline)
+    if !(_.isUndefined(maxResults) || _.isEmpty(maxResults))
+      max = maxResults[0]
+      if max.hasOwnProperty(key)
+        maxDate = max[key]
+    return [minDate, maxDate]
