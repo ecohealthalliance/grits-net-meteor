@@ -66,8 +66,38 @@ class GritsNodeLayer extends GritsLayer
     
     @_layer = L.d3SvgOverlay(_.bind(@_drawCallback, this), {})
     
+    @hasLoaded = new ReactiveVar(false)
+    
     @_bindMapEvents()
     return
+  
+  # clears the layer
+  #
+  # @override
+  clear: () ->
+    @_data = {}
+    @_removeLayerGroup()
+    @_addLayerGroup()
+    @hasLoaded.set(false)
+  
+  # gets the nodes from the layer
+  #
+  # @return [Array] array of nodes
+  getNodes: () ->
+    return _.values(@_data)
+  
+  # find a node by the latLng pair
+  #
+  # @param [Array] an array [lat,lng]
+  # @return [Object] a GritsNode object
+  findByLatLng: (latLng) ->
+    nodes = @getNodes()
+    node = _.find(nodes, (node) ->      
+      return _.isEqual(node.latLng, latLng)
+    )
+    if _.isUndefined(node)
+      return null
+    return node
   
   # The D3 callback that renders the svg elements on the map
   #
