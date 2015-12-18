@@ -3,7 +3,7 @@ border-radius()
   -webkit-border-radius arguments
   -moz-border-radius arguments
   border-radius arguments
-
+  
 html, body
 	margin 0
 	padding 0
@@ -35,6 +35,9 @@ body
 
 .marker-icon
   cursor pointer
+
+.nav-tabs > li > a
+  padding 5px 10px
 
 #filterContainer
   font-size small
@@ -267,28 +270,27 @@ p.intro
 .my-legend a
   color #777
 
-#flightTableDiv
+#dataTableDiv
   width 370px
 
-#flightTableBody
-  display block
-  overflow auto
-  max-height 200px
-  text-align center
+.dataTable
+  width 370px
 
-thead, tbody tr
-  display table
-  table-layout fixed
+.dataTableContent
+  overflow-x hidden
+  overflow-y auto
+  max-height 250px
 
-.flightTableRow
+.pathTableRow 
   width 350px
-  text-align left
+  text-align center
   cursor pointer
   cursor hand
 
-#noFlights
-  font-style italic
-
+.nodeTableRow, .heatmapTableRow
+  width 350px
+  text-align center
+  
 .activeRow
   background-color #d9fafe
 
