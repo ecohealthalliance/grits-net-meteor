@@ -8,7 +8,7 @@ Heatmap = Astro.Class(
     ignore = Object.keys(heatmap.constructor.getFields())
     # the diff is a list of codes
     codes = _.difference(Object.keys(doc), ignore)
-    airports = Airports.find({'_id':{'$in': codes}}).fetch()
+    airports = Airports.find({'_id':{'$in': codes}}, {transform: null}).fetch()
     # map the data
     heatmap.data = []
     _.each(doc, (value, key) ->
