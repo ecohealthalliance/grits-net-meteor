@@ -1,0 +1,137 @@
+<template name="gritsDataTable">
+  <div id="flightTableDiv">
+    <div class="export btn-group pull-right">
+      <button class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown" type="button">
+        <i class="fa fa-cloud-download icon-share"></i>
+        <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" role="menu">
+        <li class="exportData" data-type="json"><a href="javascript:void(0)">JSON</a></li>
+        <li class="exportData" data-type="xml"><a href="javascript:void(0)">XML</a></li>
+        <li class="exportData" data-type="csv"><a href="javascript:void(0)">CSV</a></li>
+        <li class="exportData" data-type="excel"><a href="javascript:void(0)">MS-Excel</a></li>
+      </ul>
+    </div>
+    <ul class="nav nav-tabs">
+      <li class="active"><a href="#paths" data-toggle="tab" id="pathTab">Paths</a></li>
+      <li><a href="#nodes" data-toggle="tab" id="nodeTab">Nodes</a></li>
+      <li><a href="#heatmap" data-toggle="tab" id="heatmapTab">Heatmap</a></li>
+    </ul>
+    <div class="tab-content dataTableContent">
+      <div class="tab-pane active" id="paths">
+        <table class="table dataTable">
+          <thead>
+            <tr>
+              <th>Origin</th>
+              <th>Destination</th>
+              <th>Occurrances</th>
+              <th>Throughput</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#with paths}}
+              {{#each paths}}
+                <tr class="pathTableRow" data-id="{{this._id}}">
+                  <td>
+                    {{this.origin._id}}
+                  </td>
+                  <td>
+                    {{this.destination._id}}
+                  </td>
+                  <td>
+                    {{this.occurrances}}
+                  </td>
+                  <td>
+                    {{this.throughput}}
+                  </td>
+                </tr>
+              {{/each}}
+            {{else}}
+              <tr>
+                <td colspan="4">
+                  <span style="font-style: italic;">No data</span>
+                </td>
+              </tr>
+            {{/with}}
+          </tbody>
+        </table>
+      </div>
+      <div class="tab-pane" id="nodes">
+        <table class="table dataTable">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Incoming</th>
+              <th>Outgoing</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody class="dataTableBody">
+            {{#with nodes}}
+              {{#each nodes}}
+                <tr class="nodeTableRow" data-id="{{this._id}}">
+                  <td>
+                    {{this._id}}
+                  </td>
+                  <td>
+                    {{this.incomingThroughput}}
+                  </td>
+                  <td>
+                    {{this.outgoingThroughput}}
+                  </td>
+                  <td>
+                    {{this.total}}
+                  </td>
+                </tr>
+              {{/each}}
+            {{else}}
+              <tr>
+                <td colspan="4">
+                  <span style="font-style: italic;">No data</span>
+                </td>
+              </tr>
+            {{/with}}
+          </tbody>
+        </table>
+      </div>
+      <div class="tab-pane" id="heatmap">
+        <table class="table dataTable">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Intensity</th>
+            </tr>
+          </thead>
+            <tbody>
+            {{#with heatmaps}}
+              {{#each heatmaps}}
+                <tr class="heatmapTableRow" data-id="{{this._id}}">
+                  <td>
+                    {{this.code}}
+                  </td>
+                  <td>
+                    {{this.latitude}}
+                  </td>
+                  <td>
+                    {{this.longitude}}
+                  </td>
+                  <td>
+                    {{this.intensity}}
+                  </td>
+                </tr>
+              {{/each}}
+            {{else}}
+              <tr>
+                <td colspan="4">
+                  <span style="font-style: italic;">No data</span>
+                </td>
+              </tr>
+            {{/with}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
