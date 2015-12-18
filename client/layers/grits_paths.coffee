@@ -1,44 +1,52 @@
+_previousPath = null # placeholder for a previously selected path
 _eventHandlers = {
   mouseout: (element, selection, projection) ->
     if not Session.get('grits-net-meteor:isUpdating')
-      oldPath = Template.gritsMap.getCurrentPath() # initialized to null
-      if oldPath isnt null
-        if element is oldPath
+      previousPath = _previousPath
+      if previousPath isnt null
+        if element is previousPath
           d3.select(element).style("cursor": "pointer")
           return
-      d3.select(element).style('stroke', @color).style("cursor": "pointer")
+      if @clicked
+        # do not remove the blue highlight
+        d3.select(element).style("cursor": "pointer")
+      else
+        d3.select(element).style('stroke', @color).style("cursor": "pointer")
   mouseover: (element, selection, projection) ->
     if not Session.get('grits-net-meteor:isUpdating')
-      oldPath = Template.gritsMap.getCurrentPath() # initialized to null
-      if oldPath isnt null
-        if element is oldPath
+      previousPath = _previousPath
+      if previousPath isnt null
+        if element is previousPath
           d3.select(element).style("cursor": "pointer")
           return
-      d3.select(element).style('stroke', 'black').style("cursor": "pointer")
+      if @clicked
+        # do not remove the blue highlight
+        d3.select(element).style("cursor": "pointer")
+      else
+        d3.select(element).style('stroke', 'black').style("cursor": "pointer")
   click: (element, selection, projection) ->
+    self = this
     if not Session.get('grits-net-meteor:isUpdating')
-      oldPath = Template.gritsMap.getCurrentPath() # initialized to null
-      @element = element
-      if oldPath is element
-        d3.select(oldPath.__data__.element).style('stroke', oldPath.__data__.color)
-        oldPath.__data__.clicked = false
-        $("#" + oldPath.__data__._id + "_pathId").removeClass('activeRow')
-        Template.gritsMap.setCurrentPath(null)
+      # attach the svg dom element to the GritsPath model
+      self.element = element
+      self.clicked = true
+      # get any previously selected path
+      previousPath = _previousPath
+      if previousPath == self
+        d3.select(element).style('stroke', previousPath.color)
+        self.clicked = false
+        _previousPath = null
         Template.gritsMap.hidePathDetails()
         return
-      if oldPath isnt null
-        d3.select(oldPath.__data__.element).style('stroke', oldPath.__data__.color)
-        $("#" + oldPath.__data__._id + "_pathId").removeClass('activeRow')
-        oldPath.__data__.clicked = false
-
-      # set the gritsPath.element to the d3 element
-
-      # temporarily set the path color
-      $("#" + element.__data__._id + "_pathId").addClass('activeRow')
+      if !_.isNull(previousPath)
+        d3.select(previousPath.element).style('stroke', previousPath.color)
+        previousPath.clicked = false
+      # update the dataTable
+      Template.gritsDataTable.highlightPathTableRow(this)
+      # temporarily set the path color to blue
       d3.select(element).style('stroke', 'blue')
-      # set the currentPath to this gritsPath
-      Template.gritsMap.setCurrentPath(element)
-      Template.gritsMap.setCurrentRow($("#" + element.__data__._id + "_pathId")[0])
+      # set the _previousPath to this gritsPath
+      _previousPath = this
       # show the pathDetails template
       Template.gritsMap.showPathDetails(this)
 }
@@ -59,9 +67,26 @@ class GritsPathLayer extends GritsLayer
     @_map = map
 
     @_layer = L.d3SvgOverlay(_.bind(@_drawCallback, this), {})
+    
+    @hasLoaded = new ReactiveVar(false)
 
     @_bindMapEvents()
     return
+
+  # clears the layer
+  #
+  # @override
+  clear: () ->
+    @_data = {}
+    @_removeLayerGroup()
+    @_addLayerGroup()
+    @hasLoaded.set(false)
+
+  # gets the paths from the layer
+  #
+  # @return [Array] array of nodes
+  getPaths: () ->
+    return _.values(@_data)
 
   # The D3 callback that renders the svg elements on the map
   #
@@ -89,9 +114,9 @@ class GritsPathLayer extends GritsLayer
       .attr('d', 'M0,-5L10,0L0,5')
       .attr('class', 'arrowHead')
 
-    paths = _.sortBy(_.values(self._data, (path) ->
-      return path.destination.latLng[0]
-    ))
+    paths = _.sortBy(_.values(self._data), (path) ->
+      return path.destination.latLng[0] * -1
+    )
 
     pathCount = paths.length
     if pathCount <= 0
@@ -232,7 +257,7 @@ class GritsPathLayer extends GritsLayer
     else
       path.level = level
       path.occurrances += 1
-      path.throughput += flight.totalSeats
+      path.throughput += flight.totalSeats    
     if path.throughput > @_normalizedCI
       @_normalizedCI = path.throughput
     return
