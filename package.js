@@ -45,15 +45,15 @@ Package.on_use(function(api){
     'client/layers/grits_paths.coffee',
     'client/layers/grits_heatmap.coffee',
     'client/models/grits_filter_criteria.coffee',
-    'client/templates/flightTable.html',
-    'client/templates/flightTableRow.html',
+    'client/templates/grits_dataTable.html',
+    'client/templates/grits_dataTable.coffee',
     'client/templates/grits_map.html',
-    'client/templates/grits_map.coffee',
-    'client/templates/legend.html',
+    'client/templates/grits_map.coffee',    
     'client/templates/grits_filter.html',
     'client/templates/grits_filter.coffee',
     'client/templates/nodeDetails.html',
     'client/templates/pathDetails.html',
+    'client/templates/legend.html',
     'client/subscription.coffee'
   ], 'client');
 
@@ -71,7 +71,7 @@ Package.on_use(function(api){
   api.add_files([
     'server/publications.coffee'
   ], 'server');
-  //public API
+  //public API, client and server
   api.export([
     'Airport',
     'Airports',

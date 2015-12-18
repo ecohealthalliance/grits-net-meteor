@@ -19,6 +19,8 @@ class GritsHeatmapLayer extends GritsLayer
     @_layerGroup = L.layerGroup([@_layer])
     @_map.addOverlayControl(@_name, @_layerGroup)
     
+    @hasLoaded = new ReactiveVar(false)
+    
     @_bindMapEvents()
     @_trackDepartures()
     return
@@ -40,6 +42,7 @@ class GritsHeatmapLayer extends GritsLayer
   clear: () ->
     @_data = []
     @_layer.setLatLngs(@_data)
+    @hasLoaded.set(false)
     return
   
   # returns the cellSize of the Leaflet.Heat plugin
@@ -87,8 +90,9 @@ class GritsHeatmapLayer extends GritsLayer
             for heatmap in heatmaps
               _.each(heatmap.data, (a) ->
                 intensity = a[2] * self._getCellSize() * self._getZoomFactor()
-                self._data.push([a[0], a[1], intensity])
+                self._data.push([a[0], a[1], intensity, a[2], a[3]])
               )
+            self.hasLoaded.set(true)
             self.draw()
           )
       else
@@ -106,8 +110,17 @@ class GritsHeatmapLayer extends GritsLayer
       intensity = a[2] * self._getCellSize() * self._getZoomFactor()
       self._data.push([a[0], a[1], intensity])
     )
+    self.hasLoaded.set(true)
     self.draw()
     return
+  
+  # get the heatmap data
+  #
+  # @return [Array] array of the heatmap data
+  getData: () ->
+    if _.isEmpty(@_data)
+      return []
+    return @_data
   
   # binds to the Tracker.gritsMap.getInstance() map event listener .on
   # 'overlyadd' and 'overlayremove' methods
