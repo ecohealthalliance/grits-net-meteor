@@ -3,7 +3,11 @@ border-radius()
   -webkit-border-radius arguments
   -moz-border-radius arguments
   border-radius arguments
-  
+filter-tab-content-background-color()
+  background-color #ffffff
+filter-container-width()
+  width: 370px
+
 html, body
 	margin 0
 	padding 0
@@ -36,6 +40,24 @@ body
 .marker-icon
   cursor pointer
 
+.tab-content  
+  max-height 273px
+  overflow-x hidden
+  overflow-y scroll
+  border-left: 1px solid #ddd
+  border-right: 1px solid #ddd
+  border-bottom: 1px solid #ddd
+  filter-tab-content-background-color()
+
+.nav-tabs > li > a
+  padding 5px 10px
+
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus
+  filter-tab-content-background-color()
+
+.date > span.input-group-addon
+  background-color #ddd
+  
 .nav-tabs > li > a
   padding 5px 10px
 
@@ -44,52 +66,59 @@ body
   background-color white
   padding 0px
   border-radius 5px
-  width 315px
+  filter-container-width()
 
-#filter
-  font-size small
-  margin-top 0
-  margin-bottom 85px  
-  max-height 400px
-  width 315px
-  overflow-x hidden
-  overflow-y scroll
-  
 #filterLoading
   display none
 
-#filterFooter
-  position absolute
-  width 100%
-  height 85px
-  bottom 0
-  left 0
-  padding 5px 5px 5px 5px
+#filter
+  display none
+  font-size small
+  margin-top 0
+  filter-container-width()
 
-.filter-horizontal-rule
-  margin 0px 0 0px 0
+.filter-heading
+  font-size: 16px;
+  font-weight: bold;
+  position: absolute;
+  right: 0;
+  margin: 5px 15px 0px 0;
+  bottom: -25px;
+  color: #333;
 
 .filter-row
-	margin 2px -15px 2px -15px
+  margin 5px -15px 2px -10px
+
+.filter-first-row
+  margin 9px -15px 2px -10px
+
+.filter-last-row
+  margin 5px -15px 11px -10px
 
 .filter-header
-	background-color #eee
-	padding 5px
-	min-width initial
-	border-radius 2px
+  background-color #eee
+  padding 5px
+  min-width initial
+  border-radius 2px
 
 .filter-title
-	display inline
-	vertical-align middle
-	font-weight bold
-	margin 0 0 0 5px
+  display inline
+  vertical-align middle
+  font-weight bold
+  margin 0 0 0 5px
 
 .filter-label
-	font-weight bold
+  font-weight bold
 
 .filter-group
-	white-space nowrap
-	padding 2px
+  white-space nowrap
+  padding 2px
+
+.filter-footer
+  margin 2px 0 0 0
+
+.dow
+  padding 0
 
 .applyFilter
 	padding 5px
@@ -97,10 +126,19 @@ body
 .tokenized
   word-wrap normal
 
-.tokenized.departure
-  max-height: 60px;
-  overflow-y: scroll;
+.tokenized.main
+  max-width 310px
 
+.tokenized.departure
+  max-height 60px
+  overflow-x hidden
+  overflow-y auto
+
+.tokenized.arrival
+  max-height 60px
+  overflow-x hidden
+  overflow-y auto
+  
 .hamburger
   float left
   margin 2px
@@ -142,7 +180,7 @@ body
   font-size 16px
   color #666
   z-index 2000
-  
+
 .searchBar
   margin 5px 5px 5px 60px
   width 100%
@@ -269,6 +307,9 @@ p.intro
 
 .my-legend a
   color #777
+
+#dataTableContainer
+  font-size small
 
 #dataTableDiv
   width 370px
