@@ -24,8 +24,22 @@ _suggestionTemplate = _.template('
 # not allow us to pass in a custom context to the footer.  <%= obj.query %> and
 # <%= obj.isEmpty %> are the only things available.
 _typeaheadFooter = _.template('
-  <div class="airport-footer">  
-    <span id="suggestionCount"></span>
+  <div class="airport-footer">
+    <div class="row">
+      <div class="col-xs-6 pull-middle">
+        <span id="suggestionCount"></span>
+      </div>
+      <div class="col-xs-6 pull-middle">
+        <ul class="pager">
+          <li class="previous-suggestions">
+            <a href="#" id="previousSuggestions">Previous</a>
+          </li>
+          <li class="next-suggestions">
+            <a href="#" id="forwardSuggestions">Forward</a>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>')
 
 # provides one-way synchroniziation between tokens in departureSearchMain and
@@ -154,7 +168,7 @@ _setDiscontinuedDatePicker = (datetimePicker) ->
 #
 # @param [String] input, the string used as the search
 # @param [Array] results, the server response
-# @return [Array] array of matches, extends the raw document of the base Astro class.  This allows all properties of the model to be available in the suggestion template.
+# @return [Array] array of matches, with all properties of the model to be available in the suggestion template under the key 'raw'.
 _determineFieldMatchesByWeight = (input, res) ->
   numComparator = (a, b) ->
     a - b
@@ -171,34 +185,28 @@ _determineFieldMatchesByWeight = (input, res) ->
   for obj in res
     # get the typeahead matcher from the Astro Class, contains weight, display
     # and regexOptions
-    if obj.constructor.getName() != 'Airport'
-      return
-    typeaheadMatcher = Airport.typeaheadMatcher()
-      
-    # get the raw document from Astro, this will also be used for the
-    # _suggestionTemplate
-    object = _.extend(obj.raw()) 
+    typeaheadMatcher = Airport.typeaheadMatcher()    
     for field, matcher of typeaheadMatcher      
       regex = new RegExp(matcher.regexSearch({search: input}), matcher.regexOptions)
-      value = object[field]
+      value = obj[field]
       # cannot match on an empty value
       if _.isEmpty(value)
         continue
       # apply the regex to the value
       if value.match(regex) != null
         # determine if its a previous match
-        match = _.find(matches, (m) -> m.label == object._id)
+        match = _.find(matches, (m) -> m.label == obj._id)
         # if not, create a new object and assign the properties
         # note: prefix is added to avoid possible confict with the class fields
         # that are extended.
         if _.isUndefined(match)
           match =
-            label: object._id
+            label: obj._id
             value: value
             field: field
             weight: matcher.weight
             display: matcher.display
-            raw: object
+            raw: obj
           matches.push(match)
           continue
         else
@@ -246,6 +254,71 @@ Template.gritsFilter.onCreated ->
 
 # triggered when the 'filter' template is rendered
 Template.gritsFilter.onRendered ->
+  _matchSkip = null
+  _suggestionGenerator = (query, skip, callback) ->
+    _matchSkip = skip
+    Meteor.call('typeaheadAirport', query, skip, (err, res) ->
+      if err or _.isUndefined(res) or _.isEmpty(res)
+        callback([])
+        return
+      Meteor.call('countTypeaheadAirports', query, (err, count) ->
+        matches = _determineFieldMatchesByWeight(query, res)
+        # expects an array of objects with keys [label, value]
+        callback(matches)
+        
+        # keep going to update the _typeaheadFooter via jQuery 
+        # update the record count
+        if count > 1
+          if (_matchSkip + 10) > count
+            diff = (_matchSkip + 10) - count
+            $('#suggestionCount').html("<span>Matches #{_matchSkip+1}-#{_matchSkip+(10-diff)} of #{count}</span>")
+          else
+            $('#suggestionCount').html("<span>Matches #{_matchSkip+1}-#{_matchSkip+10} of #{count}</span>")
+        else if count == 1
+          $('#suggestionCount').html("<span>#{count} match found</span>")
+        else
+          $('#suggestionCount').html("<span>No matches found</span>")
+        
+        # enable/disable the pager elements
+        if count <= 10
+          $('.next-suggestions').addClass('disabled')
+          $('.previous-suggestions').addClass('disabled')
+        if count > 10
+          # edge case min
+          if _matchSkip == 0
+            $('.previous-suggestions').addClass('disabled')
+          # edge case max
+          if (count - _matchSkip) <= 10
+            $('.next-suggestions').addClass('disabled')
+          
+        # bind click handlers
+        if !$('.previous-suggestions').hasClass('disabled')
+          $('#previousSuggestions').bind('click', (e) ->
+            e.preventDefault()
+            e.stopPropagation()          
+            if count <= 10 || _matchSkip <= 10
+              _matchSkip = 0
+            else
+              _matchSkip -= 10
+            _suggestionGenerator(query, _matchSkip, callback)
+          )
+        if !$('.next-suggestions').hasClass('disabled')
+          $('#forwardSuggestions').bind('click', (e) ->
+            e.preventDefault()
+            e.stopPropagation()
+            if count <= 10
+              _matchSkip 0
+            else
+              _matchSkip += 10
+            _suggestionGenerator(query, _matchSkip, callback)
+            return
+          )
+        return
+      )
+      return
+    )
+    return  
+ 
   departureSearchMain = $('#departureSearchMain').tokenfield({
     typeahead: [{hint:false, highlight:true}, {
       display: (match) ->
@@ -256,26 +329,12 @@ Template.gritsFilter.onRendered ->
         suggestion: _suggestionTemplate
         footer: _typeaheadFooter
       source: (query, callback) ->
-        Meteor.call('typeaheadAirport', query, (err, res) ->
-          if err or _.isUndefined(res) or _.isEmpty(res)
-            return
-          Meteor.call('countTypeaheadAirports', query, (err, count) ->
-            matches = _determineFieldMatchesByWeight(query, res)
-            # expects an array of objects with keys [label, value]
-            callback(matches)
-            # update the footer count
-            if count > 1
-              $('#suggestionCount').html('<span>'+count+' matches found.</span>')
-            else if count == 1
-              $('#suggestionCount').html('<span>'+count+' match found.</span>')
-            else
-              $('#suggestionCount').html('<span> No matches found.</span>')
-          )
-        )
+        _suggestionGenerator(query, 0, callback)
+        return
     }]
   })
   _setDepartureSearchMain(departureSearchMain)
-
+  
   departureSearch = $('#departureSearch').tokenfield({})
   _setDepartureSearch(departureSearch)
 
