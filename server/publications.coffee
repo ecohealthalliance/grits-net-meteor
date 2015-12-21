@@ -249,14 +249,28 @@ Meteor.methods
   
 Meteor.methods
   # find airports that match the search
-  typeaheadAirport: (search, options) ->
+  typeaheadAirport: (search, skip, options) ->
+    start = new Date()
+    if typeof skip == 'undefined'
+      skip = 0
     fields = []
     for fieldName, matcher of Airport.typeaheadMatcher()
       field = {}
       field[fieldName] = {$regex: new RegExp(matcher.regexSearch({search: search}), matcher.regexOptions)}
-      fields.push(field)    
+      fields.push(field)
+    pipeline = [
+      {$match: {$or: fields}},
+      {$sort: {_id: 1}},
+      {$skip: skip},
+      {$limit: 10}
+    ]
+    matches = Airports.aggregate(pipeline)
+    ###
     query = { $or: fields }
-    return Airports.find(query, {limit: 10, sort: {_id: 1}}).fetch()
+    matches = Airports.find(query, {limit: 10, sort: {_id: 1}, skip: skip}).fetch()
+    ###
+    console.log('typeaheadAirport:timeTaken(ms): ', new Date() - start)
+    return matches
   countTypeaheadAirports: (search, options) ->
     fields = []
     for fieldName, matcher of Airport.typeaheadMatcher()
