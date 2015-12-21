@@ -20,6 +20,13 @@ _suggestionTemplate = _.template('
       <span>
     <% } %>
   </span>')
+# Unfortunately we need to result to jQuery as twitter's typeahead plugin does
+# not allow us to pass in a custom context to the footer.  <%= obj.query %> and
+# <%= obj.isEmpty %> are the only things available.
+_typeaheadFooter = _.template('
+  <div class="airport-footer">  
+    <span id="suggestionCount"></span>
+  </div>')
 
 # provides one-way synchroniziation between tokens in departureSearchMain and
 # departureSearch when a token is created
@@ -164,12 +171,15 @@ _determineFieldMatchesByWeight = (input, res) ->
   for obj in res
     # get the typeahead matcher from the Astro Class, contains weight, display
     # and regexOptions
-    typeaheadMatcher = obj.typeaheadMatcher()
+    if obj.constructor.getName() != 'Airport'
+      return
+    typeaheadMatcher = Airport.typeaheadMatcher()
+      
     # get the raw document from Astro, this will also be used for the
     # _suggestionTemplate
     object = _.extend(obj.raw()) 
-    for field, matcher of typeaheadMatcher
-      regex = new RegExp(input, matcher.regexOptions)
+    for field, matcher of typeaheadMatcher      
+      regex = new RegExp(matcher.regexSearch({search: input}), matcher.regexOptions)
       value = object[field]
       # cannot match on an empty value
       if _.isEmpty(value)
@@ -244,14 +254,24 @@ Template.gritsFilter.onRendered ->
         return match.label
       templates:
         suggestion: _suggestionTemplate
+        footer: _typeaheadFooter
       source: (query, callback) ->
         Meteor.call('typeaheadAirport', query, (err, res) ->
           if err or _.isUndefined(res) or _.isEmpty(res)
             return
-          matches = _determineFieldMatchesByWeight(query, res)
-          # expects an array of objects with keys [label, value]
-          callback(matches)
-      )
+          Meteor.call('countTypeaheadAirports', query, (err, count) ->
+            matches = _determineFieldMatchesByWeight(query, res)
+            # expects an array of objects with keys [label, value]
+            callback(matches)
+            # update the footer count
+            if count > 1
+              $('#suggestionCount').html('<span>'+count+' matches found.</span>')
+            else if count == 1
+              $('#suggestionCount').html('<span>'+count+' match found.</span>')
+            else
+              $('#suggestionCount').html('<span> No matches found.</span>')
+          )
+        )
     }]
   })
   _setDepartureSearchMain(departureSearchMain)
@@ -380,9 +400,7 @@ Template.gritsFilter.events
       GritsFilterCriteria.apply()
   'click #toggleFilter': (e) ->
     $self = $(e.currentTarget)
-    $("#filter").toggle("fast", () ->
-      #
-    )
+    $("#filter").toggle("fast")
   'click #applyFilter': (event, template) ->
     GritsFilterCriteria.scanAll()
     GritsFilterCriteria.apply()
