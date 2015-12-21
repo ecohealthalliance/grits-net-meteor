@@ -11,23 +11,22 @@ Tracker.autorun ->
 
   Meteor.call('flightsByQuery', query, limit, lastId, (err, flights) ->
     if (err)
-      console.error(err)
-      Session.set('grits-net-meteor:isUpdating', false)
+      Meteor.gritsUtil.handleError(err)
       return
     
-    if _.isUndefined(flights)
-      Session.set('grits-net-meteor:isUpdating', false)
+    if _.isUndefined(flights) || flights.length <= 0
+      toastr.info('The filter did not return any results')
+      Session.set('grits-net-meteor:isUpdating', false)        
       return
     
     Meteor.call 'countFlightsByQuery', query, (err, totalRecords) ->
       if (err)
-        console.error(err)
-        Session.set('grits-net-meteor:isUpdating', false)
+        Meteor.gritsUtil.handleError(err)
         return
     
       if Meteor.gritsUtil.debug
         console.log 'totalRecords: ', totalRecords
-    
+      
       if levels <= 1
         Session.set 'grits-net-meteor:totalRecords', totalRecords
     

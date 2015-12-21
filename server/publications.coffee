@@ -267,3 +267,5 @@ Meteor.methods
       if max.hasOwnProperty(key)
         maxDate = max[key]
     return [minDate, maxDate]
+  isTestEnvironment: () ->    
+    return process.env.hasOwnProperty('VELOCITY_MAIN_APP_PATH')
