@@ -29,20 +29,19 @@ if Meteor.isClient
       return
 
   Template.gritsMap.onRendered ->
-    OpenStreetMap = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-      layerName: 'CartoDB_Positron'
-      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
-      subdomains: 'abcd'
-      maxZoom: 19)
-    MapQuestOpen_OSM = L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/{type}/{z}/{x}/{y}.{ext}',
-      type: 'map'
-      layerName: 'MapQuestOpen_OSM'
-      ext: 'jpg'
-      subdomains: '1234')
-    Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      layerName: 'Esri_WorldImagery')
+    mapLayers = []
+    for ml of Meteor.settings.public.mapLayers
+      newLayer = L.tileLayer(Meteor.settings.public.mapLayers[ml].url,
+        subdomains: Meteor.settings.public.mapLayers[ml].subdomains
+        layerName: Meteor.settings.public.mapLayers[ml].layerName
+        type: Meteor.settings.public.mapLayers[ml].type
+        ext: Meteor.settings.public.mapLayers[ml].ext
+        mapId: Meteor.settings.public.mapLayers[ml].mapId
+        maxZoom: Meteor.settings.public.mapLayers[ml].maxZoom
+        accessToken: Meteor.settings.public.mapLayers[ml].accessToken)
+      mapLayers.push(newLayer)
 
-    baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
+    baseLayers = mapLayers
     element = 'grits-map'
     height = window.innerHeight
     options = {
