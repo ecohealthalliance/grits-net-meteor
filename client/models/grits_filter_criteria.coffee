@@ -1,5 +1,4 @@
-_validFields = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels', 'effectiveDate', 'discontinuedDate']
-_validDays = ['SUN','MON','TUE','WED','THU','FRI','SAT']
+_validFields = ['weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels', 'effectiveDate', 'discontinuedDate']
 _validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in', '$near']
 _state = null # keeps track of the query string state
 # local/private minimongo collection
@@ -213,41 +212,6 @@ class FilterCriteria
       Session.set 'grits-net-meteor:limit', null
     Session.set 'grits-net-meteor:lastId', null
     Session.set 'grits-net-meteor:query', query
-    return
-
-  # sets the corresponding checkbox on the UI to the 'day' and 'value'
-  # specified, as well as, updating the underlying FilterCriteria.
-  #
-  # @param [String] day, one of 'SUN','MON','TUE','WED','THU','FRI','SAT'
-  # @param [Boolean] value, true, false or null
-  setDayOfWeek: (day, value) ->
-    if _.indexOf(_validDays, day.toUpperCase()) < 0
-      throw new Error('Invalid day: ' + day)    
-    if !(_.isBoolean(value) || _.isNull(value))
-      throw new Error('Invalid value: ', + value)
-    
-    setField = (field) ->
-      if _.isBoolean(value)
-        $('#dow' + day).val(value.toString())
-        GritsFilterCriteria.createOrUpdate(field, {key: field, operator: '$eq', 'value': value})
-      else
-        $('#dow' + day).val('')
-        GritsFilterCriteria.remove(field)
-        
-    if day == 'SUN'
-      setField('day1')
-    else if day == 'MON'
-      setField('day2')
-    else if day == 'TUE'
-      setField('day3')
-    else if day == 'WED'
-      setField('day4')
-    else if day == 'THU'
-      setField('day5')
-    else if day == 'FRI'
-      setField('day6')
-    else if day == 'SAT'
-      setField('day7')
     return
 
   # sets the weeklyFrequency input on the UI to the 'operator' and 'value'
@@ -495,25 +459,6 @@ class FilterCriteria
       GritsFilterCriteria.remove('arrival')
     else
       GritsFilterCriteria.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: codes})
-    return
-
-  # reads the 'days Of Week' checkboxes currently displayed on the
-  # filter UI, then creates and/or updates the underlying FilterCriteria
-  readDaysOfWeek: () ->
-    readDow = (day, field) ->
-      v = $('#dow' + day).val()
-      if v == true.toString()
-        GritsFilterCriteria.createOrUpdate(field, {key: field, operator: '$eq', 'value': true})
-      else if v == false.toString()
-        GritsFilterCriteria.createOrUpdate(field, {key: field, operator: '$eq', 'value': true})
-      else
-        GritsFilterCriteria.remove(field)
-    
-    fields = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7']
-    idx = 0
-    _.each(fields, (field) -> 
-      readDow(_validDays[idx++], field)
-    )
     return
 
   # reads the 'weeklyFrequency' input currently displayed on the filter UI,
