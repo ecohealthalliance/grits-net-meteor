@@ -44,36 +44,6 @@ Meteor.methods
     return Flights.find(query, options).fetch()
 
 Meteor.methods
-  countFlightsByQuery: (query) ->
-    if _.isUndefined(query) or _.isEmpty(query)
-      return 0
-
-    extendQuery(query, null)
-    buildOptions(null)
-
-    count = Flights.find(query).count()
-    console.log('countFlightsByQuery:query: %j', query)
-    console.log('countFlightsByQuery:count: %j', count)
-    return count
-
-  typeaheadAirport: (search, options) ->
-    query = {
-      $or: [
-        #regex = new RegExp(".*?(?:^|\s)(#{search}[^\s$]*).*?", 'ig')
-        {_id: {$regex: new RegExp(search, 'i')}},
-        {name: {$regex: new RegExp(search, 'i')}},
-        {city: {$regex: new RegExp(search, 'ig')}},
-        {state: {$regex: new RegExp(search, 'ig')}},
-        {stateName: {$regex: new RegExp(search, 'ig')}},
-        {country: {$regex: new RegExp(search, 'ig')}},
-        {countryName: {$regex: new RegExp(search, 'ig')}},
-        {globalRegion: {$regex: new RegExp(search, 'ig')}},
-        {WAC: {$regex: new RegExp(search, 'ig')}}
-        {notes: {$regex: new RegExp(search, 'ig')}}
-      ]
-    }
-    return Airports.find(query, {limit: 10, sort: {_id: 1}}).fetch()
-
   getFlightsByLevel: (query, levels, origin, limit) ->
     if _.isUndefined(query) or _.isEmpty(query)
       return 'query is empty'
@@ -197,11 +167,18 @@ Meteor.methods
         newLastId = flightsToReturn[flightsToReturn.length-1]._id
     return [flightsToReturn, totalFlights, newLastId]
 
-Meteor.publish 'autoCompleteAirports', (query, options) ->
-  Autocomplete.publishCursor(Airports.find(query, options), this)
-  this.ready()
-
 Meteor.methods
+  countFlightsByQuery: (query) ->
+    if _.isUndefined(query) or _.isEmpty(query)
+      return 0
+
+    extendQuery(query, null)
+    buildOptions(null)
+
+    count = Flights.find(query).count()
+    console.log('countFlightsByQuery:query: %j', query)
+    console.log('countFlightsByQuery:count: %j', count)
+    return count
   findHeatmapByCode: (code) ->
     if _.isUndefined(code) or _.isEmpty(code)
       return {}
@@ -269,3 +246,22 @@ Meteor.methods
     return [minDate, maxDate]
   isTestEnvironment: () ->    
     return process.env.hasOwnProperty('VELOCITY_MAIN_APP_PATH')
+  
+Meteor.methods
+  # find airports that match the search
+  typeaheadAirport: (search, options) ->
+    fields = []
+    for fieldName, matcher of Airport.typeaheadMatcher()
+      field = {}
+      field[fieldName] = {$regex: new RegExp(matcher.regexSearch({search: search}), matcher.regexOptions)}
+      fields.push(field)    
+    query = { $or: fields }
+    return Airports.find(query, {limit: 10, sort: {_id: 1}}).fetch()
+  countTypeaheadAirports: (search, options) ->
+    fields = []
+    for fieldName, matcher of Airport.typeaheadMatcher()
+      field = {}
+      field[fieldName] = {$regex: new RegExp(matcher.regexSearch({search: search}), matcher.regexOptions)}
+      fields.push(field)    
+    query = { $or: fields }
+    return Airports.find(query, {sort: {_id: 1}}).count()
