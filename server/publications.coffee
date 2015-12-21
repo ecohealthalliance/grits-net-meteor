@@ -262,6 +262,6 @@ Meteor.methods
     for fieldName, matcher of Airport.typeaheadMatcher()
       field = {}
       field[fieldName] = {$regex: new RegExp(matcher.regexSearch({search: search}), matcher.regexOptions)}
-      fields.push(field)    
+      fields.push(field)
     query = { $or: fields }
     return Airports.find(query, {sort: {_id: 1}}).count()
