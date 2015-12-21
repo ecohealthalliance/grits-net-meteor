@@ -22,7 +22,7 @@ Package.on_use(function(api){
     'brylie:leaflet-heat@0.1.0',
     'fortawesome:fontawesome@4.4.0',
     'd3js:d3@3.5.5',
-    'sergeyt:typeahead@0.0.11',
+    'fourq:typeahead@1.0.0',
     'ajduke:bootstrap-tokenfield@0.5.0',
     'flawless:meteor-toastr@1.0.1',
     'meteorhacks:aggregate@1.3.0',
