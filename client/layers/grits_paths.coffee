@@ -78,6 +78,7 @@ class GritsPathLayer extends GritsLayer
   # @override
   clear: () ->
     @_data = {}
+    @_normalizedCI = 1
     @_removeLayerGroup()
     @_addLayerGroup()
     @hasLoaded.set(false)
