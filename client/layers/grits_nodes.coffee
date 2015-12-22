@@ -36,17 +36,17 @@ _eventHandlers = {
     return
 }
 # custom color scale for each marker
-_colorScale =
-  9: 'F9A839'
-  8: 'F9AF40'
-  7: 'F9B747'
-  6: 'F9BE4E'
-  5: 'F9C656'
-  4: 'F9CE5D'
-  3: 'F9D564'
-  2: 'F9DD6B'
-  1: 'F9E573'
-
+_colorScale = 
+  100: '#f9e784'
+  90: '#f9e27d'
+  80: '#f9dc75'
+  70: '#f9d66e'
+  60: '#f9d066'
+  50: '#f9ca5f'
+  40: '#f9c457'
+  30: '#f9bd50'
+  20: '#f9b648'
+  10: '#f9af41'
 
 # Creates an instance of a GritsNodeLayer, extends  GritsLayer
 #
@@ -76,6 +76,7 @@ class GritsNodeLayer extends GritsLayer
   # @override
   clear: () ->
     @_data = {}
+    @_normalizedCI = 1
     @_removeLayerGroup()
     @_addLayerGroup()
     @hasLoaded.set(false)
@@ -141,9 +142,9 @@ class GritsNodeLayer extends GritsLayer
         (node.marker.width) / projection.scale
       )
       .attr('fill', (node) ->
-        '#'+self._getMarkerColor(node)
+        self._getMarkerColor(node)
       )
-      .attr('fill-opacity', .8)
+      .attr('fill-opacity', .9)
   
   
     # add new elements workflow (following https://github.com/mbostock/d3/wiki/Selections#enter )
@@ -160,11 +161,14 @@ class GritsNodeLayer extends GritsLayer
         (node.marker.width) / projection.scale
       )
       .attr('fill', (node) ->
-        '#'+self._getMarkerColor(node)
+        self._getMarkerColor(node)
       )
-      .attr('fill-opacity', .8)
+      .attr('fill-opacity', .9)
       .attr('class', (node) ->
         'marker-icon'
+      )
+      .attr('id', (node) ->
+        'node-' + node._id
       )
       .on('click', (node) ->
         d3.event.stopPropagation();
@@ -229,35 +233,59 @@ class GritsNodeLayer extends GritsLayer
   #
   # @return [Number] normalizedThroughput, 0 >= n <= .9 
   _getNormalizedThroughput: (node) ->
-    maxAllowed = 0.9
-    r = 0.0
+    maxAllowed = 100
+    np = 0
     if @_normalizedCI > 0
-      r = ((node.incomingThroughput + node.outgoingThroughput) / @_normalizedCI)
-    if r > maxAllowed
+      np = ((node.incomingThroughput + node.outgoingThroughput) / @_normalizedCI) * 100
+    if np > maxAllowed
       return maxAllowed
-    return +(r).toFixed(1)
+    return +(np).toFixed(0)
   
-  # returns the href to use as the marker image
-  #
-  # @return [String] href, the marker image src
-  _getMarkerHref: (node) ->
-    v = node.marker.colorScale[@_getNormalizedThroughput(node) * 10]
-    if !(typeof v == 'undefined' or v == null)
-      href = '/packages/grits_grits-net-mapper/images/marker-icon-#{v}.svg'
-    else
-      href = '/packages/grits_grits-net-mapper/images/marker-icon-B8B8B8.svg'
-    return href
-
   # returns the color to use as the marker fill
   #
   # @return [String] color, the marker image color
   _getMarkerColor: (node) ->
-    v = node.marker.colorScale[@_getNormalizedThroughput(node) * 10]
-    if !(typeof v == 'undefined' or v == null)
-      color = v
-    else
-      color = 'DB943E'
-    return color 
+    node.color = '#f9a839' #default
+    np = @_getNormalizedThroughput(node)
+    if np < 10
+      node.color = _colorScale[10]
+    else if np < 20
+      node.color = _colorScale[20]
+    else if np < 30
+      node.color = _colorScale[30]
+    else if np < 40
+      node.color = _colorScale[40]
+    else if np < 50
+      node.color = _colorScale[50]
+    else if np < 60
+      node.color = _colorScale[60]
+    else if np < 70
+      node.color = _colorScale[70]
+    else if np < 80
+      node.color = _colorScale[80]
+    else if np < 90
+      node.color = _colorScale[90]
+    else if np <= 100
+      node.color = _colorScale[100]
+    return node.color
+  
+  filterByMinMaxThroughput: (min, max) ->
+    self = this
+    nodes = self.getNodes()
+    if _.isEmpty(nodes)
+      return
+    filtered = _.filter(nodes, (node) ->
+      np = self._getNormalizedThroughput(node)      
+      $element = $('#node-'+node._id)
+      if (np < min) || (np > max)
+        $element.attr('display', 'none')
+        n = node
+      else
+        $element.attr('display', '')
+      if n
+        return n
+    )
+    return filtered
   
   # binds to the Tracker.gritsMap.getInstance() map event listener .on
   # 'overlyadd' and 'overlayremove' methods
@@ -275,3 +303,6 @@ class GritsNodeLayer extends GritsLayer
           if Meteor.gritsUtil.debug
             console.log self._name + ' removed'
     )
+
+# Static reference to the colorScale
+GritsNodeLayer.colorScale = _colorScale

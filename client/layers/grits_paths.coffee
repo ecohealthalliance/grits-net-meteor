@@ -50,6 +50,19 @@ _eventHandlers = {
       # show the pathDetails template
       Template.gritsMap.showPathDetails(this)
 }
+# custom color scale for each path
+_colorScale =
+  100: '#fe5d62'
+  90: '#fe686d'
+  80: '#e17288'
+  70: '#e17c90'
+  60: '#c488ae'
+  50: '#c48fb1'
+  40: '#a69ed5'
+  30: '#ada6d5'
+  20: '#89b3fb'
+  10: '#94bafb'
+
 # Creates an instance of a GritsNodeLayer, extends  GritsLayer
 #
 # @param [Object] map, an instance of GritsMap
@@ -104,12 +117,12 @@ class GritsPathLayer extends GritsLayer
       defs = svg.append('defs')
       defs.append('marker').attr(
         'id': 'arrowhead'
-        'viewBox': '0 -5 10 10'
+        'viewBox': '0 -2 10 10'
         'refX': 5
         'refY': 0
         'opacity': .5
-        'markerWidth': 4
-        'markerHeight': 4
+        'markerWidth': 2
+        'markerHeight': 3
         'orient': 'auto')
       .append('path')
       .attr('d', 'M0,-5L10,0L0,5')
@@ -197,8 +210,9 @@ class GritsPathLayer extends GritsLayer
         return path.color
       ).attr("fill", "none")
       .attr("id", (path) ->
-        return path._id
-      ).attr("marker-mid": "url(#arrowhead)")
+        return path._id      
+      )
+      .attr("marker-mid": "url(#arrowhead)")
       .on('mouseover', (path) ->
         path.eventHandlers.mouseover(this, selection, projection)
       ).on('mouseout', (path) ->
@@ -219,23 +233,30 @@ class GritsPathLayer extends GritsLayer
   #
   # @return [String] normalizedColor, a hex string
   _getStyle: (path) ->
-    path.color = '#fef0d9'
-    if @_normalizedCI > 0
-      x = path.throughput / @_normalizedCI
-      np = parseFloat(1 - (1 - x))
-      path.normalizedPercent = np
-      if np < .20
-        path.color = '#89B3FB'
-      else if np < .40
-        path.color = '#A69ED5'
-      else if np < .60
-        path.color = '#C488AE'
-      else if np < .80
-        path.color = '#E17288'
-      else if np <= 1
-        path.color = '#FE5D62'
+    path.color = '#93c0fb' #default
+    np = @_getNormalizedThroughput(path)
+    if np < 10
+      path.color = _colorScale[10]
+    else if np < 20
+      path.color = _colorScale[20]
+    else if np < 30
+      path.color = _colorScale[30]
+    else if np < 40
+      path.color = _colorScale[40]
+    else if np < 50
+      path.color = _colorScale[50]
+    else if np < 60
+      path.color = _colorScale[60]
+    else if np < 70
+      path.color = _colorScale[70]
+    else if np < 80
+      path.color = _colorScale[80]
+    else if np < 90
+      path.color = _colorScale[90]
+    else if np <= 100
+      path.color = _colorScale[100]
     return path.color
-
+    
   # converts domain specific flight data into generic GritsNode nodes
   #
   # @param [Object] flight, an Astronomy class 'Flight' represending a single
@@ -263,6 +284,37 @@ class GritsPathLayer extends GritsLayer
       @_normalizedCI = path.throughput
     return
 
+  # returns the normalized throughput for a node
+  #
+  # @return [Number] normalizedThroughput, 0 >= n <= 100 
+  _getNormalizedThroughput: (path) ->
+    maxAllowed = 100
+    r = 0
+    if @_normalizedCI > 0
+      r = (path.throughput / @_normalizedCI ) * 100
+    if r > maxAllowed
+      return maxAllowed
+    return +(r).toFixed(0)
+
+  filterByMinMaxThroughput: (min, max) ->
+    self = this
+    paths = self.getPaths()
+    if _.isEmpty(paths)
+      return
+    filtered = _.filter(paths, (path) ->
+      np = self._getNormalizedThroughput(path)
+      console.log('np: ', np)
+      $element = $('#'+path._id)
+      if (np < min) || (np > max)
+        $element.attr('display', 'none')
+        p = path
+      else
+        $element.attr('display', '')
+      if p
+        return p
+    )
+    return filtered
+
   # binds to the Tracker.gritsMap.getInstance() map event listener .on
   # 'overlyadd' and 'overlayremove' methods
   _bindMapEvents: () ->
@@ -279,3 +331,6 @@ class GritsPathLayer extends GritsLayer
           if Meteor.gritsUtil.debug
             console.log self._name + ' removed'
     )
+
+# Static reference to the colorScale
+GritsPathLayer.colorScale = _colorScale
