@@ -26,6 +26,7 @@ Package.on_use(function(api){
     'ajduke:bootstrap-tokenfield@0.5.0',
     'flawless:meteor-toastr@1.0.1',
     'meteorhacks:aggregate@1.3.0',
+    'kidovate:bootstrap-slider@0.0.5',
     'grits:grits-net-mapper@0.2.2'
   ]);
   // client only packages
@@ -51,9 +52,10 @@ Package.on_use(function(api){
     'client/templates/grits_map.coffee',    
     'client/templates/grits_filter.html',
     'client/templates/grits_filter.coffee',
+    'client/templates/grits_legend.html',
+    'client/templates/grits_legend.coffee',
     'client/templates/nodeDetails.html',
-    'client/templates/pathDetails.html',
-    'client/templates/legend.html',
+    'client/templates/pathDetails.html',    
     'client/subscription.coffee'
   ], 'client');
 
