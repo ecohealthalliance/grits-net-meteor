@@ -57,9 +57,7 @@ Package.on_use(function(api){
     'client/subscription.coffee'
   ], 'client');
 
-  api.addAssets([
-    'client/images/ajax-loader.gif'
-  ], 'client');
+  api.addAssets([], 'client');
 
   // both client and server files
   api.add_files([
