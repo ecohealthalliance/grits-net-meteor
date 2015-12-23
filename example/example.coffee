@@ -13,7 +13,7 @@ if Meteor.isClient
       nodeLayer.clear()
 
       for flight in Meteor.dummyFlights
-        nodes = nodeLayer.convertFlight(flight)
+        nodes = nodeLayer.convertFlight(flight, [])
         pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
 
       pathLayer.draw()
