@@ -37,16 +37,18 @@ _eventHandlers = {
 }
 # custom color scale for each marker
 _colorScale = 
-  100: '#f9e784'
-  90: '#f9e27d'
-  80: '#f9dc75'
-  70: '#f9d66e'
-  60: '#f9d066'
-  50: '#f9ca5f'
-  40: '#f9c457'
-  30: '#f9bd50'
-  20: '#f9b648'
-  10: '#f9af41'
+  10: '#D95F0E'
+  20: '#DD6F21'
+  30: '#E18034'
+  40: '#E9A25B'
+  50: '#E89B53'
+  60: '#EEB36E'
+  70: '#F2C482'
+  80: '#F6D595'
+  90: '#FAE6A8'
+  100: '#FFF7BC'
+# custom [width, height] size for each marker
+_size = [7, 7]
 
 # Creates an instance of a GritsNodeLayer, extends  GritsLayer
 #
@@ -65,6 +67,8 @@ class GritsNodeLayer extends GritsLayer
     @_map = map
     
     @_layer = L.d3SvgOverlay(_.bind(@_drawCallback, this), {})
+    
+    @_prefixDOMID = 'node-'
     
     @hasLoaded = new ReactiveVar(false)
     
@@ -86,6 +90,13 @@ class GritsNodeLayer extends GritsLayer
   # @return [Array] array of nodes
   getNodes: () ->
     return _.values(@_data)
+  
+  # gets the element ID within the DOM of a path
+  #
+  # @param [Object] obj, a gritsNode object
+  # @return [String] elementID
+  getElementID: (obj) ->
+    return @_prefixDOMID + obj._id
   
   # find a node by the latLng pair
   #
@@ -110,7 +121,7 @@ class GritsNodeLayer extends GritsLayer
   _drawCallback: (selection, projection) ->
     self = this
     # sort by latitude so markers that are lower appear on top
-    nodes = _.sortBy(_.values(self._data), (node) ->
+    nodes = _.sortBy(self.getNodes(), (node) ->
       return node.latLng[0] * -1
     )
   
@@ -119,56 +130,57 @@ class GritsNodeLayer extends GritsLayer
       return
   
     # since the map may be updated asynchronously the sums of the throughput
-    # counters must be calcuated on every draw and the self.maxValue set
+    # counters must be calcuated on every draw and the self._normalizedCI set
     sums = _.map(nodes, (node) ->
+      if typeof node.excludedFromNormalization != 'undefined' && node.excludedFromNormalization
+        return 0
       node.incomingThroughput + node.outgoingThroughput
     )
     self._normalizedCI = _.max(sums)
   
     # select any existing circles and store data onto elements
-    markers = selection.selectAll('circle').data(nodes, (node) -> node._id)
+    markers = selection.selectAll('circle').data(nodes, (node) ->
+      node._id
+    )
   
     #work on existing nodes
     markers
       .attr('cx', (node) ->
-        x = projection.latLngToLayerPoint(node.latLng).x
-        return x - ((node.marker.width/2) / projection.scale)
+        return self._projectCX(projection, node)
       )
-      .attr('cy', (node) ->
-        y = projection.latLngToLayerPoint(node.latLng).y
-        return y - ((node.marker.height/2) / projection.scale)
+      .attr('cy', (node) ->        
+        return self._projectCY(projection, node)
       )
       .attr('r', (node) ->
-        (node.marker.width) / projection.scale
+        return (node.marker.width) / projection.scale
       )
       .attr('fill', (node) ->
-        self._getMarkerColor(node)
+        return self._getNormalizedColor(node)
       )
-      .attr('fill-opacity', .9)
+      .attr('fill-opacity', .8)
   
   
     # add new elements workflow (following https://github.com/mbostock/d3/wiki/Selections#enter )
     markers.enter().append('circle')
       .attr('cx', (node) ->
-        x = projection.latLngToLayerPoint(node.latLng).x
-        return x - ((node.marker.width/2) / projection.scale)
+        return self._projectCX(projection, node)
       )
       .attr('cy', (node) ->
-        y = projection.latLngToLayerPoint(node.latLng).y
-        return y - ((node.marker.height/2) / projection.scale)
+        return self._projectCY(projection, node)
       )
       .attr('r', (node) ->
-        (node.marker.width) / projection.scale
+        return (node.marker.width) / projection.scale
       )
       .attr('fill', (node) ->
-        self._getMarkerColor(node)
+        return self._getNormalizedColor(node)
       )
-      .attr('fill-opacity', .9)
+      .attr('fill-opacity', .8)
       .attr('class', (node) ->
-        'marker-icon'
+        return 'marker-icon'
       )
       .attr('id', (node) ->
-        'node-' + node._id
+        node.elementID = self.getElementID(node)
+        return node.elementID
       )
       .on('click', (node) ->
         d3.event.stopPropagation();
@@ -176,6 +188,7 @@ class GritsNodeLayer extends GritsLayer
         if node.hasOwnProperty('eventHandlers')
           if node.eventHandlers.hasOwnProperty('click')
             node.eventHandlers.click(this, selection, projection)
+        return 
       )
       .on('mouseover', (node) ->
         d3.event.stopPropagation();
@@ -183,51 +196,67 @@ class GritsNodeLayer extends GritsLayer
         if node.hasOwnProperty('eventHandlers')
           if node.eventHandlers.hasOwnProperty('mouseover')
             node.eventHandlers.mouseover(this, selection, projection)
+        return 
       )
     markers.exit()
     return
   
+  _projectCX: (projection, node) ->
+    x = projection.latLngToLayerPoint(node.latLng).x    
+    r = (1/projection.scale)
+    return x - r
+
+  _projectCY: (projection, node) ->
+    y = projection.latLngToLayerPoint(node.latLng).y
+    r = (1/projection.scale)
+    return y - r
+  
   # converts domain specific flight data into generic GritsNode nodes
   # 
-  # @param [Object] flight, an Astronomy class 'Flight' represending a single
-  #   record from a MongoDB collection
-  convertFlight: (flight) ->
+  # @param [Object] flight, an Astronomy class 'Flight' represending a single record from a MongoDB collection
+  # @param [Array] list of queryOrigins (_id) from the query that should be exclude from the throughput
+  # @return [Array] array containing the [originNode, destinationNode]
+  convertFlight: (flight, queryOrigins) ->
     self = this
+    originNode = null
+    destinationNode = null
     # the departureAirport of the flight
-    departure = flight.departureAirport
-    if (typeof departure != "undefined" and departure != null and departure.hasOwnProperty('_id'))
-      departureNode = self._data[departure._id]
-      if (typeof departureNode == "undefined" or departureNode == null)
+    origin = flight.departureAirport
+    if (typeof origin != "undefined" and origin != null and origin.hasOwnProperty('_id'))
+      originNode = self._data[origin._id]
+      if (typeof originNode == "undefined" or originNode == null)
         try
-          marker = new GritsMarker(7, 7, _colorScale)
-          departureNode = new GritsNode(departure, marker)
-          departureNode.setEventHandlers(_eventHandlers)
-          departureNode.outgoingThroughput = flight.totalSeats
+          marker = new GritsMarker(_size[0], _size[1], _colorScale)
+          originNode = new GritsNode(origin, marker)
+          originNode.setEventHandlers(_eventHandlers)
+          originNode.outgoingThroughput = flight.totalSeats
+          if originNode._id in queryOrigins
+            originNode.excludedFromNormalization = true
         catch e
           console.error(e.message)
           return
-        self._data[departure._id] = departureNode
+        self._data[origin._id] = originNode
       else
-        departureNode.outgoingThroughput += flight.totalSeats
+        originNode.outgoingThroughput += flight.totalSeats
   
     # the arrivalAirport of the flight
-    arrival = flight.arrivalAirport
-    if (typeof arrival != "undefined" and arrival != null and arrival.hasOwnProperty('_id'))
-      arrivalNode = self._data[arrival._id]
-      if (typeof arrivalNode == "undefined" or arrivalNode == null)
+    destination = flight.arrivalAirport
+    if (typeof destination != "undefined" and destination != null and destination.hasOwnProperty('_id'))
+      destinationNode = self._data[destination._id]
+      if (typeof destinationNode == "undefined" or destinationNode == null)
         try
-          marker = new GritsMarker(7, 7, _colorScale)
-          arrivalNode = new GritsNode(arrival, marker)
-          arrivalNode.setEventHandlers(_eventHandlers)
-          arrivalNode.incomingThroughput = flight.totalSeats
+          marker = new GritsMarker(_size[0], _size[1], _colorScale)
+          destinationNode = new GritsNode(destination, marker)
+          destinationNode.setEventHandlers(_eventHandlers)
+          destinationNode.incomingThroughput = flight.totalSeats
         catch e
           console.error(e.message)
           return
-        self._data[arrival._id] = arrivalNode
+        self._data[destination._id] = destinationNode
       else
-        arrivalNode.incomingThroughput += flight.totalSeats
+        destinationNode.incomingThroughput += flight.totalSeats
   
-    return [departureNode, arrivalNode]
+    return [originNode, destinationNode]
   
   # returns the normalized throughput for a node
   #
@@ -235,7 +264,7 @@ class GritsNodeLayer extends GritsLayer
   _getNormalizedThroughput: (node) ->
     maxAllowed = 100
     np = 0
-    if @_normalizedCI > 0
+    if @_normalizedCI > 0      
       np = ((node.incomingThroughput + node.outgoingThroughput) / @_normalizedCI) * 100
     if np > maxAllowed
       return maxAllowed
@@ -244,8 +273,7 @@ class GritsNodeLayer extends GritsLayer
   # returns the color to use as the marker fill
   #
   # @return [String] color, the marker image color
-  _getMarkerColor: (node) ->
-    node.color = '#f9a839' #default
+  _getNormalizedColor: (node) ->
     np = @_getNormalizedThroughput(node)
     if np < 10
       node.color = _colorScale[10]
@@ -267,16 +295,18 @@ class GritsNodeLayer extends GritsLayer
       node.color = _colorScale[90]
     else if np <= 100
       node.color = _colorScale[100]
+    else
+      node.color = _colorScale[10]
     return node.color
   
   filterByMinMaxThroughput: (min, max) ->
     self = this
     nodes = self.getNodes()
     if _.isEmpty(nodes)
-      return
+      return    
     filtered = _.filter(nodes, (node) ->
-      np = self._getNormalizedThroughput(node)      
-      $element = $('#node-'+node._id)
+      $element = $('#' + node.elementID)
+      np = self._getNormalizedThroughput(node)
       if (np < min) || (np > max)
         $element.attr('display', 'none')
         n = node
