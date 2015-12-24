@@ -26,6 +26,7 @@ Package.on_use(function(api){
     'ajduke:bootstrap-tokenfield@0.5.0',
     'flawless:meteor-toastr@1.0.1',
     'meteorhacks:aggregate@1.3.0',
+    'momentjs:moment@2.10.6',
     'grits:grits-net-mapper@0.2.2'
   ]);
   // client only packages
