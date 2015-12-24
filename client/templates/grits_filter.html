@@ -143,7 +143,7 @@
             <div class="filter-group">
               <span class="filter-label">Start:</span>
               <div class='input-group date' id='discontinuedDate' style="max-width: 300px;">
-                <input type='text' class="date-button form-control input-sm" />
+                <input type='text' class="date-button form-control input-sm" value="{{start}}"/>
                 <span class="input-group-addon">
                   <span class="glyphicon glyphicon-calendar"></span>
                 </span>
@@ -152,7 +152,7 @@
             <div class="filter-group">
               <span class="filter-label">End:</span>
                 <div class='input-group date' id='effectiveDate' style="max-width: 300px;">
-                    <input type='text' class="date-button form-control input-sm" />
+                    <input type='text' class="date-button form-control input-sm" value="{{end}}"/>
                     <span class="input-group-addon">
                       <span class="glyphicon glyphicon-calendar"></span>
                     </span>
@@ -201,9 +201,7 @@
       <div class="row filter-row">
         <div class="col-xs-12">
           <button id="applyFilter" class="btn btn-sm btn-default">
-            <span class="filter-label">
-              Apply
-            </span>
+            <span class="filter-label">Apply</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="filterLoading"/>
           </button>
           {{#if state }}
             <span class="filter-status-message">Recent changes have not been applied</span><i class="fa fa-exclamation-circle filter-status"></i>
