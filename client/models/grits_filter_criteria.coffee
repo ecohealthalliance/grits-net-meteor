@@ -36,6 +36,9 @@ class FilterCriteria
     date = now.getDate()
     year = now.getFullYear()
     @_today = new Date(year, month, date)
+    # this._baseState keeps track of the initial plugin state after any init
+    # methods have run
+    @_baseState = {}
     return
   # initialize the start date of the filter 'discontinuedDate'
   #
@@ -44,10 +47,12 @@ class FilterCriteria
     start = @_today
     @createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: start})
     query = @getQueryObject()
+    # update the state logic for the indicator
     _state = JSON.stringify(query)
+    @_baseState = JSON.stringify(query)
     month = start.getMonth() + 1
     date = start.getDate()
-    year = start.getFullYear().toString().slice(2,4)
+    year = start.getFullYear().toString().slice(2,4)    
     return "#{month}/#{date}/#{year}"
   # initialize the end date through the 'effectiveDate' filter
   #
@@ -55,8 +60,11 @@ class FilterCriteria
   initEnd: () ->
     end = moment(@_today).add(7, 'd').toDate()
     @createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: end})
+    # get the query object
     query = @getQueryObject()
-    _state = JSON.stringify(query)
+    # update the state logic for the indicator
+    _state = JSON.stringify(query)    
+    @_baseState = JSON.stringify(query)
     month = end.getMonth() + 1
     date = end.getDate()
     year = end.getFullYear().toString().slice(2,4)
@@ -130,7 +138,8 @@ class FilterCriteria
     setTimeout(() ->
       current = self.getCurrentState()
       if current != _state
-        if current == "{}" # do not notifiy on an empty query object
+        # do not notifiy on an empty query or the base state
+        if current == "{}" || current == self._baseState
           self.stateChanged.set(false)  
         else
           self.stateChanged.set(true)
