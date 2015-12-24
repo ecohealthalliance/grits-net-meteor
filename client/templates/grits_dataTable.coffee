@@ -131,7 +131,7 @@ Template.gritsDataTable.onRendered ->
         sorted = _.sortBy(data, (path) ->
           return path.throughput * -1
         )
-        self.paths.set(paths)
+        self.paths.set(sorted)
     # when the nodes are finished loading, set the template data to the result
     nodesLoaded = nodesLayer.hasLoaded.get()
     if nodesLoaded
