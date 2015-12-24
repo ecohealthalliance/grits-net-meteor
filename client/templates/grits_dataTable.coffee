@@ -29,10 +29,10 @@ _formatHeatmapData = (data) ->
   _.each(data, (a) ->
     heat = {
       _id: 'heatmapRow' + ++count
-      code: a[4]
+      code: a[3]
       latitude: +(a[0]).toFixed(5)
       longitude: +(a[1]).toFixed(5)
-      intensity: +(a[3]).toFixed(3)
+      intensity: +(a[2]).toFixed(3)
     }
     heatmaps.push(heat)
   )
