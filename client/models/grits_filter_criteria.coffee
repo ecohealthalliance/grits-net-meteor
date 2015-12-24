@@ -32,8 +32,49 @@ class GritsFilterCriteria
     # reactive var used to update the UI when the query state has changed
     self.stateChanged = new ReactiveVar(null)
     # reactive var used to track the departures
-    self.departures = new ReactiveVar(null)
+    self.departures = new ReactiveVar(null)    
+    # setup an instance variable that contains todays date.  This will be used
+    # to set the initial Start and End dates to the Operating Date Range
+    now = new Date()
+    month = now.getMonth()
+    date = now.getDate()
+    year = now.getFullYear()
+    self._today = new Date(year, month, date)
+    # this._baseState keeps track of the initial plugin state after any init
+    # methods have run
+    self._baseState = {}
     return
+  # initialize the start date of the filter 'discontinuedDate'
+  #
+  # @return [String] dateString, formatted MM/DD/YY
+  initStart: () ->
+    self = this
+    start = self._today
+    self.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: start})
+    query = @getQueryObject()
+    # update the state logic for the indicator
+    _state = JSON.stringify(query)
+    self._baseState = JSON.stringify(query)
+    month = start.getMonth() + 1
+    date = start.getDate()
+    year = start.getFullYear().toString().slice(2,4)    
+    return "#{month}/#{date}/#{year}"
+  # initialize the end date through the 'effectiveDate' filter
+  #
+  # @return [String] dateString, formatted MM/DD/YY
+  initEnd: () ->
+    self = this
+    end = moment(@_today).add(7, 'd').toDate()
+    self.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: end})
+    # get the query object
+    query = self.getQueryObject()
+    # update the state logic for the indicator
+    _state = JSON.stringify(query)    
+    self._baseState = JSON.stringify(query)
+    month = end.getMonth() + 1
+    date = end.getDate()
+    year = end.getFullYear().toString().slice(2,4)
+    return "#{month}/#{date}/#{year}"
   # Creates a new filter criteria and adds it to the collection or updates
   # the collection if it already exists
   #
@@ -103,8 +144,9 @@ class GritsFilterCriteria
     setTimeout(() ->
       current = self.getCurrentState()
       if current != _state
-        if current == "{}" # do not notifiy on an empty query object
-          self.stateChanged.set(false)
+        # do not notifiy on an empty query or the base state
+        if current == "{}" || current == self._baseState
+          self.stateChanged.set(false)  
         else
           self.stateChanged.set(true)
       else
@@ -211,6 +253,24 @@ class GritsFilterCriteria
       Session.set 'grits-net-meteor:limit', null
     Session.set 'grits-net-meteor:lastId', null
     Session.set 'grits-net-meteor:query', query
+    return
+  # sets the 'start' date from the filter and updates the filter criteria
+  setOperatingDateRangeStart: (date) ->
+    self = this
+    discontinuedDatePicker = Template.gritsFilter.getDiscontinuedDatePicker()
+    if _.isNull(discontinuedDatePicker)
+      return
+    discontinuedDate = discontinuedDatePicker.data('DateTimePicker').date(date)
+    self.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: discontinuedDate})
+    return
+  # reads the 'end' date from the filter and updates the filter criteria
+  setOperatingDateRangeEnd: (date) ->
+    self = this
+    effectiveDatePicker = Template.gritsFilter.getEffectiveDatePicker()
+    if _.isNull(effectiveDatePicker)
+      return
+    effectiveDate = effectiveDatePicker.data('DateTimePicker').date(date)
+    self.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: effectiveDate})
     return
   # sets the weeklyFrequency input on the UI to the 'operator' and 'value'
   # specified, as well as, updating the underlying FilterCriteria.
