@@ -2,7 +2,8 @@
 #
 # When another meteor app adds grits:grits-net-meteor as a package
 # Template.gritsFilter will be available globally.
-
+_startDate = null # onCreated will initialize the date through GritsFilterCriteria
+_endDate = null # onCreated will initialize the date through GritsFilterCriteria
 _lastFlightId = null # stores the last flight _id from the collection, used in limit/offset
 _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
@@ -239,13 +240,16 @@ Template.gritsFilter.helpers({
       return false
   start: () ->
     # set inital date
-    return GritsFilterCriteria.initStart()
+    return _startDate
   end: () ->
     # set inital date
-    return GritsFilterCriteria.initEnd()
+    return _endDate
 })
 
 Template.gritsFilter.onCreated ->
+  _startDate = GritsFilterCriteria.initStart()
+  _endDate = GritsFilterCriteria.initEnd()
+  
   # Public API
   # Currently we declare methods above for documentation purposes then assign
   # to the Template.gritsFilter as a global export
