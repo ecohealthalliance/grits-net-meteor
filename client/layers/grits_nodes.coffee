@@ -80,6 +80,14 @@ class GritsNodeLayer extends GritsLayer
     @_addLayerGroup()
     @hasLoaded.set(false)
   
+  # draws the layer
+  #
+  # @override
+  draw: () ->
+    @hasLoaded.set(true)
+    @_layer.draw()
+    return
+  
   # gets the nodes from the layer
   #
   # @return [Array] array of nodes
