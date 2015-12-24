@@ -30,8 +30,8 @@
     <ul class="nav nav-tabs">
       <li class="active"><a href="#flight" data-toggle="tab" id="flightTab">Flight</a></li>
       <li><a href="#date" data-toggle="tab" id="dateTab">Date</a></li>
-    </ul>    
-    <div class="tab-content">      
+    </ul>
+    <div class="tab-content">
       <div class="tab-pane active" id="flight">
         <!-- start flight tab content -->
         <div class="row filter-first-row">
@@ -118,7 +118,7 @@
             <input type="number" id="seatsInput" class="form-control input-sm advanced-filter-status" min="0" max="525">
           </div>
           <div class="col-xs-6"></div>
-        </div>        
+        </div>
         <div class="row filter-row">
           <div class="col-xs-12">
             <span class="filter-label">Levels:</span>
@@ -127,7 +127,7 @@
         <div class="row filter-last-row">
           <div class="col-xs-3">
             <input type="number" id="connectednessLevels" min="1" value="1" class="form-control input-sm advanced-filter-status">
-          </div>          
+          </div>
         </div>
         <!-- end flight tab content -->
       </div>
@@ -137,13 +137,13 @@
           <div class="col-xs-12">
             <span class="filter-label">Operating Date Range:</span>
           </div>
-        </div>        
+        </div>
         <div class="row filter-row">
           <div class='col-xs-12'>
-            <div class="filter-group">         
+            <div class="filter-group">
               <span class="filter-label">Start:</span>
               <div class='input-group date' id='discontinuedDate' style="max-width: 300px;">
-                <input type='text' class="date-button form-control input-sm" />
+                <input type='text' class="date-button form-control input-sm" value="{{start}}"/>
                 <span class="input-group-addon">
                   <span class="glyphicon glyphicon-calendar"></span>
                 </span>
@@ -152,7 +152,7 @@
             <div class="filter-group">
               <span class="filter-label">End:</span>
                 <div class='input-group date' id='effectiveDate' style="max-width: 300px;">
-                    <input type='text' class="date-button form-control input-sm" />
+                    <input type='text' class="date-button form-control input-sm" value="{{end}}"/>
                     <span class="input-group-addon">
                       <span class="glyphicon glyphicon-calendar"></span>
                     </span>
@@ -201,13 +201,13 @@
       <div class="row filter-row">
         <div class="col-xs-12">
           <button id="applyFilter" class="btn btn-sm btn-default">
-            <span class="filter-label">Apply</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="filterLoading"/>          
-          </button>        
+            <span class="filter-label">Apply</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="filterLoading"/>
+          </button>
           {{#if state }}
             <span class="filter-status-message">Recent changes have not been applied</span><i class="fa fa-exclamation-circle filter-status"></i>
-          {{/if}}          
+          {{/if}}
         </div>
-      </div>    
+      </div>
       <div class="row row-status-bar">
         <div class="col-xs-6 col-status-bar">
           <span class="status-bar-text">Loaded Records:</span>
@@ -217,7 +217,7 @@
           <span class="status-bar-text">Total Records:</span>
           <span class="status-bar-text status-bar-counter">{{ totalRecords }}</span>
         </div>
-      </div>  
+      </div>
     </div>
   </div>
 </template>
