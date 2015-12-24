@@ -92,19 +92,19 @@ class GritsFilterCriteria
       if _.indexOf(['$eq'], o) >= 0
         value = v
       else
-        value[o] = v      
+        value[o] = v
       result[k] = value
     )
     return result
   # compares the current state vs. the original/previous state
   compareStates: () ->
     self = this
-    # timeout to avoid 'flash' affect for those who quickly change the UI 
+    # timeout to avoid 'flash' affect for those who quickly change the UI
     setTimeout(() ->
       current = self.getCurrentState()
       if current != _state
         if current == "{}" # do not notifiy on an empty query object
-          self.stateChanged.set(false)  
+          self.stateChanged.set(false)
         else
           self.stateChanged.set(true)
       else
@@ -143,39 +143,39 @@ class GritsFilterCriteria
       toastr.error('The filter requires at least one Departure')
       Session.set('grits-net-meteor:isUpdating', false)
       return
-    
+
     if !query.hasOwnProperty('departureAirport._id')
       toastr.error('The filter requires at least one Departure')
       Session.set('grits-net-meteor:isUpdating', false)
-      return    
-    
+      return
+
     # set the state
     self.setState()
     self.compareStates()
-    
+
     # re-enable the loadMore button when a new filter is applied
     $('#loadMore').prop('disabled', false)
-    limit = parseInt($('#limit').val(), 10)    
-    
+    limit = parseInt($('#limit').val(), 10)
+
     Session.set('grits-net-meteor:isUpdating', true)
     Meteor.call('flightsByQuery', query, limit, null, (err, flights) ->
       if (err)
         Meteor.gritsUtil.errorHandler(err)
         return
-      
+
       if _.isUndefined(flights) || _.isEmpty(flights)
         Session.set('grits-net-meteor:isUpdating', false)
         toastr.info('No data was returned')
         return
-      
+
       Meteor.call 'countFlightsByQuery', query, (err, totalRecords) ->
         if (err)
           Meteor.gritsUtil.errorHandler(err)
           return
-        
+
         Session.set 'grits-net-meteor:totalRecords', totalRecords
         Meteor.gritsUtil.process(flights, limit, null)
-        
+
         if cb && _.isFunction(cb)
           cb(null, flights)
       return
@@ -191,16 +191,16 @@ class GritsFilterCriteria
       toastr.error('The filter requires at least one Departure')
       Session.set('grits-net-meteor:isUpdating', false)
       return
-    
+
     if !query.hasOwnProperty('departureAirport._id')
       toastr.error('The filter requires at least one Departure')
       Session.set('grits-net-meteor:isUpdating', false)
-      return    
-    
+      return
+
     # set the state
     self.setState()
     self.compareStates()
-    
+
     # re-enable the loadMore button when a new filter is applied
     $('#loadMore').prop('disabled', false)
 
@@ -448,7 +448,7 @@ class GritsFilterCriteria
       tokens =  Template.gritsFilter.getDepartureSearch().tokenfield('getTokens')
       codes = _.pluck(tokens, 'label')
       combined = _.union(codes, combined)
-    
+
     if _.isEqual(combined, self.departures.get())
       return combined
     else
