@@ -1,3 +1,4 @@
+_previousOrigins = [] # array to track state of the heatmap
 # Creates an instance of a GritsHeatmapLayer, extends  GritsLayer
 #
 # @param [Object] map, an instance of GritsMap
@@ -30,9 +31,8 @@ class GritsHeatmapLayer extends GritsLayer
   # @note method overrides the parent class GritsLayer clear method
   # @override
   draw: () ->
-    if @_data.length == 0
-      return
     @_layer.setLatLngs(@_data)
+    @hasLoaded.set(true)
     return
   
   # clears the heatmap
@@ -67,37 +67,35 @@ class GritsHeatmapLayer extends GritsLayer
   _trackDepartures: () ->
     self = this
     Tracker.autorun () ->
-      query = Session.get('grits-net-meteor:query')
-      if _.isUndefined(query) || _.isNull(query)
-        return
-      if Session.get('grits-net-meteor:isUpdating') == true
+      departures = GritsFilterCriteria.departures.get()
+      
+      if _.isEqual(_previousOrigins, departures)
+        # do nothing
         return
       
-      # the filter has a departureAirport identified
-      if _.has(query, 'departureAirport._id')
-        # the filter has an array of airports 
-        if _.has(query['departureAirport._id'], '$in')
-          departures = query['departureAirport._id']['$in']
-          Meteor.call('findHeatmapsByCodes', departures, (err, heatmaps) ->
-            if err
-              console.error err
-              return
-                      
-            if _.isUndefined(heatmaps)
-              return
-            
-            self.clear()
-            for heatmap in heatmaps
-              _.each(heatmap.data, (a) ->
-                intensity = a[2] * self._getCellSize() * self._getZoomFactor()
-                self._data.push([a[0], a[1], intensity, a[2], a[3]])
-              )
-            self.hasLoaded.set(true)
-            self.draw()
-          )
-      else
+      if _.isEmpty(departures)
         # if a departure airport is not specified, clear the heatmap
+        _previousOrigins = null
         self.clear()
+        self.draw()
+        return
+      
+      # update the heatmap data
+      Meteor.call('findHeatmapsByCodes', departures, (err, heatmaps) ->
+        if err
+          Meteor.gritsUtil.errorHandler(err)
+          return
+        
+        self.clear()
+        for heatmap in heatmaps
+          _.each(heatmap.data, (a) ->
+            intensity = a[2] * self._getCellSize() * self._getZoomFactor()
+            self._data.push([a[0], a[1], intensity, a[2], a[3]])
+          )
+        self.draw()
+      )
+      _previousOrigins = departures
+    return
   
   # append a single heatmap to the existing layer, does not clear existing data
   #
