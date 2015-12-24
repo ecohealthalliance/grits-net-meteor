@@ -23,11 +23,17 @@ _Filter = Astro.Class(
   }
 )
 
-stateChanged = new ReactiveVar(null)
-
 # GritsFilterCriteria, this object provides the interface for
 # accessing the UI filter box.
-class FilterCriteria
+# @note exports as a 'singleton'
+class GritsFilterCriteria
+  constructor: () ->
+    self = this
+    # reactive var used to update the UI when the query state has changed
+    self.stateChanged = new ReactiveVar(null)
+    # reactive var used to track the departures
+    self.departures = new ReactiveVar(null)
+    return
   # Creates a new filter criteria and adds it to the collection or updates
   # the collection if it already exists
   #
@@ -37,6 +43,7 @@ class FilterCriteria
   #   'levels'
   # @return [Object] Astronomy model 'FilterCriteria'
   createOrUpdate: (id, fields) ->
+    self = this
     if _.indexOf(_validFields, id) < 0
       throw new Error('Invalid filter: ' + id)
     obj = _Collection.findOne({_id: id})
@@ -53,7 +60,6 @@ class FilterCriteria
         throw new Error(_.values(obj.getValidationErrors()))
       obj.save()
       return obj
-
   # removes a FilterCriteria from the collection
   #
   # @param [String] id, the name of the filter criteria
@@ -62,6 +68,7 @@ class FilterCriteria
   #   'levels'
   # @optional [Function] cb, the callback method if removing async
   remove: (id, cb) ->
+    self = this
     obj = _Collection.findOne({_id: id})
     if obj and cb
       obj.remove(cb)
@@ -70,11 +77,11 @@ class FilterCriteria
       return obj.remove()
     else
       return 0
-
   # returns the query object used to filter the server-side collection
   #
   # @return [Object] query, a mongoDB query object
   getQueryObject: () ->
+    self = this
     criteria = _Collection.find({})
     result = {}
     criteria.forEach((filter) ->
@@ -89,7 +96,6 @@ class FilterCriteria
       result[k] = value
     )
     return result
-
   # compares the current state vs. the original/previous state
   compareStates: () ->
     self = this
@@ -104,39 +110,35 @@ class FilterCriteria
       else
         self.stateChanged.set(false)
     , 500)
-
   # gets the current state of the filter
   #
   # @return [String] the query object JSON.strigify
   getCurrentState: () ->
-    @scanAll()
-    query = @getQueryObject()
+    self = this
+    self.scanAll()
+    query = self.getQueryObject()
     return JSON.stringify(query)
-  
   # get the original/previous state of the filter
   #
   # @return [String] the query object JSON.strigify
   getState: () ->
     _state
-  
   # sets the original/previous state of the filter, this method will read the
   # current query object and store is as a JSON string
   setState: () ->
-    @scanAll()
-    query = @getQueryObject()
+    self = this
+    self.scanAll()
+    query = self.getQueryObject()
     _state = JSON.stringify(query)
     return
-  
-  # reactive var used to update the UI when the query state has changed
-  stateChanged: stateChanged
-  
   # applies the filter directly, without using the global session 'query' object
   # and allows binding an anonymous function to be called at the end of the
   # asynchronous comunication with the server
   #
   # @param [Function] cb, the callback function
   applyWithCallback: (cb) ->
-    query = GritsFilterCriteria.getQueryObject()
+    self = this
+    query = self.getQueryObject()
     if _.isUndefined(query) or _.isEmpty(query)
       toastr.error('The filter requires at least one Departure')
       Session.set('grits-net-meteor:isUpdating', false)
@@ -148,8 +150,8 @@ class FilterCriteria
       return    
     
     # set the state
-    @setState()
-    @compareStates()
+    self.setState()
+    self.compareStates()
     
     # re-enable the loadMore button when a new filter is applied
     $('#loadMore').prop('disabled', false)
@@ -170,10 +172,7 @@ class FilterCriteria
         if (err)
           Meteor.gritsUtil.errorHandler(err)
           return
-      
-        if Meteor.gritsUtil.debug
-          console.log 'totalRecords: ', totalRecords
-      
+        
         Session.set 'grits-net-meteor:totalRecords', totalRecords
         Meteor.gritsUtil.process(flights, limit, null)
         
@@ -182,12 +181,12 @@ class FilterCriteria
       return
     )
     return
-  
   # sets the global Session 'grits-net-meteor:query' object to the current
   # getQueryObject.  This will trigger an update of the map through the
   # server-side publication
   apply: () ->
-    query = GritsFilterCriteria.getQueryObject()
+    self = this
+    query = self.getQueryObject()
     if _.isUndefined(query) or _.isEmpty(query)
       toastr.error('The filter requires at least one Departure')
       Session.set('grits-net-meteor:isUpdating', false)
@@ -199,8 +198,8 @@ class FilterCriteria
       return    
     
     # set the state
-    @setState()
-    @compareStates()
+    self.setState()
+    self.compareStates()
     
     # re-enable the loadMore button when a new filter is applied
     $('#loadMore').prop('disabled', false)
@@ -213,112 +212,120 @@ class FilterCriteria
     Session.set 'grits-net-meteor:lastId', null
     Session.set 'grits-net-meteor:query', query
     return
-
   # sets the weeklyFrequency input on the UI to the 'operator' and 'value'
   # specified, as well as, updating the underlying FilterCriteria.
   #
   # @param [String] operator, one of '$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in'
   # @param [Integer] value
   setWeeklyFrequency: (operator, value) ->
+    self = this
     if _.indexOf(_validOperators, operator) < 0
       throw new Error('Invalid operator: ', operator)
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
 
     if _.isNull(value)
-      GritsFilterCriteria.remove('weeklyFrequency')
+      self.remove('weeklyFrequency')
     else
-      GritsFilterCriteria.createOrUpdate('weeklyFrequency', {key: 'weeklyFrequency', operator: operator, value: value})
+      self.createOrUpdate('weeklyFrequency', {key: 'weeklyFrequency', operator: operator, value: value})
 
     $('#weekly-frequency-operand').val(operator)
     $("#weeklyFrequencyInput").val(value)
     return
-
   # sets the stops input on the UI to the 'operator' and 'value'
   # specified, as well as, updating the underlying FilterCriteria.
   #
   # @param [String] operator, one of '$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in'
   # @param [Integer] value
   setStops: (operator, value) ->
+    self = this
     if _.indexOf(_validOperators, operator) < 0
       throw new Error('Invalid operator: ', operator)
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
 
     if _.isNull(value)
-      GritsFilterCriteria.remove('stops')
+      self.remove('stops')
     else
-      GritsFilterCriteria.createOrUpdate('stops', {key: 'stops', operator: operator, value: value})
+      self.createOrUpdate('stops', {key: 'stops', operator: operator, value: value})
 
     $('#stops-operand').val(operator)
     $("#stopsInput").val(value)
     return
-
   # sets the seats input on the UI to the 'operator' and 'value'
   # specified, as well as, updating the underlying FilterCriteria.
   #
   # @param [String] operator, one of '$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in'
   # @param [Integer] value
   setSeats: (operator, value) ->
+    self = this
     if _.indexOf(_validOperators, operator) < 0
       throw new Error('Invalid operator: ', operator)
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
 
     if _.isNull(value)
-      GritsFilterCriteria.remove('seats')
+      self.remove('seats')
     else
-      GritsFilterCriteria.createOrUpdate('seats', {key: 'totalSeats', operator: operator, value: value})
+      self.createOrUpdate('seats', {key: 'totalSeats', operator: operator, value: value})
 
     $('#seats-operand').val(operator)
     $("#seatsInput").val(value)
     return
-
   # sets the departure input on the UI to the 'code'
   # specified, as well as, updating the underlying FilterCriteria.
   #
   # @param [String] code, an airport IATA code
   # @see http://www.iata.org/Pages/airports.aspx
   setDeparture: (code) ->
+    self = this
     if _.isUndefined(code)
       throw new Error('A code must be defined or null.')
     if _.isNull(code)
-      GritsFilterCriteria.remove('departure')
+      self.remove('departure')
       Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [])
+      self.departures.set(null)
+      return
+    if _.isEmpty(code)
+      self.remove('departure')
+      Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [])
+      self.departures.set(null)
       return
     if _.isArray(code)
-      GritsFilterCriteria.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: code})
+      self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: code})
       Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', code)
+      @departures.set(code)
     else
-      GritsFilterCriteria.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: [code]})
+      self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: [code]})
       Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [code])
+      self.departures.set([code])
     return
-
   # sets the arrival input on the UI to the 'code'
   # specified, as well as, updating the underlying FilterCriteria.
   #
   # @param [String] code, an airport IATA code
   # @see http://www.iata.org/Pages/airports.aspx
   setArrival: (code) ->
+    self = this
     if _.isUndefined(code)
       throw new Error('A code must be defined or null.')
     if _.isNull(code)
-      GritsFilterCriteria.remove('arrival')
+      self.remove('arrival')
       Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [])
       return
     if _.isArray(code)
-      GritsFilterCriteria.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: code})
+      self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: code})
       Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', code)
     else
-      GritsFilterCriteria.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: [code]})
+      self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: [code]})
       Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [code])
     return
-
   # sets the level input on the UI to the 'value'
   # specified, as well as, updating the underlying FilterCriteria.
   #
   # @param [Intever] value
   setLevels: (value) ->
+    self = this
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
     if _.isNull(value)
@@ -330,13 +337,13 @@ class FilterCriteria
     Session.set('grits-net-meteor:levels', val)
     $("#connectednessLevels").val(val)
     return
-
   # sets the limit input on the UI to the 'value'
   # specified, as well as, updating the underlying global Session
   # 'grits-net-meteor:limit' variable.
   #
   # @param [Intever] value
   setLimit: (value) ->
+    self = this
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
     val = Math.floor(parseInt(value, 10))
@@ -345,92 +352,91 @@ class FilterCriteria
     $('#limit').val(val)
     Session.set('grits-net-meteor:limit', val)
     return
-
   # convenience method for reading all the filter UI inputs and creating and/or
   # updating the underlying FilterCriteria
   scanAll: () ->
-    for name, method of this
+    self = this
+    for name, method of self
       if name.indexOf('read') >= 0
-        method()
+        self[name]()
     return
-
   # reads the 'start' date from the filter and updates the filter criteria
   readOperatingDateRangeStart: () ->
+    self = this
     discontinuedDatePicker = Template.gritsFilter.getDiscontinuedDatePicker()
     if _.isNull(discontinuedDatePicker)
       return
     discontinuedDate = discontinuedDatePicker.data('DateTimePicker').date()
     if _.isUndefined(discontinuedDate) || _.isEmpty(discontinuedDate)
-      GritsFilterCriteria.remove('discontinuedDate')
+      self.remove('discontinuedDate')
       return
-    GritsFilterCriteria.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: discontinuedDate})
+    self.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: discontinuedDate})
     return
-  
   # reads the 'end' date from the filter and updates the filter criteria
   readOperatingDateRangeEnd: () ->
+    self = this
     effectiveDatePicker = Template.gritsFilter.getEffectiveDatePicker()
     if _.isNull(effectiveDatePicker)
       return
     effectiveDate = effectiveDatePicker.data('DateTimePicker').date()
     if _.isUndefined(effectiveDate) || _.isEmpty(effectiveDate)
-      GritsFilterCriteria.remove('effectiveDate')
+      self.remove('effectiveDate')
       return
-    GritsFilterCriteria.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: effectiveDate})
+    self.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: effectiveDate})
     return
-  
   # reads the 'levels' input currently displayed on the filter UI
   # then calls the setter to set the Session variable
   # @note: we do not add to the underlying FilterCriteria
   readLevels: () ->
+    self = this
     val = $("#connectednessLevels").val()
     try
-      GritsFilterCriteria.setLevels(val)
+      self.setLevels(val)
     catch e
       console.error(e)
-      return
     return
-
   readIncludeNearbyAirports: () ->
+    self = this
     miles = $("#includeNearbyAirportsRadius").val()
     if $('#includeNearbyAirports').is(':checked')
-      departures = GritsFilterCriteria.readDeparture()
+      departures = self.readDeparture()
       if departures.length >= 0
         Meteor.call('findAirportById', departures[0], (err, airport) ->
-          GritsFilterCriteria.setIncludeNearbyAirports(true, miles, airport.loc.coordinates)
+          self.setIncludeNearbyAirports(true, miles, airport.loc.coordinates)
         )
     return
-
   # reads the 'seats' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
   readSeats: () ->
+    self = this
     val = parseInt($("#seatsInput").val())
     op = $('#seats-operand').val()
     if _.isUndefined(op)
       return
     if _.isUndefined(val) or isNaN(val)
-      GritsFilterCriteria.remove('seats')
+      self.remove('seats')
     else
-      GritsFilterCriteria.createOrUpdate('seats', {key: 'totalSeats', operator: op, value: val})
+      self.createOrUpdate('seats', {key: 'totalSeats', operator: op, value: val})
     return
-
   # reads the 'stops' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
   readStops: () ->
+    self = this
     val = parseInt($("#stopsInput").val())
     op = $('#stops-operand').val()
     if _.isUndefined(op)
       return
     if _.isUndefined(val) or isNaN(val)
-      GritsFilterCriteria.remove('stops')
+      @remove('stops')
     else
-      GritsFilterCriteria.createOrUpdate('stops', {key: 'stops', operator: op, value: val})
+      @createOrUpdate('stops', {key: 'stops', operator: op, value: val})
     return
-
   # reads the 'departure' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
   #
   # @return [Array] combined, departures from #departureSearchMain and #departureSearch inputs
   readDeparture: () ->
+    self = this
     combined = []
 
     if typeof Template.gritsFilter.getDepartureSearchMain() != 'undefined'
@@ -442,36 +448,36 @@ class FilterCriteria
       tokens =  Template.gritsFilter.getDepartureSearch().tokenfield('getTokens')
       codes = _.pluck(tokens, 'label')
       combined = _.union(codes, combined)
-
-    if _.isEmpty(combined)
-      GritsFilterCriteria.remove('departure')
+    
+    if _.isEqual(combined, self.departures.get())
+      return combined
     else
-      GritsFilterCriteria.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: combined})
-    return combined
-
+      self.setDeparture(combined)
+      return combined
   # reads the 'arrival' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
   readArrival: () ->
+    self = this
     if typeof Template.gritsFilter.getDepartureSearch() != 'undefined'
       tokens =  Template.gritsFilter.getArrivalSearch().tokenfield('getTokens')
       codes = _.pluck(tokens, 'label')
     if _.isEmpty(codes)
-      GritsFilterCriteria.remove('arrival')
+      self.remove('arrival')
     else
-      GritsFilterCriteria.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: codes})
+      self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: codes})
     return
-
   # reads the 'weeklyFrequency' input currently displayed on the filter UI,
   # then creates and/or updates the underlying FilterCriteria
   readWeeklyFrequency: () ->
+    self = this
     val = parseInt($("#weeklyFrequencyInput").val())
     op = $('#weekly-frequency-operand').val()
     if _.isUndefined(op)
         return
     if _.isUndefined(val) or isNaN(val)
-      GritsFilterCriteria.remove('weeklyFrequency')
+      self.remove('weeklyFrequency')
     else
-      GritsFilterCriteria.createOrUpdate('weeklyFrequency', {key: 'weeklyFrequency', operator: op, value: val})
+      self.createOrUpdate('weeklyFrequency', {key: 'weeklyFrequency', operator: op, value: val})
     return
 
-GritsFilterCriteria = new FilterCriteria() #GritsFilterCriteria exports as a singleton
+GritsFilterCriteria = new GritsFilterCriteria() # exports as a singleton
