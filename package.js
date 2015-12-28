@@ -47,6 +47,7 @@ Package.on_use(function(api){
     'client/layers/grits_paths.coffee',
     'client/layers/grits_heatmap.coffee',
     'client/models/grits_filter_criteria.coffee',
+    'client/templates/header.html',
     'client/templates/grits_dataTable.html',
     'client/templates/grits_dataTable.coffee',
     'client/templates/grits_map.html',
@@ -60,7 +61,9 @@ Package.on_use(function(api){
     'client/subscription.coffee'
   ], 'client');
 
-  api.addAssets([], 'client');
+  api.addAssets([
+    'client/images/flirt.png',
+  ], 'client');
 
   // both client and server files
   api.add_files([

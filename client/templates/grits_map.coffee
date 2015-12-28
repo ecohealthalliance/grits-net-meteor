@@ -70,18 +70,23 @@ addDefaultControls = (map) ->
   nodeDetail = new GritsControl('', 7, 'bottomright', 'info node-detail')
   map.addControl(nodeDetail)
   $('.node-detail').hide()
-  
+
   legendControl = new GritsControl('<div id="legendContainer"></div>', 8, 'bottomright', 'info')
   map.addControl(legendControl)
   Blaze.render(Template.gritsLegend, $('#legendContainer')[0])
 
-  filterControl = new GritsControl('<div id="filterContainer"></div>', 10, 'topleft', 'info')
+  zoomControl = L.control.zoom({position:'topleft'})
+  map.addControl(zoomControl)
+
+  filterControl = new GritsControl('<div id="filterContainer">', 10, 'topleft', 'info filter-control')
   map.addControl(filterControl)
   Blaze.render(Template.gritsFilter, $('#filterContainer')[0])
 
   dataTableControl = new GritsControl('<div id="dataTableContainer"></div>', 7, 'bottomleft', 'info')
   map.addControl(dataTableControl)
   Blaze.render(Template.gritsDataTable, $('#dataTableContainer')[0])
+
+
 
 
 Template.gritsMap.onCreated ->
