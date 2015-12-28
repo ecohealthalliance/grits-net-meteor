@@ -28,6 +28,7 @@ Package.on_use(function(api){
     'meteorhacks:aggregate@1.3.0',
     'momentjs:moment@2.10.6',
     'kidovate:bootstrap-slider@0.0.5',
+    'momentjs:moment@2.10.6',
     'grits:grits-net-mapper@0.2.2'
   ]);
   // client only packages
