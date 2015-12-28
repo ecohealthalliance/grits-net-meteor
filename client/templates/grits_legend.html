@@ -1,0 +1,53 @@
+<template name="gritsLegend">
+  <div class='my-legend'>
+    <div class='legend-title'>Path Throughput</div>
+    <div class='legend-scale'>
+      <div class='slider-container'>
+        <input type="text"
+               class="slider"
+               value=""
+               data-slider-name="{{pathLayerName}}"
+               data-slider-min="0"
+               data-slider-max="100"
+               data-slider-step="1"
+               data-slider-value="[0,100]"
+               data-slider-orientation="horizontal"
+               data-slider-selection="after"
+               data-slider-tooltip="show"
+               style="position:relative; top:0; left:0; width:100%;">
+        <ul class='legend-labels'>
+          <li><span style='background-color: {{pathColorScale 20}};'></span>20%</li>
+          <li><span style='background-color: {{pathColorScale 40}};'></span>40%</li>
+          <li><span style='background-color: {{pathColorScale 60}};'></span>60%</li>
+          <li><span style='background-color: {{pathColorScale 80}};'></span>80%</li>
+          <li><span style='background-color: {{pathColorScale 100}};'></span>100%</li>
+        </ul>
+      </div>
+    </div>    
+    <div class='legend-title'>Node Throughput</div>
+    <div class='legend-scale'>
+      <div class='slider-container'>
+        <input type="text"
+               class="slider"
+               value=""
+               data-slider-name="{{nodeLayerName}}"
+               data-slider-min="0"
+               data-slider-max="100"
+               data-slider-step="1"
+               data-slider-value="[0,100]"
+               data-slider-orientation="horizontal"
+               data-slider-selection="after"
+               data-slider-tooltip="show"
+               style="position:relative; top:0; left:0; width:100%;">
+        <ul class='legend-labels'>
+          <li><span style='background-color: {{nodeColorScale 20}};'></span>20%</li>
+          <li><span style='background-color: {{nodeColorScale 40}};'></span>40%</li>
+          <li><span style='background-color: {{nodeColorScale 60}};'></span>60%</li>
+          <li><span style='background-color: {{nodeColorScale 80}};'></span>80%</li>
+          <li><span style='background-color: {{nodeColorScale 100}};'></span>100%</li>
+        </ul>
+      </div>
+    </div>
+    <div class='legend-source'>Path and node throughput percentage is normalized using current filtered paths</div>
+  </div>
+</template>
