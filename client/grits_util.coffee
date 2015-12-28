@@ -27,7 +27,7 @@ Meteor.gritsUtil =
   
     count = 0
     processQueue = async.queue(((flight, callback) ->
-      nodes = nodeLayer.convertFlight(flight)
+      nodes = nodeLayer.convertFlight(flight, GritsFilterCriteria.readDeparture())
       pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
       async.nextTick ->
         if !(count % 100)
@@ -57,7 +57,7 @@ Meteor.gritsUtil =
     pathLayer = map.getGritsLayer('Paths')
   
     processQueue = async.queue(((flight, callback) ->
-      nodes = nodeLayer.convertFlight(flight)
+      nodes = nodeLayer.convertFlight(flight, GritsFilterCriteria.readDeparture())
       pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
       async.nextTick ->
         if !(tcount % 100)

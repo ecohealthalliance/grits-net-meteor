@@ -10,7 +10,7 @@ _previousPath = null # placeholde for the last clicked path
 highlightPathTableRow = (path) ->
   if !(path instanceof GritsPath)
     return
-  $row = $("[data-id=#{path._id}]")
+  $row = $("tr[data-id=#{path._id}]")
   # remove any previously clicked rows
   $table = $row.closest('table')
   $table.find('.activeRow').removeClass('activeRow')
@@ -66,7 +66,8 @@ Template.gritsDataTable.events({
     path = _.find(paths, (path) -> path._id == _id)        
     if _.isUndefined(path)
       return
-    element = $('path#'+_id)[0]
+    element = $('#'+path.elementID)[0]
+    console.log('element: ', element)
     if _.isUndefined(element)
       return
     # simulate a click on the path
