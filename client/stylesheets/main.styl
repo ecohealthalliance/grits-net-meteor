@@ -312,10 +312,10 @@ p.intro
   font-size small
 
 #dataTableDiv
-  width 370px
+  width 405px
 
 .dataTable
-  width 370px
+  width 405px
 
 .dataTableContent
   overflow-x hidden
@@ -337,6 +337,12 @@ p.intro
 
 .leaflet-heatmap-layer
   z-index -1
+  
+.leaflet-control-zoom
+  clear none // allows horizontal stacking with filter
+
+.filter-control
+  clear none // allows horizontal stacking with zoom
 
 .searchBar
   position relative
