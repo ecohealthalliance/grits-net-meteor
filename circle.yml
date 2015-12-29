@@ -29,7 +29,7 @@ test:
     - mongoimport --db grits-cucumber --collection 'halunka:i18n' --file example/tests/mongo/i18n.json
     - chmod +x continuous_integration.sh
     - ./continuous_integration.sh
-    - CHIMP_OPTIONS='--browser=phantomjs' VELOCITY_CI=1 DEBUG=1 meteor run --test:
+    - CHIMP_OPTIONS='--browser=chrome' VELOCITY_CI=1 DEBUG=1 meteor run --test:
         pwd:
           example
 
