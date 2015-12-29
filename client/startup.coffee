@@ -1,0 +1,15 @@
+Meteor.startup ->
+  Session.set 'grits-net-meteor:query', null
+  Session.set 'grits-net-meteor:isUpdating', false
+  Session.set 'grits-net-meteor:loadedRecords', 0
+  Session.set 'grits-net-meteor:totalRecords', 0
+  Session.set 'grits-net-meteor:limit', null
+  Session.set 'grits-net-meteor:levels', 1
+  Session.set 'grits-net-meteor:lastId', null
+  # string externalization/i18n
+  Template.registerHelper('_', i18n.get)
+  i18n.addLanguage('en', 'English')
+  i18n.loadAll(() ->
+    i18n.setLanguage('en')
+  )
+  
