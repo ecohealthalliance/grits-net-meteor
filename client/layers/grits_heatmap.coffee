@@ -56,7 +56,7 @@ class GritsHeatmapLayer extends GritsLayer
       if _.isEqual(_previousOrigins, departures)
         # do nothing
         return
-
+      
       if _.isEmpty(departures)
         # if a departure airport is not specified, clear the heatmap
         _previousOrigins = null

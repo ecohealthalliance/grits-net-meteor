@@ -43,6 +43,7 @@ jagi:reactive-map@2.0.0
 jparker:crypto-core@0.1.0
 jparker:crypto-md5@0.1.1
 jquery@1.11.4
+kidovate:bootstrap-slider@0.0.5
 launch-screen@1.0.4
 less@2.5.1
 livedata@1.0.15
