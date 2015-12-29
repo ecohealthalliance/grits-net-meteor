@@ -6,10 +6,13 @@ Meteor.startup ->
   Session.set 'grits-net-meteor:limit', null
   Session.set 'grits-net-meteor:levels', 1
   Session.set 'grits-net-meteor:lastId', null
+  Session.set 'grits-net-meteor:isReady', false # the map will not be displayed until isReady is set to true
+  
   # string externalization/i18n
   Template.registerHelper('_', i18n.get)
   i18n.addLanguage('en', 'English')
   i18n.loadAll(() ->
     i18n.setLanguage('en')
+    Session.set 'grits-net-meteor:isReady', true
   )
   
