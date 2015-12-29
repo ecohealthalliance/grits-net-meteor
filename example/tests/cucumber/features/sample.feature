@@ -12,7 +12,7 @@ Feature: Map display
   @watch
   Scenario: Check that we see the correct entry page
     When I navigate to "/"
-    Then I should see the title "example"
+    Then I should see the title "FLIRT"
 
   @watch
   Scenario: Clicking on module a should give us some paths

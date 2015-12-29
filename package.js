@@ -26,9 +26,11 @@ Package.on_use(function(api){
     'ajduke:bootstrap-tokenfield@0.5.0',
     'flawless:meteor-toastr@1.0.1',
     'meteorhacks:aggregate@1.3.0',
+    'momentjs:moment@2.10.6',
     'kidovate:bootstrap-slider@0.0.5',
     'tsega:bootstrap3-datetimepicker@4.17.37_1',
     'halunka:i18n@1.1.1',
+    'momentjs:moment@2.10.6',
     'grits:grits-net-mapper@0.2.2'
   ]);
   // client only packages
@@ -45,24 +47,27 @@ Package.on_use(function(api){
     'client/lib/tableExport.min.js',
     'client/startup.coffee',
     'client/grits_util.coffee',
+    'client/models/grits_filter_criteria.coffee',
     'client/layers/grits_nodes.coffee',
     'client/layers/grits_paths.coffee',
     'client/layers/grits_heatmap.coffee',
-    'client/models/grits_filter_criteria.coffee',
+    'client/templates/header.html',
     'client/templates/grits_dataTable.html',
     'client/templates/grits_dataTable.coffee',
     'client/templates/grits_map.html',
-    'client/templates/grits_map.coffee',    
+    'client/templates/grits_map.coffee',
     'client/templates/grits_filter.html',
     'client/templates/grits_filter.coffee',
     'client/templates/grits_legend.html',
     'client/templates/grits_legend.coffee',
     'client/templates/grits_elementDetails.html',
-    'client/templates/grits_elementDetails.coffee',    
+    'client/templates/grits_elementDetails.coffee',
     'client/subscription.coffee'
   ], 'client');
 
-  api.addAssets([], 'client');
+  api.addAssets([
+    'client/images/flirt.png'
+  ], 'client');
 
   // both client and server files
   api.add_files([

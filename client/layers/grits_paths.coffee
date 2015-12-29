@@ -97,6 +97,13 @@ class GritsPathLayer extends GritsLayer
     @_addLayerGroup()
     @hasLoaded.set(false)
 
+  # draws the layer
+  #
+  # @override
+  draw: () ->
+    @_layer.draw()
+    return
+
   # gets the paths from the layer
   #
   # @return [Array] array of nodes

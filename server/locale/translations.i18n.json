@@ -56,10 +56,10 @@
                 "en": "Code"
             },
             "latitude-heading": {
-                "en": "Incoming"
+                "en": "Latitude"
             },
             "longitude-heading": {
-                "en": "Outgoing"
+                "en": "Longitude"
             },
             "intensity-heading": {
                 "en": "Intensity"
