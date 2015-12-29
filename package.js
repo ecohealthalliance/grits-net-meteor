@@ -27,6 +27,7 @@ Package.on_use(function(api){
     'flawless:meteor-toastr@1.0.1',
     'meteorhacks:aggregate@1.3.0',
     'kidovate:bootstrap-slider@0.0.5',
+    'halunka:i18n@1.1.1',
     'grits:grits-net-mapper@0.2.2'
   ]);
   // client only packages
@@ -41,6 +42,7 @@ Package.on_use(function(api){
     'client/stylesheets/main.styl',
     'client/lib/L.D3SvgOverlay.min.js',
     'client/lib/tableExport.min.js',
+    'client/startup.coffee',
     'client/grits_util.coffee',
     'client/layers/grits_nodes.coffee',
     'client/layers/grits_paths.coffee',
@@ -54,8 +56,8 @@ Package.on_use(function(api){
     'client/templates/grits_filter.coffee',
     'client/templates/grits_legend.html',
     'client/templates/grits_legend.coffee',
-    'client/templates/nodeDetails.html',
-    'client/templates/pathDetails.html',    
+    'client/templates/grits_elementDetails.html',
+    'client/templates/grits_elementDetails.coffee',    
     'client/subscription.coffee'
   ], 'client');
 
@@ -69,7 +71,9 @@ Package.on_use(function(api){
   ],['client', 'server']);
   //server-side only files
   api.add_files([
-    'server/publications.coffee'
+    'server/locale/translations.i18n.json',
+    'server/startup.coffee',
+    'server/publications.coffee'    
   ], 'server');
   //public API, client and server
   api.export([
@@ -84,6 +88,7 @@ Package.on_use(function(api){
     'GritsMap',
     'GritsHeatmapLayer',
     'GritsNodeLayer',
-    'GritsPathLayer'
+    'GritsPathLayer',
+    'i18n'
   ], ['client', 'server']);
 });
