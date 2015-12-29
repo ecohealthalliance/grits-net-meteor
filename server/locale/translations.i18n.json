@@ -1,0 +1,204 @@
+{
+    "window-title": {
+        "en": "FLIRT"
+    },
+    "gritsLegend": {        
+        "path-throughput": {
+            "en": "Flight Seat Count"
+        },
+        "node-throughput": {
+            "en": "Airport Seat Count"
+        },
+        "source": {
+            "en": "Flight and Airport seat count is normalized based on the current filter."
+        }
+    },
+    "gritsDataTable": {
+        "tab-1": {
+            "title" : {
+               "en": "Flights" 
+            },
+            "origin-heading": {
+                "en": "Origin"
+            },
+            "destination-heading": {
+                "en": "Destination"
+            },
+            "occurrances-heading": {
+                "en": "Occurrances"
+            },
+            "throughput-heading": {
+                "en": "Total Seats"
+            }
+        },
+        "tab-2": {
+            "title" : {
+               "en": "Airports" 
+            },
+            "code-heading": {
+                "en": "Code"
+            },
+            "incoming-heading": {
+                "en": "Incoming"
+            },
+            "outgoing-heading": {
+                "en": "Outgoing"
+            },
+            "total-heading": {
+                "en": "Total Seats"
+            }
+        },
+        "tab-3": {
+            "title" : {
+               "en": "Heatmap" 
+            }, 
+            "code-heading": {
+                "en": "Code"
+            },
+            "latitude-heading": {
+                "en": "Incoming"
+            },
+            "longitude-heading": {
+                "en": "Outgoing"
+            },
+            "intensity-heading": {
+                "en": "Intensity"
+            }
+        }
+    },
+    "gritsFilter": {
+        "tokenfield-placeholder": {
+            "en": "Type to search"
+        },
+        "title": {
+            "en": "Advanced Filter"
+        },
+        "limit-label": {
+            "en": "Limit"
+        },
+        "more-button": {
+            "en": "More..."
+        },
+        "apply-button": {
+            "en": "Apply"
+        },
+        "loaded-records": {
+            "en": "Loaded Records"
+        },
+        "total-records": {
+            "en": "Total Records"
+        },
+        "recent-changes": {
+            "en": "Recent changes have not been applied"
+        },
+        "tab-1": {
+            "title": {
+                "en": "Flight"
+            },
+            "origin-label": {
+                "en": "Origin:"
+            },
+            "destination-label": {
+                "en": "Destination"
+            },
+            "include-nearby-label": {
+                "en": "Include Nearby"
+            },
+            "miles-label": {
+                "en": "Miles"
+            },
+            "stops-label": {
+                "en": "Stops"
+            },
+            "seats-label": {
+                "en": "Seats"
+            },
+            "levels-label": {
+                "en": "Levels"
+            }
+        },
+        "tab-2": {
+            "title": {
+                "en": "Date"
+            },
+            "operating-date-range" : {
+                "en": "Operating Date Range"
+            },
+            "start-label": {
+                "en": "Start"
+            },
+            "end-label": {
+                "en": "End"
+            },
+            "weekly-frequency-label": {
+                "en": "Weekly Frequency"
+            }
+        }
+    },
+    "gritsElementDetails": {
+        "tab-1": {
+            "title": {
+                "en": "Flight"
+            },
+            "level-label": {
+                "en": "Level"
+            },
+            "occurrances-label": {
+                "en": "Occurrances"
+            },
+            "weight-label": {
+                "en": "Weight"
+            },
+            "origin-label": {
+                "en": "Origin"
+            },
+            "destination-label": {
+                "en": "Destination"
+            },
+            "normalized-label": {
+                "en": "Normalized"
+            },
+            "stops-label": {
+                "en": "Stops"
+            },
+            "throughput-label": {
+                "en": "Total Seats"
+            }
+        },
+        "tab-2": {
+            "title": {
+                "en": "Airport"
+            },
+            "level-label": {
+                "en": "Level"
+            },
+            "code-label": {
+                "en": "Code"
+            },
+            "name-label": {
+                "en": "Name"
+            },
+            "city-label": {
+                "en": "City"
+            },
+            "country-label": {
+                "en": "Country"
+            },
+            "region-label": {
+                "en": "Region"
+            },
+            "normalized-label": {
+                "en": "Normalized"
+            },
+            "incoming-label": {
+                "en": "Incoming Seats"
+            },
+            "outgoing-label": {
+                "en": "Outgoing Seats"
+            },
+            "total-throughput-label": {
+                "en": "Total Seats"
+            }
+        }
+    }
+}
