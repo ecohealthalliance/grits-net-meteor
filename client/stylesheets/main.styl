@@ -17,28 +17,18 @@ body
 
 .bootstrap-datetimepicker-widget.dropdown-menu
   position fixed
-  
-#nodeDetailsDiv, #pathDetailsDiv
   font-size small
-  background-color white
-  border-radius 5px
-  width 100%
-  overflow hidden
 
-.node-detail-header, .path-detail-header
-  background-color #eee
-  padding 5px
-  min-width initial
-  border-radius 2px
+#elementDetailsContainer
+  width 260px
+  font-size small
 
-.node-detail-container, .path-detail-container
-  margin-top 5px
-
-.node-detail-row, .path-detail-row
-  margin 2px -15px 2px -15px
-
-.node-detail-close, .path-detail-close
+.element-details-close
   line-height inherit
+
+.element-details-path, .element-details-node
+  padding 5px
+  height 140px
 
 .marker-icon
   cursor pointer
@@ -259,11 +249,6 @@ p.intro
 	/* styles for smaller devices */
 	.notice
 		font-size 11px
-
-.path-detail, .node-detail
-	width 320px
-	height 250px
-	overflow auto
 
 .my-legend .legend-title
   text-align left

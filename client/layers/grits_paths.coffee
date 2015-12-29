@@ -1,8 +1,9 @@
-_previousPath = null # placeholder for a previously selected path
+_previousPath = new ReactiveVar(null) # placeholder for a previously selected path
+
 _eventHandlers = {
   mouseout: (element, selection, projection) ->
     if not Session.get('grits-net-meteor:isUpdating')
-      previousPath = _previousPath
+      previousPath = _previousPath.get()
       if previousPath isnt null
         if element is previousPath
           d3.select(element).style("cursor": "pointer")
@@ -14,7 +15,7 @@ _eventHandlers = {
         d3.select(element).style('stroke', @color).style("cursor": "pointer")
   mouseover: (element, selection, projection) ->
     if not Session.get('grits-net-meteor:isUpdating')
-      previousPath = _previousPath
+      previousPath = _previousPath.get()
       if previousPath isnt null
         if element is previousPath
           d3.select(element).style("cursor": "pointer")
@@ -31,12 +32,11 @@ _eventHandlers = {
       self.element = element
       self.clicked = true
       # get any previously selected path
-      previousPath = _previousPath
+      previousPath = _previousPath.get()
       if previousPath == self
         d3.select(element).style('stroke', previousPath.color)
         self.clicked = false
-        _previousPath = null
-        Template.gritsMap.hidePathDetails()
+        _previousPath.set(null)
         return
       if !_.isNull(previousPath)
         d3.select(previousPath.element).style('stroke', previousPath.color)
@@ -46,9 +46,7 @@ _eventHandlers = {
       # temporarily set the path color to blue
       d3.select(element).style('stroke', 'blue')
       # set the _previousPath to this gritsPath
-      _previousPath = this
-      # show the pathDetails template
-      Template.gritsMap.showPathDetails(this)
+      _previousPath.set(this)
 }
 # custom color scale for each path
 _colorScale =
@@ -84,7 +82,8 @@ class GritsPathLayer extends GritsLayer
     @_prefixDOMID = 'path-'
     
     @hasLoaded = new ReactiveVar(false)
-
+    @currentPath = _previousPath
+    
     @_bindMapEvents()
     return
 
@@ -295,7 +294,8 @@ class GritsPathLayer extends GritsLayer
       r = (path.throughput / @_normalizedCI ) * 100
     if r > maxAllowed
       return maxAllowed
-    return +(r).toFixed(0)
+    path.normalizedPercent = +(r).toFixed(0)
+    return path.normalizedPercent
 
   filterByMinMaxThroughput: (min, max) ->
     self = this

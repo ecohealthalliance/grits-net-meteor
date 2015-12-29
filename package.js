@@ -28,6 +28,8 @@ Package.on_use(function(api){
     'meteorhacks:aggregate@1.3.0',
     'momentjs:moment@2.10.6',
     'kidovate:bootstrap-slider@0.0.5',
+    'tsega:bootstrap3-datetimepicker@4.17.37_1',
+    'halunka:i18n@1.1.1',
     'momentjs:moment@2.10.6',
     'grits:grits-net-mapper@0.2.2'
   ]);
@@ -43,6 +45,7 @@ Package.on_use(function(api){
     'client/stylesheets/main.styl',
     'client/lib/L.D3SvgOverlay.min.js',
     'client/lib/tableExport.min.js',
+    'client/startup.coffee',
     'client/grits_util.coffee',
     'client/models/grits_filter_criteria.coffee',
     'client/layers/grits_nodes.coffee',
@@ -57,13 +60,13 @@ Package.on_use(function(api){
     'client/templates/grits_filter.coffee',
     'client/templates/grits_legend.html',
     'client/templates/grits_legend.coffee',
-    'client/templates/nodeDetails.html',
-    'client/templates/pathDetails.html',
+    'client/templates/grits_elementDetails.html',
+    'client/templates/grits_elementDetails.coffee',
     'client/subscription.coffee'
   ], 'client');
 
   api.addAssets([
-    'client/images/flirt.png',
+    'client/images/flirt.png'
   ], 'client');
 
   // both client and server files
@@ -74,7 +77,9 @@ Package.on_use(function(api){
   ],['client', 'server']);
   //server-side only files
   api.add_files([
-    'server/publications.coffee'
+    'server/locale/translations.i18n.json',
+    'server/startup.coffee',
+    'server/publications.coffee'    
   ], 'server');
   //public API, client and server
   api.export([
@@ -89,6 +94,7 @@ Package.on_use(function(api){
     'GritsMap',
     'GritsHeatmapLayer',
     'GritsNodeLayer',
-    'GritsPathLayer'
+    'GritsPathLayer',
+    'i18n'
   ], ['client', 'server']);
 });

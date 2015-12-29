@@ -1,5 +1,3 @@
-
-
 Template.gritsLegend.events({
   'slide': (event, template) ->
     $slider = $(event.target)

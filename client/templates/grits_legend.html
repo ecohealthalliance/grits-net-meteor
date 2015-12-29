@@ -1,6 +1,6 @@
 <template name="gritsLegend">
   <div class='my-legend'>
-    <div class='legend-title'>Path Throughput</div>
+    <div class='legend-title'>{{_ "gritsLegend.path-throughput"}}</div>
     <div class='legend-scale'>
       <div class='slider-container'>
         <input type="text"
@@ -24,7 +24,7 @@
         </ul>
       </div>
     </div>    
-    <div class='legend-title'>Node Throughput</div>
+    <div class='legend-title'>{{_ "gritsLegend.node-throughput"}}</div>
     <div class='legend-scale'>
       <div class='slider-container'>
         <input type="text"
@@ -48,6 +48,6 @@
         </ul>
       </div>
     </div>
-    <div class='legend-source'>Path and node throughput percentage is normalized using current filtered paths</div>
+    <div class='legend-source'>{{_ "gritsLegend.source"}}</div>
   </div>
 </template>

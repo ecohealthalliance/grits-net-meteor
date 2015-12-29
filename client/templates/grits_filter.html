@@ -17,26 +17,26 @@
     </div>
     <div class="searchBar">
       <div class="tokenized main">
-        <input id="departureSearchMain" class="form-control input-sm advanced-filter-status" name="departureSearchMain" placeholder="Type to search" />
+        <input id="departureSearchMain" class="form-control input-sm advanced-filter-status" name="departureSearchMain" placeholder='{{_ "gritsFilter.tokenfield-placeholder"}}' />
       </div>
     </div>
   </div>
   <div id="filter" class="clearfix">
     <div class="row filter-row">
       <div class="col-xs-12">
-        <span class="filter-heading">Advanced Filter</span>
+        <span class="filter-heading">{{_ "gritsFilter.title"}}</span>
       </div>
     </div>
     <ul class="nav nav-tabs">
-      <li class="active"><a href="#flight" data-toggle="tab" id="flightTab">Flight</a></li>
-      <li><a href="#date" data-toggle="tab" id="dateTab">Date</a></li>
+      <li class="active"><a href="#flight" data-toggle="tab" id="flightTab">{{_ "gritsFilter.tab-1.title"}}</a></li>
+      <li><a href="#date" data-toggle="tab" id="dateTab">{{_ "gritsFilter.tab-2.title"}}</a></li>
     </ul>
     <div class="tab-content">
       <div class="tab-pane active" id="flight">
         <!-- start flight tab content -->
         <div class="row filter-first-row">
           <div class="col-xs-12">
-            <span class="filter-label">Departure:</span>
+            <span class="filter-label">{{_ "gritsFilter.tab-1.origin-label"}}:</span>
           </div>
         </div>
         <div class="row filter-row">
@@ -49,7 +49,7 @@
         </div>
         <div class="row fliter-row">
           <div class="col-xs-8" style="text-align: right;">
-            <span>Include Nearby:</span>
+            <span>{{_ "gritsFilter.tab-1.include-nearby-label"}}:</span>
           </div>
           <div class="col-xs-3" style="padding: 2px 15px 2px 15px;">
             <input type="checkbox" name="includeNearbyAirports" id="includeNearbyAirports">
@@ -58,7 +58,7 @@
         </div>
         <div class="row filter-row">
           <div class="col-xs-8" style="text-align: right;">
-            <span>Miles:</span>
+            <span>{{_ "gritsFilter.tab-1.miles-label"}}:</span>
           </div>
           <div class="col-xs-3">
             <input type="number" id="includeNearbyAirportsRadius" class="form-control input-sm" min="1" max="500" value="50">
@@ -67,7 +67,7 @@
         </div>
         <div class="row filter-row">
           <div class="col-xs-12">
-            <span class="filter-label">Arrival:</span>
+            <span class="filter-label">{{_ "gritsFilter.tab-1.destination-label"}}:</span>
           </div>
         </div>
         <div class="row filter-row">
@@ -79,7 +79,7 @@
         </div>
         <div class="row filter-first-row">
           <div class="col-xs-12">
-            <span class="filter-label">Stops:</span>
+            <span class="filter-label">{{_ "gritsFilter.tab-1.stops-label"}}:</span>
           </div>
         </div>
         <div class="row filter-row">
@@ -100,7 +100,7 @@
         </div>
         <div class="row filter-row">
           <div class="col-xs-12">
-            <span class="filter-label">Seats:</span>
+            <span class="filter-label">{{_ "gritsFilter.tab-1.seats-label"}}:</span>
           </div>
         </div>
         <div class="row filter-row">
@@ -121,7 +121,7 @@
         </div>
         <div class="row filter-row">
           <div class="col-xs-12">
-            <span class="filter-label">Levels:</span>
+            <span class="filter-label">{{_ "gritsFilter.tab-1.levels-label"}}:</span>
           </div>
         </div>
         <div class="row filter-last-row">
@@ -135,13 +135,13 @@
         <!-- start date tab content -->
         <div class="row filter-first-row">
           <div class="col-xs-12">
-            <span class="filter-label">Operating Date Range:</span>
+            <span class="filter-label">{{_ "gritsFilter.tab-2.operating-date-range"}}:</span>
           </div>
         </div>
         <div class="row filter-row">
           <div class='col-xs-12'>
             <div class="filter-group">
-              <span class="filter-label">Start:</span>
+              <span class="filter-label">{{_ "gritsFilter.tab-2.start-label"}}:</span>
               <div class='input-group date' id='discontinuedDate' style="max-width: 300px;">
                 <input type='text' class="date-button form-control input-sm" value="{{start}}"/>
                 <span class="input-group-addon">
@@ -150,7 +150,7 @@
               </div>
             </div>
             <div class="filter-group">
-              <span class="filter-label">End:</span>
+              <span class="filter-label">{{_ "gritsFilter.tab-2.end-label"}}:</span>
                 <div class='input-group date' id='effectiveDate' style="max-width: 300px;">
                     <input type='text' class="date-button form-control input-sm" value="{{end}}"/>
                     <span class="input-group-addon">
@@ -162,7 +162,7 @@
         </div>
         <div class="row filter-row">
           <div class="col-xs-12">
-            <span class="filter-label">Weekly Frequency:</span>
+            <span class="filter-label">{{_ "gritsFilter.tab-2.weekly-frequency-label"}}:</span>
           </div>
         </div>
         <div class="row filter-last-row">
@@ -187,34 +187,36 @@
     <div class="filter-footer">
       <div class="row filter-row">
         <div class="col-xs-3">
-          <span class="filter-label">Limit:</span>
+          <span class="filter-label">{{_ "gritsFilter.limit-label"}}:</span>
         </div>
         <div class="col-xs-4">
           <input type="number" id="limit" class="form-control input-sm advanced-filter-status" value="1000">
         </div>
         <div class="col-xs-5">
           <button id="loadMore" class="btn btn-sm btn-default pull-right" disabled="true">
-            <span class="filter-label">More...</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="moreLoading" style="display: none;"/>
+            <span class="filter-label">{{_ "gritsFilter.more-button"}}</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="moreLoading" style="display: none;"/>
           </button>
         </div>
       </div>
       <div class="row filter-row">
         <div class="col-xs-12">
           <button id="applyFilter" class="btn btn-sm btn-default">
-            <span class="filter-label">Apply</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="filterLoading"/>
+            <span class="filter-label">
+              {{_ "gritsFilter.apply-button"}}
+            </span>
           </button>
           {{#if state }}
-            <span class="filter-status-message">Recent changes have not been applied</span><i class="fa fa-exclamation-circle filter-status"></i>
+            <span class="filter-status-message">{{_ "gritsFilter.recent-changes"}}</span><i class="fa fa-exclamation-circle filter-status"></i>
           {{/if}}
         </div>
       </div>
       <div class="row row-status-bar">
         <div class="col-xs-6 col-status-bar">
-          <span class="status-bar-text">Loaded Records:</span>
+          <span class="status-bar-text">{{_ "gritsFilter.loaded-records"}}:</span>
           <span class="status-bar-text status-bar-counter">{{ loadedRecords }}</span>
         </div>
         <div class="col-xs-6 col-status-bar">
-          <span class="status-bar-text">Total Records:</span>
+          <span class="status-bar-text">{{_ "gritsFilter.total-records"}}:</span>
           <span class="status-bar-text status-bar-counter">{{ totalRecords }}</span>
         </div>
       </div>

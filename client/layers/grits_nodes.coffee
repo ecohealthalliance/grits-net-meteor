@@ -1,7 +1,8 @@
+_previousNode = new ReactiveVar(null) # placeholder for a previously selected node
 _eventHandlers = {
   #mouseover: (element, selection, projection) ->
   #  if not Session.get('grits-net-meteor:isUpdating')
-  #    Template.gritsMap.showNodeDetails(this)
+  #    _previousNode.set(this)
   click: (element, selection, projection) ->
     self = this
     if not Session.get('grits-net-meteor:isUpdating')
@@ -12,7 +13,7 @@ _eventHandlers = {
         match = _.find(tokens, (t) -> t == self._id)
         if match
           # this token was already used in the query
-          Template.gritsMap.showNodeDetails(this)
+          _previousNode.set(this)          
           return
         else
           # erase any previous departures
@@ -24,14 +25,18 @@ _eventHandlers = {
           GritsFilterCriteria.scanAll()
           GritsFilterCriteria.applyWithCallback((err, res) ->
             if res
-              map = Template.gritsMap.getInstance()              
+              map = Template.gritsMap.getInstance()
+              pathLayer = map.getGritsLayer('Paths')
               if map.getZoom() > 2
                 # panto the map if we're at zoom level 3 or greater
                 map.panTo(self.latLng)
               else
                 # set the view to the latLng and zoom level to 2
                 map.setView(self.latLng, 2)
-              Template.gritsMap.showNodeDetails(self)
+              # reset the current path
+              pathLayer.currentPath.set(null)
+              # set previous/current node to self
+              _previousNode.set(self)
           )
     return
 }
@@ -71,6 +76,7 @@ class GritsNodeLayer extends GritsLayer
     @_prefixDOMID = 'node-'
     
     @hasLoaded = new ReactiveVar(false)
+    @currentNode = _previousNode
     
     @_bindMapEvents()
     return
@@ -223,7 +229,7 @@ class GritsNodeLayer extends GritsLayer
   # @param [Object] flight, an Astronomy class 'Flight' represending a single record from a MongoDB collection
   # @param [Array] list of queryOrigins (_id) from the query that should be exclude from the throughput
   # @return [Array] array containing the [originNode, destinationNode]
-  convertFlight: (flight, queryOrigins) ->
+  convertFlight: (flight, level, queryOrigins) ->
     self = this
     originNode = null
     destinationNode = null
@@ -235,6 +241,7 @@ class GritsNodeLayer extends GritsLayer
         try
           marker = new GritsMarker(_size[0], _size[1], _colorScale)
           originNode = new GritsNode(origin, marker)
+          originNode.level = level
           originNode.setEventHandlers(_eventHandlers)
           originNode.outgoingThroughput = flight.totalSeats
           if originNode._id in queryOrigins
@@ -254,6 +261,7 @@ class GritsNodeLayer extends GritsLayer
         try
           marker = new GritsMarker(_size[0], _size[1], _colorScale)
           destinationNode = new GritsNode(destination, marker)
+          destinationNode.level = level
           destinationNode.setEventHandlers(_eventHandlers)
           destinationNode.incomingThroughput = flight.totalSeats
         catch e
@@ -270,12 +278,13 @@ class GritsNodeLayer extends GritsLayer
   # @return [Number] normalizedThroughput, 0 >= n <= .9 
   _getNormalizedThroughput: (node) ->
     maxAllowed = 100
-    np = 0
+    r = 0
     if @_normalizedCI > 0      
-      np = ((node.incomingThroughput + node.outgoingThroughput) / @_normalizedCI) * 100
-    if np > maxAllowed
+      r = ((node.incomingThroughput + node.outgoingThroughput) / @_normalizedCI) * 100
+    if r > maxAllowed
       return maxAllowed
-    return +(np).toFixed(0)
+    node.normalizedPercent = +(r).toFixed(0)
+    return node.normalizedPercent
   
   # returns the color to use as the marker fill
   #

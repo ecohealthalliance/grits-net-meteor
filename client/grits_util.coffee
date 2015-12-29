@@ -1,12 +1,3 @@
-Meteor.startup ->
-  Session.set 'grits-net-meteor:query', null
-  Session.set 'grits-net-meteor:isUpdating', false
-  Session.set 'grits-net-meteor:loadedRecords', 0
-  Session.set 'grits-net-meteor:totalRecords', 0
-  Session.set 'grits-net-meteor:limit', null
-  Session.set 'grits-net-meteor:levels', 1
-  Session.set 'grits-net-meteor:lastId', null
-
 Meteor.gritsUtil =  
   debug: true
   errorHandler: (err) ->
@@ -27,7 +18,7 @@ Meteor.gritsUtil =
   
     count = 0
     processQueue = async.queue(((flight, callback) ->
-      nodes = nodeLayer.convertFlight(flight, GritsFilterCriteria.readDeparture())
+      nodes = nodeLayer.convertFlight(flight, 1, GritsFilterCriteria.readDeparture())
       pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
       async.nextTick ->
         if !(count % 100)
@@ -56,7 +47,7 @@ Meteor.gritsUtil =
     pathLayer = map.getGritsLayer('Paths')
   
     processQueue = async.queue(((flight, callback) ->
-      nodes = nodeLayer.convertFlight(flight, GritsFilterCriteria.readDeparture())
+      nodes = nodeLayer.convertFlight(flight, 1, GritsFilterCriteria.readDeparture())
       pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
       async.nextTick ->
         if !(tcount % 100)
