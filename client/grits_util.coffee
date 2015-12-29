@@ -40,9 +40,8 @@ Meteor.gritsUtil =
     # callback method for when all items within the queue are processed
     processQueue.drain = ->
       nodeLayer.draw()
+      nodeLayer.hasLoaded.set(true)
       pathLayer.draw()
-      # signal that the layer has been loaded to a reactive var
-      nodeLayer.hasLoaded.set(true) 
       pathLayer.hasLoaded.set(true)
       Session.set('grits-net-meteor:loadedRecords', count)
       Session.set('grits-net-meteor:isUpdating', false)
@@ -71,9 +70,8 @@ Meteor.gritsUtil =
     # callback method for when all items within the queue are processed
     processQueue.drain = ->
       nodeLayer.draw()
+      nodeLayer.hasLoaded.set(true)
       pathLayer.draw()
-      # signal that the layer has been loaded to a reactive var
-      nodeLayer.hasLoaded.set(true) 
       pathLayer.hasLoaded.set(true)
       Session.set('grits-net-meteor:loadedRecords', count+res.length)
       Session.set('grits-net-meteor:isUpdating', false)

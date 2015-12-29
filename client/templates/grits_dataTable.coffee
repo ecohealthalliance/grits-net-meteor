@@ -26,7 +26,7 @@ _formatHeatmapData = (data) ->
   if _.isEmpty(data)
     return heatmaps
   count = 0
-  _.each(data, (a) ->        
+  _.each(data, (a) ->
     heat = {
       _id: 'heatmapRow' + ++count
       code: a[3]
@@ -51,7 +51,7 @@ _formatNodeData = (data) ->
     node = _.extend(n, {total: n.incomingThroughput + n.outgoingThroughput})
     nodes.push(node)
   )
-  return nodes  
+  return nodes
 
 Template.gritsDataTable.events({
   'click .pathTableRow': (event, template) ->
@@ -63,7 +63,7 @@ Template.gritsDataTable.events({
     # find the path from template.paths using the DOM's id
     _id = $row.data('id')
     paths = template.paths.get()
-    path = _.find(paths, (path) -> path._id == _id)        
+    path = _.find(paths, (path) -> path._id == _id)
     if _.isUndefined(path)
       return
     element = $('#'+path.elementID)[0]
@@ -76,7 +76,7 @@ Template.gritsDataTable.events({
     if _previousPath != path
       # add the active class to this row
       $row.addClass('activeRow')
-    _previousPath = path 
+    _previousPath = path
     return
   'click .exportData': (event) ->
     fileType = $(event.currentTarget).attr("data-type")
@@ -87,17 +87,17 @@ Template.gritsDataTable.events({
 })
 
 Template.gritsDataTable.helpers({
-  paths: () ->    
+  paths: () ->
     if _.isUndefined(Template.instance().paths)
       return []
     else
       return Template.instance().paths.get()
-  nodes: () ->    
+  nodes: () ->
     if _.isUndefined(Template.instance().nodes)
       return []
     else
       return Template.instance().nodes.get()
-  heatmaps: () ->    
+  heatmaps: () ->
     if _.isUndefined(Template.instance().heatmaps)
       return []
     else
@@ -111,37 +111,49 @@ Template.gritsDataTable.onCreated ->
   this.heatmaps = new ReactiveVar([])
   # Public API
   Template.gritsDataTable.highlightPathTableRow = highlightPathTableRow
-  
+
 Template.gritsDataTable.onRendered ->
   self = this
-  
+
   # get the map instance and layers
   map = Template.gritsMap.getInstance()
   pathsLayer = map.getGritsLayer('Paths')
   nodesLayer = map.getGritsLayer('Nodes')
   heatmapLayer = map.getGritsLayer('Heatmap')
-  
+
   self.autorun ->
     # when the paths are finished loading, set the template data to the result
-    pathsLoaded = pathsLayer.hasLoaded.get()    
+    pathsLoaded = pathsLayer.hasLoaded.get()
     if pathsLoaded
-      paths = _.sortBy(pathsLayer.getPaths(), (path) ->
-        return path.throughput * -1
-      )
-      self.paths.set(paths)
+      data = pathsLayer.getPaths()
+      if _.isEmpty(data)
+        self.paths.set([])
+      else
+        sorted = _.sortBy(data, (path) ->
+          return path.throughput * -1
+        )
+        self.paths.set(sorted)
     # when the nodes are finished loading, set the template data to the result
     nodesLoaded = nodesLayer.hasLoaded.get()
     if nodesLoaded
-      data = _.sortBy(nodesLayer.getNodes(), (node) ->
-        return (node.incomingThroughput + node.outgoingThroughput) * -1
-      )
-      nodes = _formatNodeData(data)
-      self.nodes.set(nodes)
+      data = nodesLayer.getNodes()
+      if _.isEmpty(data)
+        self.nodes.set([])
+      else
+        sorted = _.sortBy(data, (node) ->
+          return (node.incomingThroughput + node.outgoingThroughput) * -1
+        )
+        nodes = _formatNodeData(sorted)
+        self.nodes.set(nodes)
     # when the heatmap is finished loading, set the template data to the result
     heatmapLoaded = heatmapLayer.hasLoaded.get()
     if heatmapLoaded
-      data = _.sortBy(heatmapLayer.getData(), (data) ->
-        return data[2] * -1
-      )
-      heatmaps = _formatHeatmapData(data)
-      self.heatmaps.set(heatmaps)
+      data = heatmapLayer.getData()
+      if _.isEmpty(data)
+        self.heatmaps.set([])
+      else
+        sorted = _.sortBy(data, (data) ->
+          return data[2] * -1
+        )
+        heatmaps = _formatHeatmapData(sorted)
+        self.heatmaps.set(heatmaps)

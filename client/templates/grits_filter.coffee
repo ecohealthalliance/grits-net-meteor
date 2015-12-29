@@ -423,7 +423,6 @@ Template.gritsFilter.onRendered ->
       $('#applyFilter').prop('disabled', false)
       $('#filterLoading').hide()
 
-
 # events
 #
 # Event handlers for the grits_filter.html template
@@ -469,6 +468,7 @@ Template.gritsFilter.events
     else
       departureSearch = getDepartureSearch()
       departureSearch.tokenfield('setTokens', _sharedTokens)
+    return
   'keyup #departureSearchMain-tokenfield': (event) ->
     if event.keyCode == 13
       if GritsFilterCriteria.readDeparture() <= 0
@@ -476,14 +476,18 @@ Template.gritsFilter.events
         return
       GritsFilterCriteria.scanAll()
       GritsFilterCriteria.apply()
+    return
   'click #toggleFilter': (e) ->
     $self = $(e.currentTarget)
     $("#filter").toggle("fast")
+    return
   'click #applyFilter': (event, template) ->
     GritsFilterCriteria.scanAll()
     GritsFilterCriteria.apply()
+    return
   'click #loadMore': () ->
     Session.set 'grits-net-meteor:lastId',  Template.gritsFilter.getLastFlightId()
+    return
   'tokenfield:initialize': (e) ->
     $target = $(e.target)
     $container = $target.closest('.tokenized')
@@ -495,6 +499,7 @@ Template.gritsFilter.events
       # only allow tokens
       $container.find('.token-input.tt-input').val("")
     )
+    return
   'tokenfield:createtoken': (e) ->
     $target = $(e.target)
     $container = $target.closest('.tokenized')
@@ -504,7 +509,7 @@ Template.gritsFilter.events
       # do not create a token and clear the input
       $target.closest('.tokenized').find('.token-input.tt-input').val("")
       e.preventDefault()
-      return
+    return
   'tokenfield:createdtoken': (e) ->
     $target = $(e.target)
     tokens = $target.tokenfield('getTokens')
