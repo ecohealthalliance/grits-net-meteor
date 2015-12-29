@@ -89,7 +89,6 @@ class GritsNodeLayer extends GritsLayer
   #
   # @override
   draw: () ->
-    @hasLoaded.set(true)
     @_layer.draw()
     return
   
