@@ -27,6 +27,7 @@ Package.on_use(function(api){
     'flawless:meteor-toastr@1.0.1',
     'meteorhacks:aggregate@1.3.0',
     'kidovate:bootstrap-slider@0.0.5',
+    'tsega:bootstrap3-datetimepicker@4.17.37_1',
     'halunka:i18n@1.1.1',
     'grits:grits-net-mapper@0.2.2'
   ]);
