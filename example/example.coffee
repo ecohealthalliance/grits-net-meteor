@@ -33,7 +33,7 @@ if Meteor.isClient
     console.log('self:', self)
     self.autorun ->
       isReady = Session.get('grits-net-meteor:isReady')
-      console.log('isReady:', isReady)      
+      console.log('isReady:', isReady)
       if isReady
         OpenStreetMap = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
           layerName: 'CartoDB_Positron'
@@ -47,7 +47,7 @@ if Meteor.isClient
           subdomains: '1234')
         Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
           layerName: 'Esri_WorldImagery')
-    
+
         baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
         element = 'grits-map'
         height = window.innerHeight
@@ -61,15 +61,19 @@ if Meteor.isClient
           center: L.latLng(30,-20)
           layers: baseLayers
         }
-    
+
         map = new GritsMap(element, options, baseLayers)
         map.addGritsLayer(new GritsHeatmapLayer(map))
         map.addGritsLayer(new GritsPathLayer(map))
         map.addGritsLayer(new GritsNodeLayer(map))
-    
+
         # Add the default controls to the map.
         Template.gritsMap.addDefaultControls(map)
-    
+
+        # initialize the sidebar-v2
+        sidebar = L.control.sidebar('sidebar')
+        map.addControl(sidebar)
+
         # Add test control
         Meteor.call('isTestEnvironment', (err, result) ->
           if err
@@ -78,7 +82,7 @@ if Meteor.isClient
             map.addControl(new GritsControl('<b> Select a Module </b><div id="moduleSelectorDiv"></div>', 7, 'topleft', 'info'))
             Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
         )
-         
+
         Template.gritsMap.setInstance(map)
         return
     return

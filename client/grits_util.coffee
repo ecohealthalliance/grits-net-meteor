@@ -1,4 +1,4 @@
-Meteor.gritsUtil =  
+Meteor.gritsUtil =
   debug: true
   errorHandler: (err) ->
     if typeof err != 'undefined'
@@ -8,14 +8,14 @@ Meteor.gritsUtil =
         toastr.error(err)
         console.error(err)
     Session.set('grits-net-meteor:isUpdating', false)
-    return  
+    return
   processQueue: (res) ->
     map = Template.gritsMap.getInstance()
     nodeLayer = map.getGritsLayer('Nodes')
     pathLayer = map.getGritsLayer('Paths')
     nodeLayer.clear()
     pathLayer.clear()
-  
+
     count = 0
     processQueue = async.queue(((flight, callback) ->
       nodes = nodeLayer.convertFlight(flight, 1, GritsFilterCriteria.readDeparture())
@@ -36,7 +36,7 @@ Meteor.gritsUtil =
       pathLayer.hasLoaded.set(true)
       Session.set('grits-net-meteor:loadedRecords', count)
       Session.set('grits-net-meteor:isUpdating', false)
-  
+
     processQueue.push(res)
     return
   processLimitQueue: (res) ->
@@ -45,7 +45,7 @@ Meteor.gritsUtil =
     map = Template.gritsMap.getInstance()
     nodeLayer = map.getGritsLayer('Nodes')
     pathLayer = map.getGritsLayer('Paths')
-  
+
     processQueue = async.queue(((flight, callback) ->
       nodes = nodeLayer.convertFlight(flight, 1, GritsFilterCriteria.readDeparture())
       pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
@@ -57,16 +57,16 @@ Meteor.gritsUtil =
         Session.set('grits-net-meteor:loadedRecords', count+res.length)
         callback()
     ), 1)
-  
+
     # callback method for when all items within the queue are processed
     processQueue.drain = ->
       nodeLayer.draw()
       nodeLayer.hasLoaded.set(true)
       pathLayer.draw()
       pathLayer.hasLoaded.set(true)
-      Session.set('grits-net-meteor:loadedRecords', count+res.length)
+      Session.set('grits-net-meteor:loadedRecords', count + res.length)
       Session.set('grits-net-meteor:isUpdating', false)
-  
+
     processQueue.push(res)
     return
   # process
@@ -86,8 +86,8 @@ Meteor.gritsUtil =
           Meteor.gritsUtil.processQueue(res[0])
         return
     else
-      if flights.length > 0      
-        lastFlight = flights[flights.length-1]
+      if flights.length > 0
+        lastFlight = flights[flights.length - 1]
         Template.gritsFilter.setLastFlightId(lastFlight.get('_id'))
         Meteor.gritsUtil.processQueue(flights)
     return
@@ -108,9 +108,8 @@ Meteor.gritsUtil =
           Meteor.gritsUtil.processLimitQueue(res[0])
         return
     else
-      if flights.length > 0      
-        lastFlight = flights[flights.length-1]
+      if flights.length > 0
+        lastFlight = flights[flights.length - 1]
         Template.gritsFilter.setLastFlightId(lastFlight.get('_id'))
         Meteor.gritsUtil.processLimitQueue(flights)
     return
-    

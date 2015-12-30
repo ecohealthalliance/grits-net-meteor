@@ -55,9 +55,11 @@ Package.on_use(function(api){
     'client/templates/grits_dataTable.html',
     'client/templates/grits_dataTable.coffee',
     'client/templates/grits_map.html',
+    'client/templates/grits_map_sidebar.html',
     'client/templates/grits_map.coffee',
     'client/templates/grits_filter.html',
     'client/templates/grits_filter.coffee',
+    'client/templates/grits_search.html',
     'client/templates/grits_legend.html',
     'client/templates/grits_legend.coffee',
     'client/templates/grits_elementDetails.html',
@@ -79,7 +81,7 @@ Package.on_use(function(api){
   api.add_files([
     'server/locale/translations.i18n.json',
     'server/startup.coffee',
-    'server/publications.coffee'    
+    'server/publications.coffee'
   ], 'server');
   //public API, client and server
   api.export([

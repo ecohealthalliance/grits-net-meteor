@@ -249,7 +249,7 @@ Template.gritsFilter.helpers({
 Template.gritsFilter.onCreated ->
   _startDate = GritsFilterCriteria.initStart()
   _endDate = GritsFilterCriteria.initEnd()
-  
+
   # Public API
   # Currently we declare methods above for documentation purposes then assign
   # to the Template.gritsFilter as a global export
@@ -443,7 +443,7 @@ Template.gritsFilter.events
     height = $datetimepicker.height()
     top = $datetimepicker.offset().top
     left = $datetimepicker.offset().left
-    $('.bootstrap-datetimepicker-widget.dropdown-menu').css({top: top+height, left:left})
+    $('.bootstrap-datetimepicker-widget.dropdown-menu').css({top: top + height, left: left})
     return
   'click #includeNearbyAirports': (event) ->
     miles = parseInt($("#includeNearbyAirportsRadius").val(), 10)

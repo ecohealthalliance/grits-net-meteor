@@ -1,0 +1,17 @@
+<template name="gritsSearch">
+<style>
+  .bootstrap-datetimepicker-widget table td.day {
+    width: 28px;
+  }
+</style>
+  <div>
+    <div class="spinner">
+      <i id="filterLoading" class="fa fa-spinner fa-spin"></i>
+    </div>
+    <div class="searchBar">
+      <div class="tokenized main">
+        <input id="departureSearchMain" class="form-control input-sm advanced-filter-status" name="departureSearchMain" placeholder='{{_ "gritsFilter.tokenfield-placeholder"}}' />
+      </div>
+    </div>
+  </div>    
+</template>
