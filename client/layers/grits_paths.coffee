@@ -78,12 +78,12 @@ class GritsPathLayer extends GritsLayer
     @_map = map
 
     @_layer = L.d3SvgOverlay(_.bind(@_drawCallback, this), {})
-    
+
     @_prefixDOMID = 'path-'
-    
+
     @hasLoaded = new ReactiveVar(false)
     @currentPath = _previousPath
-    
+
     @_bindMapEvents()
     return
 
@@ -146,21 +146,19 @@ class GritsPathLayer extends GritsLayer
     paths = _.sortBy(self.getPaths(), (path) ->
       return path.destination.latLng[0] * -1
     )
-    
+
     pathCount = paths.length
     if pathCount <= 0
       return
-    
+
     # since the map may be updated asynchronously the sums of the throughput
     # counters must be calcuated on every draw and the self._normalizedCI set
     sums = _.map(paths, (path) ->
-      if typeof path.excludedFromNormalization != 'undefined' && path.excludedFromNormalization
-        return 0
       path.throughput
     )
     self._normalizedCI = _.max(sums)
-    
-    
+
+
 
     lines = selection.selectAll('path').data(paths, (path) -> path._id)
     #work on existing nodes
@@ -258,7 +256,7 @@ class GritsPathLayer extends GritsLayer
     else
       path.color = _colorScale[10]
     return path.color
-    
+
   # converts domain specific flight data into generic GritsNode nodes
   #
   # @param [Object] flight, an Astronomy class 'Flight' represending a single
@@ -281,12 +279,12 @@ class GritsPathLayer extends GritsLayer
     else
       path.level = level
       path.occurrances += 1
-      path.throughput += flight.totalSeats    
+      path.throughput += flight.totalSeats
     return
 
   # returns the normalized throughput for a node
   #
-  # @return [Number] normalizedThroughput, 0 >= n <= 100 
+  # @return [Number] normalizedThroughput, 0 >= n <= 100
   _getNormalizedThroughput: (path) ->
     maxAllowed = 100
     r = 0
@@ -304,7 +302,7 @@ class GritsPathLayer extends GritsLayer
       return
     filtered = _.filter(paths, (path) ->
       $element = $('#' + path.elementID)
-      np = self._getNormalizedThroughput(path)      
+      np = self._getNormalizedThroughput(path)
       if (np < min) || (np > max)
         $element.attr('display', 'none')
         p = path
