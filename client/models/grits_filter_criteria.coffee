@@ -37,7 +37,7 @@ class GritsFilterCriteria
     
     # debounce wrapper to limit the amount of calls to this function within
     # the specified time period
-    self.apply = _.debounce(self.apply, _debounceInMilliseconds)
+    self.autoApply = _.debounce(self.autoApply, _debounceInMilliseconds)
     
     # lastFlightId used for query with more than one level
     self.lastFlightId = null
@@ -218,7 +218,7 @@ class GritsFilterCriteria
           self.stateChanged.set(true)
           
           # auto-apply the filter
-          self.apply()
+          self.autoApply()
           
           # disable [More...] button when filter has changed
           $('#loadMore').prop('disabled', true)
@@ -399,7 +399,7 @@ class GritsFilterCriteria
       return
     )
     return    
-  # applies the filter and resets the offset, loadedRecords, totalRecords
+  # applies the filter; resets the offset, loadedRecords, and totalRecords
   #
   # @param [Function] cb, the callback function
   apply: (cb) ->
@@ -421,6 +421,13 @@ class GritsFilterCriteria
         self.more()
     )
     return
+  # automatically applies the filter; resets the offset, loadedRecords, and
+  # totalRecords
+  #
+  # @note this method is debounced in the constructor
+  autoApply: () ->
+    self = this
+    self.apply()
   # sets the 'start' date from the filter and updates the filter criteria
   #
   # @param [Object] date, Date object or null to clear the criteria
