@@ -2,7 +2,8 @@
 #
 # When another meteor app adds grits:grits-net-meteor as a package
 # Template.gritsFilter will be available globally.
-
+_startDate = null # onCreated will initialize the date through GritsFilterCriteria
+_endDate = null # onCreated will initialize the date through GritsFilterCriteria
 _lastFlightId = null # stores the last flight _id from the collection, used in limit/offset
 _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
@@ -20,6 +21,27 @@ _suggestionTemplate = _.template('
       <span>
     <% } %>
   </span>')
+# Unfortunately we need to result to jQuery as twitter's typeahead plugin does
+# not allow us to pass in a custom context to the footer.  <%= obj.query %> and
+# <%= obj.isEmpty %> are the only things available.
+_typeaheadFooter = _.template('
+  <div class="airport-footer">
+    <div class="row">
+      <div class="col-xs-6 pull-middle">
+        <span id="suggestionCount"></span>
+      </div>
+      <div class="col-xs-6 pull-middle">
+        <ul class="pager">
+          <li class="previous-suggestions">
+            <a href="#" id="previousSuggestions">Previous</a>
+          </li>
+          <li class="next-suggestions">
+            <a href="#" id="forwardSuggestions">Forward</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>')
 
 # provides one-way synchroniziation between tokens in departureSearchMain and
 # departureSearch when a token is created
@@ -51,7 +73,7 @@ _syncRemovedSharedToken = (newToken, id) ->
     if _.indexOf(tokens, newToken) < 0
       return
     else
-      tokens.splice(_.indexOf(tokens, newToken), 1)      
+      tokens.splice(_.indexOf(tokens, newToken), 1)
       _departureSearch.tokenfield('setTokens', tokens)
   return
 
@@ -147,7 +169,7 @@ _setDiscontinuedDatePicker = (datetimePicker) ->
 #
 # @param [String] input, the string used as the search
 # @param [Array] results, the server response
-# @return [Array] array of matches, extends the raw document of the base Astro class.  This allows all properties of the model to be available in the suggestion template.
+# @return [Array] array of matches, with all properties of the model to be available in the suggestion template under the key 'raw'.
 _determineFieldMatchesByWeight = (input, res) ->
   numComparator = (a, b) ->
     a - b
@@ -164,31 +186,28 @@ _determineFieldMatchesByWeight = (input, res) ->
   for obj in res
     # get the typeahead matcher from the Astro Class, contains weight, display
     # and regexOptions
-    typeaheadMatcher = obj.typeaheadMatcher()
-    # get the raw document from Astro, this will also be used for the
-    # _suggestionTemplate
-    object = _.extend(obj.raw()) 
+    typeaheadMatcher = Airport.typeaheadMatcher()
     for field, matcher of typeaheadMatcher
-      regex = new RegExp(input, matcher.regexOptions)
-      value = object[field]
+      regex = new RegExp(matcher.regexSearch({search: input}), matcher.regexOptions)
+      value = obj[field]
       # cannot match on an empty value
       if _.isEmpty(value)
         continue
       # apply the regex to the value
       if value.match(regex) != null
         # determine if its a previous match
-        match = _.find(matches, (m) -> m.label == object._id)
+        match = _.find(matches, (m) -> m.label == obj._id)
         # if not, create a new object and assign the properties
         # note: prefix is added to avoid possible confict with the class fields
         # that are extended.
         if _.isUndefined(match)
           match =
-            label: object._id
+            label: obj._id
             value: value
             field: field
             weight: matcher.weight
             display: matcher.display
-            raw: object
+            raw: obj
           matches.push(match)
           continue
         else
@@ -197,7 +216,7 @@ _determineFieldMatchesByWeight = (input, res) ->
             match.value = value
             match.field = field
             match.weight = matcher.weight
-            match.display = matcher.display   
+            match.display = matcher.display
   if Meteor.gritsUtil.debug
     console.log('matches:', matches)
   if matches.length > 0
@@ -219,9 +238,18 @@ Template.gritsFilter.helpers({
       return true
     else
       return false
+  start: () ->
+    # set inital date
+    return _startDate
+  end: () ->
+    # set inital date
+    return _endDate
 })
 
 Template.gritsFilter.onCreated ->
+  _startDate = GritsFilterCriteria.initStart()
+  _endDate = GritsFilterCriteria.initEnd()
+  
   # Public API
   # Currently we declare methods above for documentation purposes then assign
   # to the Template.gritsFilter as a global export
@@ -236,6 +264,71 @@ Template.gritsFilter.onCreated ->
 
 # triggered when the 'filter' template is rendered
 Template.gritsFilter.onRendered ->
+  _matchSkip = null
+  _suggestionGenerator = (query, skip, callback) ->
+    _matchSkip = skip
+    Meteor.call('typeaheadAirport', query, skip, (err, res) ->
+      if err or _.isUndefined(res) or _.isEmpty(res)
+        callback([])
+        return
+      Meteor.call('countTypeaheadAirports', query, (err, count) ->
+        matches = _determineFieldMatchesByWeight(query, res)
+        # expects an array of objects with keys [label, value]
+        callback(matches)
+
+        # keep going to update the _typeaheadFooter via jQuery
+        # update the record count
+        if count > 1
+          if (_matchSkip + 10) > count
+            diff = (_matchSkip + 10) - count
+            $('#suggestionCount').html("<span>Matches #{_matchSkip+1}-#{_matchSkip+(10-diff)} of #{count}</span>")
+          else
+            $('#suggestionCount').html("<span>Matches #{_matchSkip+1}-#{_matchSkip+10} of #{count}</span>")
+        else if count == 1
+          $('#suggestionCount').html("<span>#{count} match found</span>")
+        else
+          $('#suggestionCount').html("<span>No matches found</span>")
+
+        # enable/disable the pager elements
+        if count <= 10
+          $('.next-suggestions').addClass('disabled')
+          $('.previous-suggestions').addClass('disabled')
+        if count > 10
+          # edge case min
+          if _matchSkip == 0
+            $('.previous-suggestions').addClass('disabled')
+          # edge case max
+          if (count - _matchSkip) <= 10
+            $('.next-suggestions').addClass('disabled')
+
+        # bind click handlers
+        if !$('.previous-suggestions').hasClass('disabled')
+          $('#previousSuggestions').bind('click', (e) ->
+            e.preventDefault()
+            e.stopPropagation()
+            if count <= 10 || _matchSkip <= 10
+              _matchSkip = 0
+            else
+              _matchSkip -= 10
+            _suggestionGenerator(query, _matchSkip, callback)
+          )
+        if !$('.next-suggestions').hasClass('disabled')
+          $('#forwardSuggestions').bind('click', (e) ->
+            e.preventDefault()
+            e.stopPropagation()
+            if count <= 10
+              _matchSkip 0
+            else
+              _matchSkip += 10
+            _suggestionGenerator(query, _matchSkip, callback)
+            return
+          )
+        return
+      )
+      return
+    )
+    return
+
   departureSearchMain = $('#departureSearchMain').tokenfield({
     typeahead: [{hint:false, highlight:true}, {
       display: (match) ->
@@ -244,14 +337,10 @@ Template.gritsFilter.onRendered ->
         return match.label
       templates:
         suggestion: _suggestionTemplate
+        footer: _typeaheadFooter
       source: (query, callback) ->
-        Meteor.call('typeaheadAirport', query, (err, res) ->
-          if err or _.isUndefined(res) or _.isEmpty(res)
-            return
-          matches = _determineFieldMatchesByWeight(query, res)
-          # expects an array of objects with keys [label, value]
-          callback(matches)
-      )
+        _suggestionGenerator(query, 0, callback)
+        return
     }]
   })
   _setDepartureSearchMain(departureSearchMain)
@@ -261,7 +350,7 @@ Template.gritsFilter.onRendered ->
 
   arrivalSearch = $('#arrivalSearch').tokenfield({})
   _setArrivalSearch(arrivalSearch)
-  
+
   # Toast notification options
   toastr.options = {
     positionClass: 'toast-bottom-center',
@@ -286,7 +375,6 @@ Template.gritsFilter.onRendered ->
       options.maxDate = max
     effectiveDatePicker = $('#effectiveDate').datetimepicker(options)
     _setEffectiveDatePicker(effectiveDatePicker)
-    $(".bootstrap-datetimepicker-widget table td.day").css('width': '30px')
   )
 
   # set the discontinuedDatePicker and options
@@ -297,22 +385,21 @@ Template.gritsFilter.onRendered ->
     if Meteor.gritsUtil.debug
       console.log('discontinuedDate:minMax: ', minMax)
     min = minMax[0]
-    max = minMax[1]    
+    max = minMax[1]
     options = {
       format: 'MM/DD/YY'
     }
     if !_.isNull(min)
       options.minDate = min
     if !_.isNull(max)
-      options.maxDate = max    
+      options.maxDate = max
     discontinuedDatePicker = $('#discontinuedDate').datetimepicker(options)
     _setDiscontinuedDatePicker(discontinuedDatePicker)
-    $(".bootstrap-datetimepicker-widget table td.day").css('width': '30px')
-  )  
-  
+  )
+
   # set the originals state of the filter on document ready
   GritsFilterCriteria.setState()
-  
+
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
   # apply button and filterLoading indicator.
@@ -336,7 +423,6 @@ Template.gritsFilter.onRendered ->
       $('#applyFilter').prop('disabled', false)
       $('#filterLoading').hide()
 
-
 # events
 #
 # Event handlers for the grits_filter.html template
@@ -344,33 +430,45 @@ Template.gritsFilter.events
   'change .advanced-filter-status': (event) ->
     # compare the state of the filter so that an indicator may be shown to the user
     GritsFilterCriteria.compareStates()
+    return
   'dp.change': (event) ->
     # compare the state of the filter so that an indicator may be shown to the user
     GritsFilterCriteria.compareStates()
     return
+  'dp.show': (event) ->
+    # in order to not be contained within the scrolling div, the style of the
+    # .bootstrap-datetimepicker-widget.dropdown-menu is set to fixed then we
+    # position it manually below.
+    $datetimepicker = $(event.target)
+    height = $datetimepicker.height()
+    top = $datetimepicker.offset().top
+    left = $datetimepicker.offset().left
+    $('.bootstrap-datetimepicker-widget.dropdown-menu').css({top: top+height, left:left})
+    return
   'click #includeNearbyAirports': (event) ->
     miles = parseInt($("#includeNearbyAirportsRadius").val(), 10)
     departures = GritsFilterCriteria.readDeparture()
-    
+
     if departures.length <= 0
       toastr.error('Include Nearby requires a Departure')
       return false
-    
+
     if $('#includeNearbyAirports').is(':checked')
       Session.set('grits-net-meteor:isUpdating', true)
       Meteor.call('findNearbyAirports', departures[0], miles, (err, airports) ->
         if err
           Meteor.gritsUtil.errorHandler(err)
           return
-        
+
         nearbyTokens = _.pluck(airports, '_id')
-        union = _.union(_sharedTokens, nearbyTokens)              
+        union = _.union(_sharedTokens, nearbyTokens)
         _departureSearch.tokenfield('setTokens', union)
         Session.set('grits-net-meteor:isUpdating', false)
       )
     else
-      departureSearch = getDepartureSearch()      
+      departureSearch = getDepartureSearch()
       departureSearch.tokenfield('setTokens', _sharedTokens)
+    return
   'keyup #departureSearchMain-tokenfield': (event) ->
     if event.keyCode == 13
       if GritsFilterCriteria.readDeparture() <= 0
@@ -378,16 +476,18 @@ Template.gritsFilter.events
         return
       GritsFilterCriteria.scanAll()
       GritsFilterCriteria.apply()
+    return
   'click #toggleFilter': (e) ->
     $self = $(e.currentTarget)
-    $("#filter").toggle("fast", () ->
-      #
-    )
+    $("#filter").toggle("fast")
+    return
   'click #applyFilter': (event, template) ->
     GritsFilterCriteria.scanAll()
     GritsFilterCriteria.apply()
+    return
   'click #loadMore': () ->
     Session.set 'grits-net-meteor:lastId',  Template.gritsFilter.getLastFlightId()
+    return
   'tokenfield:initialize': (e) ->
     $target = $(e.target)
     $container = $target.closest('.tokenized')
@@ -399,6 +499,7 @@ Template.gritsFilter.events
       # only allow tokens
       $container.find('.token-input.tt-input').val("")
     )
+    return
   'tokenfield:createtoken': (e) ->
     $target = $(e.target)
     $container = $target.closest('.tokenized')
@@ -408,26 +509,26 @@ Template.gritsFilter.events
       # do not create a token and clear the input
       $target.closest('.tokenized').find('.token-input.tt-input').val("")
       e.preventDefault()
-      return
+    return
   'tokenfield:createdtoken': (e) ->
-    $target = $(e.target)    
+    $target = $(e.target)
     tokens = $target.tokenfield('getTokens')
     # remove the placeholder text
     if tokens.length > 0
       $target.closest('.tokenized').find('.token-input.tt-input').attr('placeholder', '')
-    
+
     token = e.attrs.label
     _syncCreatedSharedToken(token, $target.attr('id'))
     return false
   'tokenfield:removedtoken': (e) ->
     $target = $(e.target)
-    tokens = $target.tokenfield('getTokens')        
+    tokens = $target.tokenfield('getTokens')
     # determine if the remaining tokens is empty, then show the placeholder text
     if tokens.length == 0
       $target.closest('.tokenized').find('.token-input.tt-input').attr('placeholder', 'Type to search')
       if $target.attr('id') in ['departureSearch', 'departureSearchMain']
         $('#includeNearbyAirports').prop('checked', false)
-    
+
     token = e.attrs.label
     _syncRemovedSharedToken(token, $target.attr('id'))
     return false

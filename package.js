@@ -22,10 +22,15 @@ Package.on_use(function(api){
     'brylie:leaflet-heat@0.1.0',
     'fortawesome:fontawesome@4.4.0',
     'd3js:d3@3.5.5',
-    'sergeyt:typeahead@0.0.11',
+    'fourq:typeahead@1.0.0',
     'ajduke:bootstrap-tokenfield@0.5.0',
     'flawless:meteor-toastr@1.0.1',
     'meteorhacks:aggregate@1.3.0',
+    'momentjs:moment@2.10.6',
+    'kidovate:bootstrap-slider@0.0.5',
+    'tsega:bootstrap3-datetimepicker@4.17.37_1',
+    'halunka:i18n@1.1.1',
+    'momentjs:moment@2.10.6',
     'grits:grits-net-mapper@0.2.2'
   ]);
   // client only packages
@@ -40,25 +45,28 @@ Package.on_use(function(api){
     'client/stylesheets/main.styl',
     'client/lib/L.D3SvgOverlay.min.js',
     'client/lib/tableExport.min.js',
+    'client/startup.coffee',
     'client/grits_util.coffee',
+    'client/models/grits_filter_criteria.coffee',
     'client/layers/grits_nodes.coffee',
     'client/layers/grits_paths.coffee',
     'client/layers/grits_heatmap.coffee',
-    'client/models/grits_filter_criteria.coffee',
+    'client/templates/header.html',
     'client/templates/grits_dataTable.html',
     'client/templates/grits_dataTable.coffee',
     'client/templates/grits_map.html',
-    'client/templates/grits_map.coffee',    
+    'client/templates/grits_map.coffee',
     'client/templates/grits_filter.html',
     'client/templates/grits_filter.coffee',
-    'client/templates/nodeDetails.html',
-    'client/templates/pathDetails.html',
-    'client/templates/legend.html',
+    'client/templates/grits_legend.html',
+    'client/templates/grits_legend.coffee',
+    'client/templates/grits_elementDetails.html',
+    'client/templates/grits_elementDetails.coffee',
     'client/subscription.coffee'
   ], 'client');
 
   api.addAssets([
-    'client/images/ajax-loader.gif'
+    'client/images/flirt.png'
   ], 'client');
 
   // both client and server files
@@ -69,7 +77,9 @@ Package.on_use(function(api){
   ],['client', 'server']);
   //server-side only files
   api.add_files([
-    'server/publications.coffee'
+    'server/locale/translations.i18n.json',
+    'server/startup.coffee',
+    'server/publications.coffee'    
   ], 'server');
   //public API, client and server
   api.export([
@@ -84,6 +94,7 @@ Package.on_use(function(api){
     'GritsMap',
     'GritsHeatmapLayer',
     'GritsNodeLayer',
-    'GritsPathLayer'
+    'GritsPathLayer',
+    'i18n'
   ], ['client', 'server']);
 });

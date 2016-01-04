@@ -28,9 +28,11 @@ ejson@1.0.7
 fastclick@1.0.7
 flawless:meteor-toastr@1.0.1
 fortawesome:fontawesome@4.4.0
+fourq:typeahead@1.0.0
 geojson-utils@1.0.4
 grits:grits-net-mapper@0.2.2
 grits:grits-net-meteor@0.0.1
+halunka:i18n@1.1.1
 html-tools@1.0.5
 htmljs@1.0.5
 http@1.1.1
@@ -42,6 +44,7 @@ jagi:reactive-map@2.0.0
 jparker:crypto-core@0.1.0
 jparker:crypto-md5@0.1.1
 jquery@1.11.4
+kidovate:bootstrap-slider@0.0.5
 launch-screen@1.0.4
 less@2.5.1
 livedata@1.0.15
@@ -53,7 +56,7 @@ meteorhacks:collection-utils@1.2.0
 minifiers@1.1.7
 minimongo@1.0.10
 mobile-status-bar@1.0.6
-momentjs:moment@2.8.4
+momentjs:moment@2.10.6
 mongo@1.1.3
 mongo-id@1.0.1
 mongo-livedata@1.0.9
@@ -75,7 +78,6 @@ routepolicy@1.0.6
 sanjo:long-running-child-process@1.1.3
 sanjo:meteor-files-helpers@1.2.0_1
 sanjo:meteor-version@1.0.0
-sergeyt:typeahead@0.0.11
 session@1.1.1
 simple:json-routes@1.0.4
 spacebars@1.0.7

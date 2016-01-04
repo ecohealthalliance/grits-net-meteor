@@ -1,7 +1,8 @@
+_previousNode = new ReactiveVar(null) # placeholder for a previously selected node
 _eventHandlers = {
   #mouseover: (element, selection, projection) ->
   #  if not Session.get('grits-net-meteor:isUpdating')
-  #    Template.gritsMap.showNodeDetails(this)
+  #    _previousNode.set(this)
   click: (element, selection, projection) ->
     self = this
     if not Session.get('grits-net-meteor:isUpdating')
@@ -12,7 +13,7 @@ _eventHandlers = {
         match = _.find(tokens, (t) -> t == self._id)
         if match
           # this token was already used in the query
-          Template.gritsMap.showNodeDetails(this)
+          _previousNode.set(this)          
           return
         else
           # erase any previous departures
@@ -24,29 +25,35 @@ _eventHandlers = {
           GritsFilterCriteria.scanAll()
           GritsFilterCriteria.applyWithCallback((err, res) ->
             if res
-              map = Template.gritsMap.getInstance()              
+              map = Template.gritsMap.getInstance()
+              pathLayer = map.getGritsLayer('Paths')
               if map.getZoom() > 2
                 # panto the map if we're at zoom level 3 or greater
                 map.panTo(self.latLng)
               else
                 # set the view to the latLng and zoom level to 2
                 map.setView(self.latLng, 2)
-              Template.gritsMap.showNodeDetails(self)
+              # reset the current path
+              pathLayer.currentPath.set(null)
+              # set previous/current node to self
+              _previousNode.set(self)
           )
     return
 }
 # custom color scale for each marker
-_colorScale =
-  9: 'F9A839'
-  8: 'F9AF40'
-  7: 'F9B747'
-  6: 'F9BE4E'
-  5: 'F9C656'
-  4: 'F9CE5D'
-  3: 'F9D564'
-  2: 'F9DD6B'
-  1: 'F9E573'
-
+_colorScale = 
+  10: '#D95F0E'
+  20: '#DD6F21'
+  30: '#E18034'
+  40: '#E9A25B'
+  50: '#E89B53'
+  60: '#EEB36E'
+  70: '#F2C482'
+  80: '#F6D595'
+  90: '#FAE6A8'
+  100: '#FFF7BC'
+# custom [width, height] size for each marker
+_size = [7, 7]
 
 # Creates an instance of a GritsNodeLayer, extends  GritsLayer
 #
@@ -66,7 +73,10 @@ class GritsNodeLayer extends GritsLayer
     
     @_layer = L.d3SvgOverlay(_.bind(@_drawCallback, this), {})
     
+    @_prefixDOMID = 'node-'
+    
     @hasLoaded = new ReactiveVar(false)
+    @currentNode = _previousNode
     
     @_bindMapEvents()
     return
@@ -76,15 +86,30 @@ class GritsNodeLayer extends GritsLayer
   # @override
   clear: () ->
     @_data = {}
+    @_normalizedCI = 1
     @_removeLayerGroup()
     @_addLayerGroup()
     @hasLoaded.set(false)
+  
+  # draws the layer
+  #
+  # @override
+  draw: () ->
+    @_layer.draw()
+    return
   
   # gets the nodes from the layer
   #
   # @return [Array] array of nodes
   getNodes: () ->
     return _.values(@_data)
+  
+  # gets the element ID within the DOM of a path
+  #
+  # @param [Object] obj, a gritsNode object
+  # @return [String] elementID
+  getElementID: (obj) ->
+    return @_prefixDOMID + obj._id
   
   # find a node by the latLng pair
   #
@@ -109,7 +134,7 @@ class GritsNodeLayer extends GritsLayer
   _drawCallback: (selection, projection) ->
     self = this
     # sort by latitude so markers that are lower appear on top
-    nodes = _.sortBy(_.values(self._data), (node) ->
+    nodes = _.sortBy(self.getNodes(), (node) ->
       return node.latLng[0] * -1
     )
   
@@ -118,30 +143,32 @@ class GritsNodeLayer extends GritsLayer
       return
   
     # since the map may be updated asynchronously the sums of the throughput
-    # counters must be calcuated on every draw and the self.maxValue set
+    # counters must be calcuated on every draw and the self._normalizedCI set
     sums = _.map(nodes, (node) ->
+      if typeof node.excludedFromNormalization != 'undefined' && node.excludedFromNormalization
+        return 0
       node.incomingThroughput + node.outgoingThroughput
     )
     self._normalizedCI = _.max(sums)
   
     # select any existing circles and store data onto elements
-    markers = selection.selectAll('circle').data(nodes, (node) -> node._id)
+    markers = selection.selectAll('circle').data(nodes, (node) ->
+      node._id
+    )
   
     #work on existing nodes
     markers
       .attr('cx', (node) ->
-        x = projection.latLngToLayerPoint(node.latLng).x
-        return x - ((node.marker.width/2) / projection.scale)
+        return self._projectCX(projection, node)
       )
-      .attr('cy', (node) ->
-        y = projection.latLngToLayerPoint(node.latLng).y
-        return y - ((node.marker.height/2) / projection.scale)
+      .attr('cy', (node) ->        
+        return self._projectCY(projection, node)
       )
       .attr('r', (node) ->
-        (node.marker.width) / projection.scale
+        return (node.marker.width) / projection.scale
       )
       .attr('fill', (node) ->
-        '#'+self._getMarkerColor(node)
+        return self._getNormalizedColor(node)
       )
       .attr('fill-opacity', .8)
   
@@ -149,22 +176,24 @@ class GritsNodeLayer extends GritsLayer
     # add new elements workflow (following https://github.com/mbostock/d3/wiki/Selections#enter )
     markers.enter().append('circle')
       .attr('cx', (node) ->
-        x = projection.latLngToLayerPoint(node.latLng).x
-        return x - ((node.marker.width/2) / projection.scale)
+        return self._projectCX(projection, node)
       )
       .attr('cy', (node) ->
-        y = projection.latLngToLayerPoint(node.latLng).y
-        return y - ((node.marker.height/2) / projection.scale)
+        return self._projectCY(projection, node)
       )
       .attr('r', (node) ->
-        (node.marker.width) / projection.scale
+        return (node.marker.width) / projection.scale
       )
       .attr('fill', (node) ->
-        '#'+self._getMarkerColor(node)
+        return self._getNormalizedColor(node)
       )
       .attr('fill-opacity', .8)
       .attr('class', (node) ->
-        'marker-icon'
+        return 'marker-icon'
+      )
+      .attr('id', (node) ->
+        node.elementID = self.getElementID(node)
+        return node.elementID
       )
       .on('click', (node) ->
         d3.event.stopPropagation();
@@ -172,6 +201,7 @@ class GritsNodeLayer extends GritsLayer
         if node.hasOwnProperty('eventHandlers')
           if node.eventHandlers.hasOwnProperty('click')
             node.eventHandlers.click(this, selection, projection)
+        return 
       )
       .on('mouseover', (node) ->
         d3.event.stopPropagation();
@@ -179,85 +209,129 @@ class GritsNodeLayer extends GritsLayer
         if node.hasOwnProperty('eventHandlers')
           if node.eventHandlers.hasOwnProperty('mouseover')
             node.eventHandlers.mouseover(this, selection, projection)
+        return 
       )
     markers.exit()
     return
   
+  _projectCX: (projection, node) ->
+    x = projection.latLngToLayerPoint(node.latLng).x    
+    r = (1/projection.scale)
+    return x - r
+
+  _projectCY: (projection, node) ->
+    y = projection.latLngToLayerPoint(node.latLng).y
+    r = (1/projection.scale)
+    return y - r
+  
   # converts domain specific flight data into generic GritsNode nodes
   # 
-  # @param [Object] flight, an Astronomy class 'Flight' represending a single
-  #   record from a MongoDB collection
-  convertFlight: (flight) ->
+  # @param [Object] flight, an Astronomy class 'Flight' represending a single record from a MongoDB collection
+  # @param [Array] list of queryOrigins (_id) from the query that should be exclude from the throughput
+  # @return [Array] array containing the [originNode, destinationNode]
+  convertFlight: (flight, level, queryOrigins) ->
     self = this
+    originNode = null
+    destinationNode = null
     # the departureAirport of the flight
-    departure = flight.departureAirport
-    if (typeof departure != "undefined" and departure != null and departure.hasOwnProperty('_id'))
-      departureNode = self._data[departure._id]
-      if (typeof departureNode == "undefined" or departureNode == null)
+    origin = flight.departureAirport
+    if (typeof origin != "undefined" and origin != null and origin.hasOwnProperty('_id'))
+      originNode = self._data[origin._id]
+      if (typeof originNode == "undefined" or originNode == null)
         try
-          marker = new GritsMarker(7, 7, _colorScale)
-          departureNode = new GritsNode(departure, marker)
-          departureNode.setEventHandlers(_eventHandlers)
-          departureNode.outgoingThroughput = flight.totalSeats
+          marker = new GritsMarker(_size[0], _size[1], _colorScale)
+          originNode = new GritsNode(origin, marker)
+          originNode.level = level
+          originNode.setEventHandlers(_eventHandlers)
+          originNode.outgoingThroughput = flight.totalSeats
+          if originNode._id in queryOrigins
+            originNode.excludedFromNormalization = true
         catch e
           console.error(e.message)
           return
-        self._data[departure._id] = departureNode
+        self._data[origin._id] = originNode
       else
-        departureNode.outgoingThroughput += flight.totalSeats
+        originNode.outgoingThroughput += flight.totalSeats
   
     # the arrivalAirport of the flight
-    arrival = flight.arrivalAirport
-    if (typeof arrival != "undefined" and arrival != null and arrival.hasOwnProperty('_id'))
-      arrivalNode = self._data[arrival._id]
-      if (typeof arrivalNode == "undefined" or arrivalNode == null)
+    destination = flight.arrivalAirport
+    if (typeof destination != "undefined" and destination != null and destination.hasOwnProperty('_id'))
+      destinationNode = self._data[destination._id]
+      if (typeof destinationNode == "undefined" or destinationNode == null)
         try
-          marker = new GritsMarker(7, 7, _colorScale)
-          arrivalNode = new GritsNode(arrival, marker)
-          arrivalNode.setEventHandlers(_eventHandlers)
-          arrivalNode.incomingThroughput = flight.totalSeats
+          marker = new GritsMarker(_size[0], _size[1], _colorScale)
+          destinationNode = new GritsNode(destination, marker)
+          destinationNode.level = level
+          destinationNode.setEventHandlers(_eventHandlers)
+          destinationNode.incomingThroughput = flight.totalSeats
         catch e
           console.error(e.message)
           return
-        self._data[arrival._id] = arrivalNode
+        self._data[destination._id] = destinationNode
       else
-        arrivalNode.incomingThroughput += flight.totalSeats
+        destinationNode.incomingThroughput += flight.totalSeats
   
-    return [departureNode, arrivalNode]
+    return [originNode, destinationNode]
   
   # returns the normalized throughput for a node
   #
   # @return [Number] normalizedThroughput, 0 >= n <= .9 
   _getNormalizedThroughput: (node) ->
-    maxAllowed = 0.9
-    r = 0.0
-    if @_normalizedCI > 0
-      r = ((node.incomingThroughput + node.outgoingThroughput) / @_normalizedCI)
+    maxAllowed = 100
+    r = 0
+    if @_normalizedCI > 0      
+      r = ((node.incomingThroughput + node.outgoingThroughput) / @_normalizedCI) * 100
     if r > maxAllowed
       return maxAllowed
-    return +(r).toFixed(1)
+    node.normalizedPercent = +(r).toFixed(0)
+    return node.normalizedPercent
   
-  # returns the href to use as the marker image
-  #
-  # @return [String] href, the marker image src
-  _getMarkerHref: (node) ->
-    v = node.marker.colorScale[@_getNormalizedThroughput(node) * 10]
-    if !(typeof v == 'undefined' or v == null)
-      href = '/packages/grits_grits-net-mapper/images/marker-icon-#{v}.svg'
-    else
-      href = '/packages/grits_grits-net-mapper/images/marker-icon-B8B8B8.svg'
-    return href
-
   # returns the color to use as the marker fill
   #
   # @return [String] color, the marker image color
-  _getMarkerColor: (node) ->
-    v = node.marker.colorScale[@_getNormalizedThroughput(node) * 10]
-    if !(typeof v == 'undefined' or v == null)
-      color = v
+  _getNormalizedColor: (node) ->
+    np = @_getNormalizedThroughput(node)
+    if np < 10
+      node.color = _colorScale[10]
+    else if np < 20
+      node.color = _colorScale[20]
+    else if np < 30
+      node.color = _colorScale[30]
+    else if np < 40
+      node.color = _colorScale[40]
+    else if np < 50
+      node.color = _colorScale[50]
+    else if np < 60
+      node.color = _colorScale[60]
+    else if np < 70
+      node.color = _colorScale[70]
+    else if np < 80
+      node.color = _colorScale[80]
+    else if np < 90
+      node.color = _colorScale[90]
+    else if np <= 100
+      node.color = _colorScale[100]
     else
-      color = 'DB943E'
-    return color 
+      node.color = _colorScale[10]
+    return node.color
+  
+  filterByMinMaxThroughput: (min, max) ->
+    self = this
+    nodes = self.getNodes()
+    if _.isEmpty(nodes)
+      return    
+    filtered = _.filter(nodes, (node) ->
+      $element = $('#' + node.elementID)
+      np = self._getNormalizedThroughput(node)
+      if (np < min) || (np > max)
+        $element.attr('display', 'none')
+        n = node
+      else
+        $element.attr('display', '')
+      if n
+        return n
+    )
+    return filtered
   
   # binds to the Tracker.gritsMap.getInstance() map event listener .on
   # 'overlyadd' and 'overlayremove' methods
@@ -275,3 +349,6 @@ class GritsNodeLayer extends GritsLayer
           if Meteor.gritsUtil.debug
             console.log self._name + ' removed'
     )
+
+# Static reference to the colorScale
+GritsNodeLayer.colorScale = _colorScale

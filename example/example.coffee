@@ -13,7 +13,7 @@ if Meteor.isClient
       nodeLayer.clear()
 
       for flight in Meteor.dummyFlights
-        nodes = nodeLayer.convertFlight(flight)
+        nodes = nodeLayer.convertFlight(flight, 1, [])
         pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
 
       pathLayer.draw()
@@ -29,49 +29,56 @@ if Meteor.isClient
       return
 
   Template.gritsMap.onRendered ->
-    OpenStreetMap = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-      layerName: 'CartoDB_Positron'
-      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
-      subdomains: 'abcd'
-      maxZoom: 19)
-    MapQuestOpen_OSM = L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/{type}/{z}/{x}/{y}.{ext}',
-      type: 'map'
-      layerName: 'MapQuestOpen_OSM'
-      ext: 'jpg'
-      subdomains: '1234')
-    Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      layerName: 'Esri_WorldImagery')
-
-    baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
-    element = 'grits-map'
-    height = window.innerHeight
-    options = {
-      height: height
-      zoomControl: false
-      noWrap: true
-      maxZoom: 18
-      minZoom: 0
-      zoom: 2
-      center: L.latLng(30,-20)
-      layers: baseLayers
-    }
-
-    map = new GritsMap(element, options, baseLayers)
-    map.addGritsLayer(new GritsHeatmapLayer(map))
-    map.addGritsLayer(new GritsPathLayer(map))
-    map.addGritsLayer(new GritsNodeLayer(map))
-
-    # Add the default controls to the map.
-    Template.gritsMap.addDefaultControls(map)
-
-    # Add test control
-    Meteor.call('isTestEnvironment', (err, result) ->
-      if err
+    self = Template.instance()
+    console.log('self:', self)
+    self.autorun ->
+      isReady = Session.get('grits-net-meteor:isReady')
+      console.log('isReady:', isReady)      
+      if isReady
+        OpenStreetMap = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+          layerName: 'CartoDB_Positron'
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+          subdomains: 'abcd'
+          maxZoom: 19)
+        MapQuestOpen_OSM = L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/{type}/{z}/{x}/{y}.{ext}',
+          type: 'map'
+          layerName: 'MapQuestOpen_OSM'
+          ext: 'jpg'
+          subdomains: '1234')
+        Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          layerName: 'Esri_WorldImagery')
+    
+        baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
+        element = 'grits-map'
+        height = window.innerHeight
+        options = {
+          height: height
+          zoomControl: false
+          noWrap: true
+          maxZoom: 18
+          minZoom: 0
+          zoom: 2
+          center: L.latLng(30,-20)
+          layers: baseLayers
+        }
+    
+        map = new GritsMap(element, options, baseLayers)
+        map.addGritsLayer(new GritsHeatmapLayer(map))
+        map.addGritsLayer(new GritsPathLayer(map))
+        map.addGritsLayer(new GritsNodeLayer(map))
+    
+        # Add the default controls to the map.
+        Template.gritsMap.addDefaultControls(map)
+    
+        # Add test control
+        Meteor.call('isTestEnvironment', (err, result) ->
+          if err
+            return
+          if result
+            map.addControl(new GritsControl('<b> Select a Module </b><div id="moduleSelectorDiv"></div>', 7, 'topleft', 'info'))
+            Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
+        )
+         
+        Template.gritsMap.setInstance(map)
         return
-      if result
-        map.addControl(new GritsControl('<b> Select a Module </b><div id="moduleSelectorDiv"></div>', 7, 'topleft', 'info'))
-        Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
-    )
-     
-    Template.gritsMap.setInstance(map)
     return

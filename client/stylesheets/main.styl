@@ -15,27 +15,20 @@ html, body
 body
 	font-family arial
 
-#nodeDetailsDiv, #pathDetailsDiv
+.bootstrap-datetimepicker-widget.dropdown-menu
+  position fixed
   font-size small
-  background-color white
-  border-radius 5px
-  width 100%
-  overflow hidden
 
-.node-detail-header, .path-detail-header
-  background-color #eee
-  padding 5px
-  min-width initial
-  border-radius 2px
+#elementDetailsContainer
+  width 260px
+  font-size small
 
-.node-detail-container, .path-detail-container
-  margin-top 5px
-
-.node-detail-row, .path-detail-row
-  margin 2px -15px 2px -15px
-
-.node-detail-close, .path-detail-close
+.element-details-close
   line-height inherit
+
+.element-details-path, .element-details-node
+  padding 5px
+  height 140px
 
 .marker-icon
   cursor pointer
@@ -43,7 +36,7 @@ body
 .tab-content  
   max-height 273px
   overflow-x hidden
-  overflow-y scroll
+  overflow-y auto
   border-left: 1px solid #ddd
   border-right: 1px solid #ddd
   border-bottom: 1px solid #ddd
@@ -188,16 +181,6 @@ body
 .leaflet-container
   background-color #CDD2D4
 
-.leaflet-control-layers-toggle
-	background-image url(packages/fuatsengul_leaflet/images/layers.png)
-	width 36px
-	height 36px
-
-.leaflet-retina .leaflet-control-layers-toggle
-	background-image url(packages/fuatsengul_leaflet/images/layers.png)
-	width 36px
-	height 36px
-
 .leaflet-top.leaflet-left
   z-index 1004
 .leaflet-top.leaflet-right
@@ -267,11 +250,6 @@ p.intro
 	.notice
 		font-size 11px
 
-.path-detail, .node-detail
-	width 320px
-	height 250px
-	overflow auto
-
 .my-legend .legend-title
   text-align left
   margin-bottom 8px
@@ -312,10 +290,10 @@ p.intro
   font-size small
 
 #dataTableDiv
-  width 370px
+  width 405px
 
 .dataTable
-  width 370px
+  width 405px
 
 .dataTableContent
   overflow-x hidden
@@ -337,6 +315,12 @@ p.intro
 
 .leaflet-heatmap-layer
   z-index -1
+  
+.leaflet-control-zoom
+  clear none // allows horizontal stacking with filter
+
+.filter-control
+  clear none // allows horizontal stacking with zoom
 
 .searchBar
   position relative
@@ -369,6 +353,40 @@ p.intro
     font-style italic
   > span
     text-transform capitalize
+
+.airport-footer
+  color #666
+  font-size 95%
+  margin 2px 0 2px 15px
+  
+.pull-middle
+  display table-cell
+  vertical-align middle
+  float none
+  
+.pager
+  display inline
+
+.slider-container
+  margin 0 5px 0 5px
+
+.slider.slider-horizontal .slider-handle
+  margin-left -7px
+  margin-top -3px
+
+.slider-handle
+  width 15px
+  height 15px
+
+.min-slider-handle
+  opacity 1
+
+.max-slider-handle
+  opacity 1
+
+.slider-selection
+  background-image none
+  background-color rgba(51, 122, 183, 0.25)
 
 .tt-suggestion
   position relative
