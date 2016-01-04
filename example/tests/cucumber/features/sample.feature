@@ -25,7 +25,7 @@ Feature: Map display
   Scenario: Entering an airport code should give us some paths
     When I navigate to "/"
     And I search for JFK
-    And I click on #sidebar-advanced-filter
+    And I click on #sidebar-advanced-filter-tab
     Then I click on #applyFilter
     Then I should see some map markers
     And I should see paths between them
@@ -34,7 +34,7 @@ Feature: Map display
   Scenario: Entering an airport code and date range should give us some paths
     When I navigate to "/"
     And I search for JFK
-    And I click on #sidebar-advanced-filter
+    And I click on #sidebar-advanced-filter-tab
     And I click on #dateTab
     And I enter 12/9/2015 into the startDate
     And I click on #applyFilter
@@ -45,7 +45,7 @@ Feature: Map display
   Scenario: Entering an airport code, and a minimum seat count should give us some paths with flight having at least that many seats
     When I navigate to "/"
     And I search for JFK
-    And I click on #sidebar-advanced-filter
+    And I click on #sidebar-advanced-filter-tab
     And I enter 499 into the seat filter
     And I click on #applyFilter
     Then I should see some map markers
