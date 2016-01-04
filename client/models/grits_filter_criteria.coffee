@@ -35,6 +35,8 @@ class GritsFilterCriteria
   constructor: () ->
     self = this
     
+    # debounce wrapper to limit the amount of calls to this function within
+    # the specified time period
     self.apply = _.debounce(self.apply, _debounceInMilliseconds)
     
     # lastFlightId used for query with more than one level
@@ -235,8 +237,7 @@ class GritsFilterCriteria
   #
   # @return [String] the query object JSON.strigify
   getState: () ->
-    _state
-  
+    _state  
   # sets the original/previous state of the filter, this method will read the
   # current query object and store is as a JSON string
   setState: () ->
@@ -244,14 +245,17 @@ class GritsFilterCriteria
     query = self.getQueryObject()
     _state = JSON.stringify(query)
     return  
-  
-  
+  # process the results of the meteor methods to get flights
+  #
+  # @param [Array] flights, an Array of flights to process
+  # @param [Integer] offset, the offset of the query
   process: (flights, offset) ->
     self = this
     map = Template.gritsMap.getInstance()
     nodeLayer = map.getGritsLayer('Nodes')
     pathLayer = map.getGritsLayer('Paths')
     
+    # if the offset is equal to zero, clear the layers
     if offset == 0
       nodeLayer.clear()
       pathLayer.clear()
@@ -279,7 +283,7 @@ class GritsFilterCriteria
     
     # add the flights to thet queue which will start processing
     processQueue.push(flights)
-
+    return
   # applies the filter but does not reset the offset
   # 
   # @param [Function] cb, the callback function
@@ -417,8 +421,9 @@ class GritsFilterCriteria
         self.more()
     )
     return
-  
   # sets the 'start' date from the filter and updates the filter criteria
+  #
+  # @param [Object] date, Date object or null to clear the criteria
   setOperatingDateRangeStart: (date) ->
     self = this
     
@@ -455,8 +460,9 @@ class GritsFilterCriteria
         self.compareStates()
       )
     return
-  
   # sets the 'end' date from the filter and updates the filter criteria
+  #
+  # @param [Object] date, Date object or null to clear the criteria
   setOperatingDateRangeEnd: (date) ->
     self = this
     
@@ -654,8 +660,7 @@ class GritsFilterCriteria
       async.nextTick(()->
         self.compareStates()
       )
-    return
-  
+    return  
   # sets the arrival input on the UI to the 'code'
   # specified, as well as, updating the underlying FilterCriteria.
   #
@@ -706,8 +711,7 @@ class GritsFilterCriteria
       async.nextTick(()->
         self.compareStates()
       )
-    return
-  
+    return  
   # sets the level input on the UI to the 'value'
   # specified, as well as, updating the underlying FilterCriteria.
   #

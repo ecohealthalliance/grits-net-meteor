@@ -46,6 +46,12 @@ arrangeQueryKeys = (query) ->
   return keys
 
 Meteor.methods
+  # method to query flights with an optional limit and offset
+  #
+  # @param [Object] query, a mongodb query object
+  # @param [Integer] limit, the amount of records to limit
+  # @param [Integer] offset, the amount of records to skip
+  # @return [Array] an array of flights
   flightsByQuery: (query, limit, offset) ->
     if _.isUndefined(query) or _.isEmpty(query)
       return []
@@ -198,6 +204,10 @@ Meteor.methods
     return [flightsToReturn, totalFlights, newLastId]
 
 Meteor.methods
+  # method to count the total flights for the specified query
+  #
+  # @param [Object] query, a mongodb query object 
+  # @return [Integer] totalRecorts, the count of the query
   countFlightsByQuery: (query) ->
     if _.isUndefined(query) or _.isEmpty(query)
       return 0
