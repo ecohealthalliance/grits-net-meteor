@@ -17,26 +17,28 @@ _eventHandlers = {
           return
         else
           # erase any previous departures
-          GritsFilterCriteria.setDeparture(null)
+          GritsFilterCriteria.setDepartures(null)
           # set the clicked element as the new origin
           departureSearchMain = Template.gritsFilter.getDepartureSearchMain()
           departureSearchMain.tokenfield('setTokens', [self._id])
-          # apply the filter
-          GritsFilterCriteria.scanAll()
-          GritsFilterCriteria.applyWithCallback((err, res) ->
-            if res
-              map = Template.gritsMap.getInstance()
-              pathLayer = map.getGritsLayer('Paths')
-              if map.getZoom() > 2
-                # panto the map if we're at zoom level 3 or greater
-                map.panTo(self.latLng)
-              else
-                # set the view to the latLng and zoom level to 2
-                map.setView(self.latLng, 2)
-              # reset the current path
-              pathLayer.currentPath.set(null)
-              # set previous/current node to self
-              _previousNode.set(self)
+          
+          async.nextTick(() ->
+            # apply the filter
+            GritsFilterCriteria.apply((err, res) ->
+              if res
+                map = Template.gritsMap.getInstance()
+                pathLayer = map.getGritsLayer('Paths')
+                if map.getZoom() > 2
+                  # panto the map if we're at zoom level 3 or greater
+                  map.panTo(self.latLng)
+                else
+                  # set the view to the latLng and zoom level to 2
+                  map.setView(self.latLng, 2)
+                # reset the current path
+                pathLayer.currentPath.set(null)
+                # set previous/current node to self
+                _previousNode.set(self)
+            )
           )
     return
 }

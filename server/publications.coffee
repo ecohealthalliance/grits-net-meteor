@@ -29,19 +29,55 @@ buildOptions = (limit) ->
     _.extend options, limitClause
   return options
 
+# the query keys should have the most selective filters first, this method
+# places the date keys prior to any other keys used in the filter.
+#
+# @return [Array] keys, arranged by selectiveness
+arrangeQueryKeys = (query) ->
+  keys = Object.keys(query)
+  effectiveDateIdx = _.indexOf(keys, 'effectiveDate')
+  if effectiveDateIdx > 0
+    keys.splice(effectiveDateIdx, 1)
+    keys.unshift('effectiveDate')
+  discontinuedDateIdx = _.indexOf(keys, 'discontinuedDate')
+  if discontinuedDateIdx > 0
+    keys.splice(discontinuedDateIdx, 1)
+    keys.unshift('discontinuedDate')
+  return keys
+
 Meteor.methods
-  flightsByQuery: (query, limit, lastId) ->
+  # method to query flights with an optional limit and offset
+  #
+  # @param [Object] query, a mongodb query object
+  # @param [Integer] limit, the amount of records to limit
+  # @param [Integer] offset, the amount of records to skip
+  # @return [Array] an array of flights
+  flightsByQuery: (query, limit, offset) ->
     if _.isUndefined(query) or _.isEmpty(query)
       return []
 
-    extendQuery(query, lastId)
-
-    options = buildOptions(limit)
-
-    console.log 'query: %j', query
-    console.log 'options: %j', options
-
-    return Flights.find(query, options).fetch()
+    if _.isUndefined(offset)
+      offset = 0
+    
+    # make sure dates are set
+    extendQuery(query, null)
+    
+    # prepare the aggregate pipeline
+    pipeline = [      
+      {$skip: offset},
+      {$limit: limit}
+    ]
+    
+    _.each(arrangeQueryKeys(query), (key) ->
+      obj = {$match:{}}
+      value = query[key]
+      obj['$match'][key] = value
+      pipeline.unshift(obj)
+    )
+    console.log('pipeline: %j', pipeline)
+    matches = Flights.aggregate(pipeline)
+    console.log('matches.length:', matches.length)
+    return matches
 
 Meteor.methods
   getFlightsByLevel: (query, levels, origin, limit) ->
@@ -168,15 +204,26 @@ Meteor.methods
     return [flightsToReturn, totalFlights, newLastId]
 
 Meteor.methods
+  # method to count the total flights for the specified query
+  #
+  # @param [Object] query, a mongodb query object 
+  # @return [Integer] totalRecorts, the count of the query
   countFlightsByQuery: (query) ->
     if _.isUndefined(query) or _.isEmpty(query)
       return 0
 
     extendQuery(query, null)
-    buildOptions(null)
+    
+    pipeline = []
+    
+    _.each(arrangeQueryKeys(query), (key) ->
+      obj = {$match:{}}
+      value = query[key]
+      obj['$match'][key] = value
+      pipeline.unshift(obj)
+    )
 
-    count = Flights.find(query).count()
-    console.log('countFlightsByQuery:query: %j', query)
+    count = Flights.aggregate(pipeline).length
     console.log('countFlightsByQuery:count: %j', count)
     return count
   findHeatmapByCode: (code) ->
