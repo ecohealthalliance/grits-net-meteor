@@ -96,9 +96,22 @@ class GritsNodeLayer extends GritsLayer
   #
   # @override
   draw: () ->
-    @_layer.draw()
+    self = this
+    self._layer.draw()
+    self._moveOriginsToTop()
     return
-
+  
+  # moves the origins to the top of the node layer
+  _moveOriginsToTop: () ->
+    self = this
+    origins = self.getOrigins()
+    _.each(origins, (node) ->
+      $n = $('#'+self.getElementID(node))
+      $g = $n.closest('g')
+      $n.detach().appendTo($g)
+    )
+    return
+  
   # gets the nodes from the layer
   #
   # @return [Array] array of nodes
@@ -157,39 +170,38 @@ class GritsNodeLayer extends GritsLayer
   #
   # @see https://github.com/mbostock/d3/wiki/API-Reference
   # @see https://github.com/mbostock/d3/wiki/Selections
-  # @param [Object] selection, teh array of elements pulled from the current
-  #   document, also includes helper methods for filtering similar to jQuery
+  # @param [Object] selection, the array of elements pulled from the current document, also includes helper methods for filtering similar to jQuery
   # @param [Object] projection, the current scale
   _drawCallback: (selection, projection) ->
     self = this
-
-    # sort by latitude so markers that are lower appear on top
-    nodes = _.sortBy(self.getNodes(), (node) ->
-      return node.latLng[0] * -1
-    )
-
-    nodeCount = nodes.length
-    if nodeCount <= 0
+    self._destinationDrawCallback(selection, projection)
+    self._originDrawCallback(selection, projection)
+    return
+  
+  _destinationDrawCallback: (selection, projection) ->
+    self = this
+    
+    destinations = self.getDestinations()
+    destinationCount = destinations.length
+    if destinationCount <= 0
       return
 
     # since the map may be updated asynchronously the sums of the throughput
     # counters must be calcuated on every draw and the self._normalizedCI set
     # @note we only normalize the destinations.
-    sums = _.map(nodes, (node) ->
-      if node.hasOwnProperty('isOrigin')
-        if node.isOrigin
-          return 0
-      node.incomingThroughput + node.outgoingThroughput
+    sums = _.map(destinations, (destination) ->
+      destination.incomingThroughput + destination.outgoingThroughput
     )
     # store the max value to the layer
     self._normalizedCI = _.max(sums)
 
     # select any existing circles and store data onto elements
-    markers = selection.selectAll('circle').data(nodes, (node) ->
-      node._id
+    destinationMarkers = selection.selectAll('.destination.marker-icon').data(destinations, (destination) ->
+      destination._id
     )
+    
     #work on existing nodes
-    markers
+    destinationMarkers
       .attr('cx', (node) ->
         return self._projectCX(projection, node)
       )
@@ -203,9 +215,12 @@ class GritsNodeLayer extends GritsLayer
         return self._getNormalizedColor(node)
       )
       .attr('fill-opacity', .8)
+      .sort((a,b) ->
+        return d3.descending(a.latLng[0], b.latLng[0])
+      )
 
     # add new elements workflow (following https://github.com/mbostock/d3/wiki/Selections#enter )
-    markers.enter().append('circle')
+    destinationMarkers.enter().append('circle')
       .attr('cx', (node) ->
         return self._projectCX(projection, node)
       )
@@ -220,17 +235,14 @@ class GritsNodeLayer extends GritsLayer
       )
       .attr('fill-opacity', .8)
       .attr('class', (node) ->
-        if node.hasOwnProperty('isOrigin')
-          if node.isOrigin
-            return 'origin marker-icon'
-          else
-            return 'destination marker-icon'
-        else
-          return 'destination marker-icon'
+        return 'destination marker-icon'
       )
       .attr('id', (node) ->
         node.elementID = self.getElementID(node)
         return node.elementID
+      )
+      .sort((a,b) ->
+        return d3.descending(a.latLng[0], b.latLng[0])
       )
       .on('click', (node) ->
         d3.event.stopPropagation();
@@ -248,7 +260,92 @@ class GritsNodeLayer extends GritsLayer
             node.eventHandlers.mouseover(this, selection, projection)
         return
       )
-    markers.exit()
+    destinationMarkers.exit()
+    return
+  
+  _originDrawCallback: (selection, projection) ->
+    self = this
+    
+    origins = self.getOrigins()
+    originCount = origins.length
+    if originCount <= 0
+      return
+    
+    count = 0
+    lastNode = null
+    # select any existing circles and store data onto elements
+    originMarkers = selection.selectAll('.origin.marker-icon').data(origins, (node) ->
+      count++
+      if count == originCount
+        lastNode = node
+      return node._id
+    )
+    #work on existing origins (update projection)
+    originMarkers
+      .attr('x', (node) ->
+        x = projection.latLngToLayerPoint(node.latLng).x
+        return x - (node.marker.width / projection.scale)
+      )
+      .attr('y', (node) ->
+        y = projection.latLngToLayerPoint(node.latLng).y
+        return y - (node.marker.height / projection.scale)
+      )
+      .attr('width', (node) ->
+        return (node.marker.width * 2) / projection.scale
+      )
+      .attr('height', (node) ->
+        return (node.marker.height * 2) / projection.scale
+      )
+      .sort((a,b) ->
+        return d3.descending(a.latLng[0], b.latLng[0])
+      )
+
+    # add new elements workflow (following https://github.com/mbostock/d3/wiki/Selections#enter )
+    originMarkers.enter().append('image')
+      .attr('xlink:href', (node) ->
+        href = self.getMarkerHref(node)
+        return href
+      )
+      .attr('x', (node) ->
+        x = projection.latLngToLayerPoint(node.latLng).x
+        return x - (node.marker.width / projection.scale)
+      )
+      .attr('y', (node) ->
+        y = projection.latLngToLayerPoint(node.latLng).y
+        return y - (node.marker.height / projection.scale)
+      )
+      .attr('width', (node) ->
+        return (node.marker.width * 2) / projection.scale
+      )
+      .attr('height', (node) ->
+        return (node.marker.height * 2) / projection.scale
+      )
+      .attr('class', (node) ->
+        return 'origin marker-icon'
+      )
+      .attr('id', (node) ->
+        return self.getElementID(node)
+      )
+      .sort((a,b) ->
+        return d3.descending(a.latLng[0], b.latLng[0])
+      )
+      .on('click', (node) ->
+        d3.event.stopPropagation();
+        # manual trigger node click handler
+        if node.hasOwnProperty('eventHandlers')
+          if node.eventHandlers.hasOwnProperty('click')
+            node.eventHandlers.click(this, selection, projection)
+        return
+      )
+      .on('mouseover', (node) ->
+        d3.event.stopPropagation();
+        # manual trigger node mouseover handler
+        if node.hasOwnProperty('eventHandlers')
+          if node.eventHandlers.hasOwnProperty('mouseover')
+            node.eventHandlers.mouseover(this, selection, projection)
+        return
+      )
+    originMarkers.exit()    
     return
 
   _projectCX: (projection, node) ->
@@ -369,6 +466,12 @@ class GritsNodeLayer extends GritsLayer
         return n
     )
     return filtered
+  
+  getMarkerHref: (node) ->
+    if node.isOrigin
+      return '/packages/grits_grits-net-meteor/client/images/origin-marker-icon.svg'
+    else
+      return ''
 
   # binds to the Tracker.gritsMap.getInstance() map event listener .on
   # 'overlyadd' and 'overlayremove' methods
