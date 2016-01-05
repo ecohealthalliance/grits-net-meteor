@@ -102,6 +102,18 @@ Template.gritsDataTable.helpers({
       return []
     else
       return Template.instance().heatmaps.get()
+  getPathThroughputColor: (path) ->
+    if _.isUndefined(path)
+      return ''
+    if _.isUndefined(Template.instance().pathsLayer)
+      return []
+    return Template.instance().pathsLayer._getNormalizedColor(path)
+  getNodeThroughputColor: (node) ->
+    if _.isUndefined(node)
+      return ''
+    if _.isUndefined(Template.instance().nodesLayer)
+      return []
+    return Template.instance().nodesLayer._getNormalizedColor(node)
 })
 
 Template.gritsDataTable.onCreated ->
@@ -116,16 +128,16 @@ Template.gritsDataTable.onRendered ->
   self = this
 
   # get the map instance and layers
-  map = Template.gritsMap.getInstance()
-  pathsLayer = map.getGritsLayer('Paths')
-  nodesLayer = map.getGritsLayer('Nodes')
-  heatmapLayer = map.getGritsLayer('Heatmap')
+  self.map = Template.gritsMap.getInstance()
+  self.pathsLayer = self.map.getGritsLayer('Paths')
+  self.nodesLayer = self.map.getGritsLayer('Nodes')
+  self.heatmapLayer = self.map.getGritsLayer('Heatmap')
 
   self.autorun ->
     # when the paths are finished loading, set the template data to the result
-    pathsLoaded = pathsLayer.hasLoaded.get()
+    pathsLoaded = self.pathsLayer.hasLoaded.get()
     if pathsLoaded
-      data = pathsLayer.getPaths()
+      data = self.pathsLayer.getPaths()
       if _.isEmpty(data)
         self.paths.set([])
       else
@@ -134,9 +146,9 @@ Template.gritsDataTable.onRendered ->
         )
         self.paths.set(sorted)
     # when the nodes are finished loading, set the template data to the result
-    nodesLoaded = nodesLayer.hasLoaded.get()
+    nodesLoaded = self.nodesLayer.hasLoaded.get()
     if nodesLoaded
-      data = nodesLayer.getNodes()
+      data = self.nodesLayer.getNodes()
       if _.isEmpty(data)
         self.nodes.set([])
       else
@@ -146,9 +158,9 @@ Template.gritsDataTable.onRendered ->
         nodes = _formatNodeData(sorted)
         self.nodes.set(nodes)
     # when the heatmap is finished loading, set the template data to the result
-    heatmapLoaded = heatmapLayer.hasLoaded.get()
+    heatmapLoaded = self.heatmapLayer.hasLoaded.get()
     if heatmapLoaded
-      data = heatmapLayer.getData()
+      data = self.heatmapLayer.getData()
       if _.isEmpty(data)
         self.heatmaps.set([])
       else
