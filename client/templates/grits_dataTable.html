@@ -30,7 +30,7 @@
         <tbody>
           {{#with paths}}
             {{#each paths}}
-              <tr class="pathTableRow" data-id="{{this._id}}">
+              <tr class="pathTableRow" data-id="{{this._id}}" style="background-color: {{getPathThroughputColor this}}">
                 <td>
                   {{this.origin._id}}
                 </td>
@@ -68,7 +68,7 @@
         <tbody class="dataTableBody">
           {{#with nodes}}
             {{#each nodes}}
-              <tr class="nodeTableRow" data-id="{{this._id}}">
+              <tr class="nodeTableRow" data-id="{{this._id}}" style="background-color: {{getNodeThroughputColor this}}">
                 <td>
                   {{this._id}}
                 </td>
