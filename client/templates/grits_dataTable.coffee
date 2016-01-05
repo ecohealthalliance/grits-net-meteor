@@ -14,8 +14,20 @@ highlightPathTableRow = (path) ->
   # remove any previously clicked rows
   $table = $row.closest('table')
   $table.find('.activeRow').removeClass('activeRow')
-  # add the active class to this row
-  $row.addClass('activeRow')
+  if _previousPath != path
+    # add the active class to this row and remove any background-color
+    $row.addClass('activeRow').css({'background-color':''})
+    # reset the previous path background-color
+    if !_.isNull(_previousPath)
+      $previousPath = $("tr[data-id=#{_previousPath._id}]")
+      $previousPath.css({'background-color':_previousPath.color})
+    # this path becomes the previousPath
+    _previousPath = path
+  else
+    # clicked on same path, reset the color and set _previousPath to null
+    $row.css({'background-color':path.color})
+    _previousPath = null
+  return
 
 # formats the heatmap data for display in the template
 #
@@ -57,26 +69,17 @@ Template.gritsDataTable.events({
   'click .pathTableRow': (event, template) ->
     # get the clicked row
     $row = $(event.currentTarget)
-    # remove any previously clicked rows
-    $table = $row.closest('table')
-    $table.find('.activeRow').removeClass('activeRow')
     # find the path from template.paths using the DOM's id
     _id = $row.data('id')
-    paths = template.paths.get()
+    paths = template.paths.get()    
     path = _.find(paths, (path) -> path._id == _id)
     if _.isUndefined(path)
       return
     element = $('#'+path.elementID)[0]
-    console.log('element: ', element)
     if _.isUndefined(element)
       return
     # simulate a click on the path
-    path.eventHandlers.click(element)
-    # if we're not clicking on ourself
-    if _previousPath != path
-      # add the active class to this row
-      $row.addClass('activeRow')
-    _previousPath = path
+    path.eventHandlers.click(element)   
     return
   'click .exportData': (event) ->
     fileType = $(event.currentTarget).attr("data-type")
@@ -106,13 +109,13 @@ Template.gritsDataTable.helpers({
     if _.isUndefined(path)
       return ''
     if _.isUndefined(Template.instance().pathsLayer)
-      return []
+      return ''
     return Template.instance().pathsLayer._getNormalizedColor(path)
   getNodeThroughputColor: (node) ->
     if _.isUndefined(node)
       return ''
     if _.isUndefined(Template.instance().nodesLayer)
-      return []
+      return ''
     return Template.instance().nodesLayer._getNormalizedColor(node)
 })
 
