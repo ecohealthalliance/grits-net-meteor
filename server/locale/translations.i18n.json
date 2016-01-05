@@ -2,7 +2,7 @@
     "window-title": {
         "en": "FLIRT"
     },
-    "gritsLegend": {        
+    "gritsLegend": {
         "path-throughput": {
             "en": "Flight Seat Count"
         },
@@ -16,7 +16,7 @@
     "gritsDataTable": {
         "tab-1": {
             "title" : {
-               "en": "Flights" 
+               "en": "Flights"
             },
             "origin-heading": {
                 "en": "Origin"
@@ -33,16 +33,16 @@
         },
         "tab-2": {
             "title" : {
-               "en": "Airports" 
+               "en": "Airports"
             },
             "code-heading": {
                 "en": "Code"
             },
             "incoming-heading": {
-                "en": "Incoming"
+                "en": "Incoming People"
             },
             "outgoing-heading": {
-                "en": "Outgoing"
+                "en": "Outgoing People"
             },
             "total-heading": {
                 "en": "Total Seats"
@@ -50,8 +50,8 @@
         },
         "tab-3": {
             "title" : {
-               "en": "Heatmap" 
-            }, 
+               "en": "Heatmap"
+            },
             "code-heading": {
                 "en": "Code"
             },
