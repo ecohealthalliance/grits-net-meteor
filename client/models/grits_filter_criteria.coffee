@@ -1,5 +1,7 @@
-_validFields = ['weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels', 'effectiveDate', 'discontinuedDate']
-_validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in', '$near']
+_debounceInMilliseconds = 2000 # time to delay the auto-submission of the filter
+_ignoreFields = ['levels', 'limit', 'offset'] # fields that are used for maintaining state but will be ignored when sent to the server
+_validFields = ['weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels', 'effectiveDate', 'discontinuedDate', 'levels', 'limit']
+_validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in', '$near', null]
 _state = null # keeps track of the query string state
 # local/private minimongo collection
 _Collection = new (Mongo.Collection)(null)
@@ -24,15 +26,25 @@ _Filter = Astro.Class(
 )
 
 # GritsFilterCriteria, this object provides the interface for
-# accessing the UI filter box.
+# accessing the UI filter box. The setter methods may be called
+# programmatically or the reactive var can be set by event handers
+# within the UI.  The entire object maintains its own state.
+#
 # @note exports as a 'singleton'
 class GritsFilterCriteria
   constructor: () ->
     self = this
+    
+    # debounce wrapper to limit the amount of calls to this function within
+    # the specified time period
+    self.autoApply = _.debounce(self.autoApply, _debounceInMilliseconds)
+    
+    # lastFlightId used for query with more than one level
+    self.lastFlightId = null
+    
     # reactive var used to update the UI when the query state has changed
     self.stateChanged = new ReactiveVar(null)
-    # reactive var used to track the departures
-    self.departures = new ReactiveVar(null)    
+    
     # setup an instance variable that contains todays date.  This will be used
     # to set the initial Start and End dates to the Operating Date Range
     now = new Date()
@@ -43,6 +55,38 @@ class GritsFilterCriteria
     # this._baseState keeps track of the initial plugin state after any init
     # methods have run
     self._baseState = {}
+    
+    # reactive vars to track form binding
+    #   departures
+    self.departures = new ReactiveVar([])
+    self.trackDepartures()
+    #   arrivals
+    self.arrivals = new ReactiveVar([])
+    self.trackArrivals()
+    #   weeklyFrequency
+    self.weeklyFrequency = new ReactiveVar(null)
+    self.trackWeeklyFrequency()    
+    #   stops
+    self.stops = new ReactiveVar(null)
+    self.trackStops()    
+    #   seats
+    self.seats = new ReactiveVar(null)
+    self.trackSeats()
+    #   operatingDateRangeStart
+    self.operatingDateRangeStart = new ReactiveVar(null)
+    self.trackOperatingDateRangeStart()
+    #   operatingDateRangeEnd
+    self.operatingDateRangeEnd = new ReactiveVar(null)
+    self.trackOperatingDateRangeEnd()
+    #   levels
+    self.levels = new ReactiveVar(1)
+    self.trackLevels()
+    #   limit
+    self.limit = new ReactiveVar(1000)
+    self.trackLimit()    
+       
+    #   offset
+    self.offset = new ReactiveVar(0)
     return
   # initialize the start date of the filter 'discontinuedDate'
   #
@@ -57,8 +101,11 @@ class GritsFilterCriteria
     self._baseState = JSON.stringify(query)
     month = start.getMonth() + 1
     date = start.getDate()
-    year = start.getFullYear().toString().slice(2,4)    
-    return "#{month}/#{date}/#{year}"
+    year = start.getFullYear().toString().slice(2,4)
+    year = start.getFullYear()
+    yearStr = year.toString().slice(2,4)
+    self.operatingDateRangeStart.set(new Date(year, month, date))
+    return "#{month}/#{date}/#{yearStr}"
   # initialize the end date through the 'effectiveDate' filter
   #
   # @return [String] dateString, formatted MM/DD/YY
@@ -73,8 +120,28 @@ class GritsFilterCriteria
     self._baseState = JSON.stringify(query)
     month = end.getMonth() + 1
     date = end.getDate()
-    year = end.getFullYear().toString().slice(2,4)
-    return "#{month}/#{date}/#{year}"
+    year = end.getFullYear()
+    yearStr = year.toString().slice(2,4)
+    self.operatingDateRangeEnd.set(new Date(year, month, date))
+    return "#{month}/#{date}/#{yearStr}"
+  # initialize the end date through the 'effectiveDate' filter
+  #  
+  # @return [Integer] level
+  initLevels: () ->
+    self = this
+    initLevels = self.levels.get()
+    self.setLevels(initLevels)
+    self._baseState = JSON.stringify(self.getQueryObject())
+    return initLevels
+  # initialize the limit through the 'effectiveDate' filter
+  #
+  # @return [Integer] limit
+  initLimit: () ->
+    self = this
+    initLimit = self.limit.get()
+    self.setLimit(initLimit)
+    self._baseState = JSON.stringify(self.getQueryObject())
+    return initLimit
   # Creates a new filter criteria and adds it to the collection or updates
   # the collection if it already exists
   #
@@ -146,39 +213,81 @@ class GritsFilterCriteria
       if current != _state
         # do not notifiy on an empty query or the base state
         if current == "{}" || current == self._baseState
-          self.stateChanged.set(false)  
+          self.stateChanged.set(false)      
         else
           self.stateChanged.set(true)
+          
+          # auto-apply the filter
+          self.autoApply()
+          
+          # disable [More...] button when filter has changed
+          $('#loadMore').prop('disabled', true)
       else
         self.stateChanged.set(false)
     , 500)
+    return
   # gets the current state of the filter
   #
   # @return [String] the query object JSON.strigify
   getCurrentState: () ->
     self = this
-    self.scanAll()
     query = self.getQueryObject()
     return JSON.stringify(query)
   # get the original/previous state of the filter
   #
   # @return [String] the query object JSON.strigify
   getState: () ->
-    _state
+    _state  
   # sets the original/previous state of the filter, this method will read the
   # current query object and store is as a JSON string
   setState: () ->
     self = this
-    self.scanAll()
     query = self.getQueryObject()
     _state = JSON.stringify(query)
-    return
-  # applies the filter directly, without using the global session 'query' object
-  # and allows binding an anonymous function to be called at the end of the
-  # asynchronous comunication with the server
+    return  
+  # process the results of the meteor methods to get flights
   #
+  # @param [Array] flights, an Array of flights to process
+  # @param [Integer] offset, the offset of the query
+  process: (flights, offset) ->
+    self = this
+    map = Template.gritsMap.getInstance()
+    nodeLayer = map.getGritsLayer('Nodes')
+    pathLayer = map.getGritsLayer('Paths')
+    
+    # if the offset is equal to zero, clear the layers
+    if offset == 0
+      nodeLayer.clear()
+      pathLayer.clear()
+    
+    count = Session.get('grits-net-meteor:loadedRecords')
+    processQueue = async.queue(((flight, callback) ->
+      nodes = nodeLayer.convertFlight(flight, 1, self.departures.get())
+      pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
+      async.nextTick ->
+        if !(count % 100)
+          nodeLayer.draw()
+          pathLayer.draw()
+        Session.set('grits-net-meteor:loadedRecords', ++count)
+        callback()
+    ), 1)
+    
+    # final method for when all items within the queue are processed
+    processQueue.drain = ->
+      nodeLayer.draw()
+      nodeLayer.hasLoaded.set(true)
+      pathLayer.draw()
+      pathLayer.hasLoaded.set(true)
+      Session.set('grits-net-meteor:loadedRecords', count)
+      Session.set('grits-net-meteor:isUpdating', false)
+    
+    # add the flights to thet queue which will start processing
+    processQueue.push(flights)
+    return
+  # applies the filter but does not reset the offset
+  # 
   # @param [Function] cb, the callback function
-  applyWithCallback: (cb) ->
+  more: (cb) ->
     self = this
     query = self.getQueryObject()
     if _.isUndefined(query) or _.isEmpty(query)
@@ -194,350 +303,517 @@ class GritsFilterCriteria
     # set the state
     self.setState()
     self.compareStates()
-
-    # re-enable the loadMore button when a new filter is applied
-    $('#loadMore').prop('disabled', false)
-    limit = parseInt($('#limit').val(), 10)
-
-    Session.set('grits-net-meteor:isUpdating', true)
-    Meteor.call('flightsByQuery', query, limit, null, (err, flights) ->
-      if (err)
+    
+    # set the arguments
+    levels = query.levels
+    limit = query.limit
+    lastId = self.lastFlightId
+    offset = self.offset.get()
+    
+    # remove the ignoreFields from the query
+    _.each(_ignoreFields, (field) ->
+      if query.hasOwnProperty(field)
+        delete query[field]
+    )
+    
+    if levels > 1
+      origin = Template.gritsFilter.getOrigin()
+      if !_.isNull(origin)
+        # show the loading indicator and call the server-side method
+        Session.set 'grits-net-meteor:isUpdating', true
+        if _.isNull(self.lastFlightId)
+          Meteor.call('getFlightsByLevel', query, levels, origin, limit, (err, res) ->
+            if Meteor.gritsUtil.debug
+              console.log('levels:res: ', res)
+            Session.set 'grits-net-meteor:totalRecords', res[1]
+            if !_.isUndefined(res[2]) and !_.isEmpty(res[2])
+              self.lastFlightId = res[2]
+            self.process(res[0], offset)
+          )
+        else
+          Meteor.call('getMoreFlightsByLevel', query, levels, origin, limit, self.lastFlightId, (err, res) ->
+            if Meteor.gritsUtil.debug
+              console.log('levels:res: ', res)
+            Session.set 'grits-net-meteor:totalRecords', res[1]
+            if !_.isUndefined(res[2]) and !_.isEmpty(res[2])
+              self.lastFlightId = res[2]
+            self.process(res[0], offset)
+          )
+        return
+      return
+    
+    # show the loading indicator and call the server-side method
+    Session.set 'grits-net-meteor:isUpdating', true
+    async.auto({
+      # get the totalRecords count first
+      'getCount': (callback, result) ->
+        Meteor.call('countFlightsByQuery', query, (err, totalRecords) ->
+          if (err)
+            callback(err)
+            return
+          
+          if Meteor.gritsUtil.debug
+            console.log 'totalRecords: ', totalRecords
+            
+          if levels <= 1
+            Session.set 'grits-net-meteor:totalRecords', totalRecords
+            
+          callback(null, totalRecords)
+        )
+      # when count is finished, get the flights if greater than 0
+      'getFlights': ['getCount', (callback, result) ->
+        totalRecords = result.getCount
+        
+        if totalRecords.length <= 0
+          toastr.info('The filter did not return any results')
+          Session.set('grits-net-meteor:isUpdating', false)
+          callback(null)
+          return
+        
+        Meteor.call('flightsByQuery', query, limit, offset, (err, flights) ->
+          if (err)
+            callback(err)
+            return
+          
+          if _.isUndefined(flights) || flights.length <= 0
+            toastr.info('The filter did not return any results')
+            Session.set('grits-net-meteor:isUpdating', false)
+            callback(null, [])
+            return
+          
+          callback(null, flights)
+        )
+      ]
+    }, (err, result) ->
+      if err
         Meteor.gritsUtil.errorHandler(err)
         return
-
-      if _.isUndefined(flights) || _.isEmpty(flights)
-        Session.set('grits-net-meteor:isUpdating', false)
-        toastr.info('No data was returned')
-        return
-
-      Meteor.call 'countFlightsByQuery', query, (err, totalRecords) ->
-        if (err)
-          Meteor.gritsUtil.errorHandler(err)
-          return
-
-        Session.set 'grits-net-meteor:totalRecords', totalRecords
-        Meteor.gritsUtil.process(flights, limit, null)
-
-        if cb && _.isFunction(cb)
-          cb(null, flights)
+      # if there hasn't been any errors, getCount and getFlights will
+      # have completed
+      flights = result.getFlights
+      # call the original callback function if its defined
+      if cb && _.isFunction(cb)
+        cb(null, flights)
+      # process the flights
+      self.process(flights, offset)
       return
     )
-    return
-  # sets the global Session 'grits-net-meteor:query' object to the current
-  # getQueryObject.  This will trigger an update of the map through the
-  # server-side publication
-  apply: () ->
+    return    
+  # applies the filter; resets the offset, loadedRecords, and totalRecords
+  #
+  # @param [Function] cb, the callback function
+  apply: (cb) ->
     self = this
-    query = self.getQueryObject()
-    if _.isUndefined(query) or _.isEmpty(query)
-      toastr.error('The filter requires at least one Departure')
-      Session.set('grits-net-meteor:isUpdating', false)
-      return
-
-    if !query.hasOwnProperty('departureAirport._id')
-      toastr.error('The filter requires at least one Departure')
-      Session.set('grits-net-meteor:isUpdating', false)
-      return
-
-    # set the state
-    self.setState()
-    self.compareStates()
-
-    # re-enable the loadMore button when a new filter is applied
-    $('#loadMore').prop('disabled', false)
-
-    limit = parseInt($('#limit').val(), 10)
-    if !_.isNaN(limit)
-      Session.set 'grits-net-meteor:limit', limit
-    else
-      Session.set 'grits-net-meteor:limit', null
-    Session.set 'grits-net-meteor:lastId', null
-    Session.set 'grits-net-meteor:query', query
+    self.lastFlightId = null
+    self.offset.set(0)
+    # allow the reactive var to be set before continue
+    async.nextTick(() ->
+      # reset the loadedRecords and totalRecords
+      Session.set('grits-net-meteor:loadedRecords', 0)
+      Session.set('grits-net-meteor:totalRecords', 0)
+      $('#loadMore').prop('disabled', false)
+      # re-enable the loadMore button when a new filter is applied
+      $('#loadMore').prop('disabled', false)
+      # pass the callback function if its defined
+      if cb && _.isFunction(cb)
+        self.more(cb)
+      else
+        self.more()
+    )
     return
+  # automatically applies the filter; resets the offset, loadedRecords, and
+  # totalRecords
+  #
+  # @note this method is debounced in the constructor
+  autoApply: () ->
+    self = this
+    self.apply()
   # sets the 'start' date from the filter and updates the filter criteria
+  #
+  # @param [Object] date, Date object or null to clear the criteria
   setOperatingDateRangeStart: (date) ->
     self = this
-    discontinuedDatePicker = Template.gritsFilter.getDiscontinuedDatePicker()
+    
+    # do not allow this to run prior to jQuery/DOM
+    if _.isUndefined($)
+      return    
+    discontinuedDatePicker = Template.gritsFilter.getDiscontinuedDatePicker()        
     if _.isNull(discontinuedDatePicker)
       return
-    discontinuedDate = discontinuedDatePicker.data('DateTimePicker').date(date)
-    self.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: discontinuedDate})
+    
+    discontinuedDate = discontinuedDatePicker.data('DateTimePicker').date()
+    
+    if _.isNull(date) || _.isNull(discontinuedDate)
+      if _.isEqual(date, discontinuedDate)
+        self.remove('discontinuedDate')
+      else
+        discontinuedDatePicker.data('DateTimePicker').date(null)
+        self.operatingDateRangeStart.set(null)
+      return
+    
+    if _.isEqual(date.toISOString(), discontinuedDate.toISOString())
+      # the reactive var is already set, change is from the UI
+      self.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: discontinuedDate})
+    else
+      discontinuedDatePicker.data('DateTimePicker').date(date)
+      self.operatingDateRangeStart.set(date)
     return
-  # reads the 'end' date from the filter and updates the filter criteria
+  trackOperatingDateRangeStart: () ->
+    self = this
+    Tracker.autorun ->
+      obj = self.operatingDateRangeStart.get()
+      self.setOperatingDateRangeStart(obj)
+      async.nextTick(()-> 
+        self.compareStates()
+      )
+    return
+  # sets the 'end' date from the filter and updates the filter criteria
+  #
+  # @param [Object] date, Date object or null to clear the criteria
   setOperatingDateRangeEnd: (date) ->
     self = this
+    
+    # do not allow this to run prior to jQuery/DOM
+    if _.isUndefined($)
+      return
     effectiveDatePicker = Template.gritsFilter.getEffectiveDatePicker()
     if _.isNull(effectiveDatePicker)
       return
-    effectiveDate = effectiveDatePicker.data('DateTimePicker').date(date)
-    self.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: effectiveDate})
+    
+    effectiveDate = effectiveDatePicker.data('DateTimePicker').date()
+    
+    if _.isNull(date) || _.isNull(effectiveDate)
+      if _.isEqual(date, effectiveDate)
+        self.remove('effectiveDate')
+      else
+        effectiveDatePicker.data('DateTimePicker').date(null)
+        self.operatingDateRangeEnd.set(null)
+      return
+    
+    if _.isEqual(date.toISOString(), effectiveDate.toISOString())
+      # the reactive var is already set, change is from the UI
+      self.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: effectiveDate})
+    else
+      effectiveDatePicker.data('DateTimePicker').date(date)
+      self.operatingDateRangeEnd.set(date)
+    return
+  trackOperatingDateRangeEnd: () ->
+    self = this
+    Tracker.autorun ->
+      obj = self.operatingDateRangeEnd.get()
+      self.setOperatingDateRangeEnd(obj)
+      async.nextTick(()-> 
+        self.compareStates()
+      )
     return
   # sets the weeklyFrequency input on the UI to the 'operator' and 'value'
   # specified, as well as, updating the underlying FilterCriteria.
   #
-  # @param [String] operator, one of '$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in'
+  # @param [String] operator
   # @param [Integer] value
   setWeeklyFrequency: (operator, value) ->
     self = this
+    
+    # do not allow this to run prior to jQuery/DOM
+    if _.isUndefined($)
+      return
     if _.indexOf(_validOperators, operator) < 0
       throw new Error('Invalid operator: ', operator)
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
 
-    if _.isNull(value)
-      self.remove('weeklyFrequency')
+    if _.isEqual(self.weeklyFrequency.get(), {value: value, operator: operator})
+      # the reactive var is already set, change is from the UI
+      if _.isNull(value)
+        self.remove('weeklyFrequency')
+      else
+        self.createOrUpdate('weeklyFrequency', {key: 'weeklyFrequency', operator: operator, value: value})
     else
-      self.createOrUpdate('weeklyFrequency', {key: 'weeklyFrequency', operator: operator, value: value})
-
-    $('#weekly-frequency-operand').val(operator)
-    $("#weeklyFrequencyInput").val(value)
+      self.weeklyFrequency.set({'value': value, 'operator', operator})
+      $('#weeklyFrequencyOperator').val(operator)
+    return
+  trackWeeklyFrequency: () ->
+    self = this
+    Tracker.autorun ->
+      obj = self.weeklyFrequency.get()
+      if _.isNull(obj)
+        return
+      self.setWeeklyFrequency(obj.operator, obj.value)
+      async.nextTick(()-> 
+        self.compareStates()
+      )
     return
   # sets the stops input on the UI to the 'operator' and 'value'
   # specified, as well as, updating the underlying FilterCriteria.
   #
-  # @param [String] operator, one of '$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in'
+  # @param [String] operator
   # @param [Integer] value
   setStops: (operator, value) ->
     self = this
+    
+    # do not allow this to run prior to jQuery/DOM
+    if _.isUndefined($)
+      return
     if _.indexOf(_validOperators, operator) < 0
       throw new Error('Invalid operator: ', operator)
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
-
-    if _.isNull(value)
-      self.remove('stops')
+    # the call to change did not come from the UI
+    if _.isEqual(self.stops.get(), {value: value, operator: operator})
+      # the reactive var is already set, change is from the UI
+      if _.isNull(value)
+        self.remove('stops')
+      else
+        self.createOrUpdate('stops', {key: 'stops', operator: operator, value: value})
     else
-      self.createOrUpdate('stops', {key: 'stops', operator: operator, value: value})
-
-    $('#stops-operand').val(operator)
-    $("#stopsInput").val(value)
+      self.stops.set({'value': value, 'operator': operator})
+      $('#stopsOperator').val(operator)
+    return
+  trackStops: () ->
+    self = this
+    Tracker.autorun ->
+      obj = self.stops.get()
+      if _.isNull(obj)
+        return
+      self.setStops(obj.operator, obj.value)
+      async.nextTick(()-> 
+        self.compareStates()
+      )
     return
   # sets the seats input on the UI to the 'operator' and 'value'
   # specified, as well as, updating the underlying FilterCriteria.
   #
-  # @param [String] operator, one of '$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in'
+  # @param [String] operator
   # @param [Integer] value
   setSeats: (operator, value) ->
     self = this
+    
+    # do not allow this to run prior to jQuery/DOM
+    if _.isUndefined($)
+      return
     if _.indexOf(_validOperators, operator) < 0
       throw new Error('Invalid operator: ', operator)
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
-
-    if _.isNull(value)
-      self.remove('seats')
+    
+    if _.isEqual(self.seats.get(), {value: value, operator: operator})
+      # the reactive var is already set, change is from the UI
+      if _.isNull(value)        
+        self.remove('seats')
+      else
+        self.createOrUpdate('seats', {key: 'totalSeats', operator: operator, value: value})
     else
-      self.createOrUpdate('seats', {key: 'totalSeats', operator: operator, value: value})
-
-    $('#seats-operand').val(operator)
-    $("#seatsInput").val(value)
+      self.seats.set({value: value, operator: operator})
+      $('#seatsOperator').val(operator)
+    return
+  trackSeats: () ->
+    self = this
+    Tracker.autorun ->
+      obj = self.seats.get()
+      if _.isNull(obj)
+        return
+      self.setSeats(obj.operator, obj.value)
+      async.nextTick(()-> 
+        self.compareStates()
+      ) 
     return
   # sets the departure input on the UI to the 'code'
   # specified, as well as, updating the underlying FilterCriteria.
   #
   # @param [String] code, an airport IATA code
   # @see http://www.iata.org/Pages/airports.aspx
-  setDeparture: (code) ->
+  setDepartures: (code) ->
     self = this
+    
+    # do not allow this to run prior to jQuery/DOM
+    if _.isUndefined($)
+      return
     if _.isUndefined(code)
       throw new Error('A code must be defined or null.')
-    if _.isNull(code)
-      self.remove('departure')
-      Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [])
-      self.departures.set(null)
-      return
-    if _.isEmpty(code)
-      self.remove('departure')
-      Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [])
-      self.departures.set(null)
-      return
-    if _.isArray(code)
-      self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: code})
-      Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', code)
-      @departures.set(code)
+    
+    if _.isEqual(self.departures.get(), code)
+      # the call is from the UI
+      if _.isNull(code)
+        self.remove('departure')
+        return
+      if _.isEmpty(code)
+        self.remove('departure')
+        return
+      if _.isArray(code)
+        self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: code})
+      else
+        self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: [code]})
     else
-      self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: [code]})
-      Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [code])
-      self.departures.set([code])
+      if _.isNull(code)
+        Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [])
+        self.departures.set([])
+        return
+      if _.isEmpty(code)
+        Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [])
+        self.departures.set([])
+        return
+      if _.isArray(code)
+        Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', code)
+        self.departures.set(code)
+      else
+        Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [code])
+        self.departures.set([code])
     return
+  trackDepartures: () ->
+    self = this
+    Tracker.autorun ->
+      obj = self.departures.get()
+      self.setDepartures(obj)
+      async.nextTick(()->
+        self.compareStates()
+      )
+    return  
   # sets the arrival input on the UI to the 'code'
   # specified, as well as, updating the underlying FilterCriteria.
   #
   # @param [String] code, an airport IATA code
   # @see http://www.iata.org/Pages/airports.aspx
-  setArrival: (code) ->
+  setArrivals: (code) ->
     self = this
+    
+    # do not allow this to run prior to jQuery/DOM
+    if _.isUndefined($)
+      return
     if _.isUndefined(code)
       throw new Error('A code must be defined or null.')
-    if _.isNull(code)
-      self.remove('arrival')
-      Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [])
-      return
-    if _.isArray(code)
-      self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: code})
-      Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', code)
+    
+    if _.isEqual(self.arrivals.get(), code)
+      # the call is from the UI
+      if _.isNull(code)
+        self.remove('arrival')
+        return
+      if _.isEmpty(code)
+        self.remove('arrival')
+        return
+      if _.isArray(code)
+         self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: code})
+      else
+         self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: [code]})
     else
-      self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: [code]})
-      Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [code])
+      if _.isNull(code)
+        Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [])
+        self.arrivals.set([])
+        return
+      if _.isEmpty(code)
+        Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [])
+        self.arrivals.set([])
+        return
+      if _.isArray(code)
+        Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', code)
+        self.arrivals.set(code)
+      else
+        Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [code])
+        self.arrivals.set([code])
     return
+  trackArrivals: () ->
+    self = this
+    Tracker.autorun ->
+      obj = self.arrivals.get()
+      self.setArrivals(obj)
+      async.nextTick(()->
+        self.compareStates()
+      )
+    return  
   # sets the level input on the UI to the 'value'
   # specified, as well as, updating the underlying FilterCriteria.
   #
-  # @param [Intever] value
+  # @note This is not part of the query, but is included to maintain the UI state.  Upon 'apply' the value is deleted from the query and used as an arguement to the server-side method
+  # @param [Integer] value
   setLevels: (value) ->
     self = this
-    if _.isUndefined(value)
-      throw new Error('A value must be defined or null.')
-    if _.isNull(value)
-      Session.set('grits-net-meteor:levels', null)
+    
+    # do not allow this to run prior to jQuery/DOM
+    if _.isUndefined($)
       return
-    val = Math.floor(parseInt(value, 10))
-    if isNaN(val) or val < 1
-      throw new Error('Level must be positive')
-    Session.set('grits-net-meteor:levels', val)
-    $("#connectednessLevels").val(val)
+    
+    if _.isUndefined(value)
+      throw new Error('Level must be defined.')
+    
+    if _.isEqual(self.levels.get(), value)
+      if _.isNull(value)
+        self.remove('levels')
+      else
+        val = Math.floor(parseInt(value, 10))
+        if isNaN(val) or val < 1
+          throw new Error('Level must be positive')
+        self.createOrUpdate('levels', {key: 'levels', operator: '$eq', value: val})
+    else      
+      self.levels.set(value)
+    return
+  trackLevels: () ->
+    self = this
+    Tracker.autorun ->
+      obj = self.levels.get()      
+      try
+        self.setLevels(obj)
+        async.nextTick(()-> 
+          self.compareStates()
+        )
+      catch e
+        Meteor.gritsUtil.errorHandler(e)      
     return
   # sets the limit input on the UI to the 'value'
-  # specified, as well as, updating the underlying global Session
-  # 'grits-net-meteor:limit' variable.
+  # specified, as well as, updating the underlying FilterCriteria.
   #
-  # @param [Intever] value
+  # @note This is not part of the query, but is included to maintain the UI state.  Upon 'apply' the value is deleted from the query and used as an arguement to the server-side method
+  # @param [Integer] value
   setLimit: (value) ->
     self = this
+    
+    # do not allow this to run prior to jQuery/DOM
+    if _.isUndefined($)
+      return
+    
     if _.isUndefined(value)
-      throw new Error('A value must be defined or null.')
-    val = Math.floor(parseInt(value, 10))
-    if isNaN(val) or val < 1
-      throw new Error('Limit must be positive')
-    $('#limit').val(val)
-    Session.set('grits-net-meteor:limit', val)
+      throw new Error('Limit must be defined.')
+    
+    if _.isEqual(self.limit.get(), value)
+      if _.isNull(value)
+        self.remove('limit')
+      else
+        val = Math.floor(parseInt(value, 10))
+        if isNaN(val) or val < 1
+          throw new Error('Limit must be positive')
+        self.createOrUpdate('limit', {key: 'limit', operator: '$eq', value: val})
+    else      
+      self.limit.set(value)
     return
-  # convenience method for reading all the filter UI inputs and creating and/or
-  # updating the underlying FilterCriteria
-  scanAll: () ->
+  trackLimit: () ->
     self = this
-    for name, method of self
-      if name.indexOf('read') >= 0
-        self[name]()
-    return
-  # reads the 'start' date from the filter and updates the filter criteria
-  readOperatingDateRangeStart: () ->
-    self = this
-    discontinuedDatePicker = Template.gritsFilter.getDiscontinuedDatePicker()
-    if _.isNull(discontinuedDatePicker)
-      return
-    discontinuedDate = discontinuedDatePicker.data('DateTimePicker').date()
-    if _.isUndefined(discontinuedDate) || _.isEmpty(discontinuedDate)
-      self.remove('discontinuedDate')
-      return
-    self.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: discontinuedDate})
-    return
-  # reads the 'end' date from the filter and updates the filter criteria
-  readOperatingDateRangeEnd: () ->
-    self = this
-    effectiveDatePicker = Template.gritsFilter.getEffectiveDatePicker()
-    if _.isNull(effectiveDatePicker)
-      return
-    effectiveDate = effectiveDatePicker.data('DateTimePicker').date()
-    if _.isUndefined(effectiveDate) || _.isEmpty(effectiveDate)
-      self.remove('effectiveDate')
-      return
-    self.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: effectiveDate})
-    return
-  # reads the 'levels' input currently displayed on the filter UI
-  # then calls the setter to set the Session variable
-  # @note: we do not add to the underlying FilterCriteria
-  readLevels: () ->
-    self = this
-    val = $("#connectednessLevels").val()
-    try
-      self.setLevels(val)
-    catch e
-      console.error(e)
-    return
-  readIncludeNearbyAirports: () ->
-    self = this
-    miles = $("#includeNearbyAirportsRadius").val()
-    if $('#includeNearbyAirports').is(':checked')
-      departures = self.readDeparture()
-      if departures.length >= 0
-        Meteor.call('findAirportById', departures[0], (err, airport) ->
-          self.setIncludeNearbyAirports(true, miles, airport.loc.coordinates)
+    Tracker.autorun ->
+      obj = self.limit.get()
+      try
+        self.setLimit(obj)
+        async.nextTick(()-> 
+          self.compareStates()
         )
+      catch e
+        Meteor.gritsUtil.errorHandler(e)
     return
-  # reads the 'seats' input currently displayed on the filter UI,
-  # then creates and/or updates the underlying FilterCriteria
-  readSeats: () ->
-    self = this
-    val = parseInt($("#seatsInput").val())
-    op = $('#seats-operand').val()
-    if _.isUndefined(op)
-      return
-    if _.isUndefined(val) or isNaN(val)
-      self.remove('seats')
-    else
-      self.createOrUpdate('seats', {key: 'totalSeats', operator: op, value: val})
-    return
-  # reads the 'stops' input currently displayed on the filter UI,
-  # then creates and/or updates the underlying FilterCriteria
-  readStops: () ->
-    self = this
-    val = parseInt($("#stopsInput").val())
-    op = $('#stops-operand').val()
-    if _.isUndefined(op)
-      return
-    if _.isUndefined(val) or isNaN(val)
-      @remove('stops')
-    else
-      @createOrUpdate('stops', {key: 'stops', operator: op, value: val})
-    return
-  # reads the 'departure' input currently displayed on the filter UI,
-  # then creates and/or updates the underlying FilterCriteria
+  # sets the offest as calculated by the current query that has more results
+  # than the limit
   #
-  # @return [Array] combined, departures from #departureSearchMain and #departureSearch inputs
-  readDeparture: () ->
+  # @note This is not part of the query, but is included to maintain the UI state.  Upon 'apply' the value is deleted from the query and used as an arguement to the server-side method
+  setOffset: () ->
     self = this
-    combined = []
-
-    if typeof Template.gritsFilter.getDepartureSearchMain() != 'undefined'
-      tokens =  Template.gritsFilter.getDepartureSearchMain().tokenfield('getTokens')
-      codes = _.pluck(tokens, 'label')
-      combined = _.union(codes, combined)
-
-    if typeof Template.gritsFilter.getDepartureSearch() != 'undefined'
-      tokens =  Template.gritsFilter.getDepartureSearch().tokenfield('getTokens')
-      codes = _.pluck(tokens, 'label')
-      combined = _.union(codes, combined)
-
-    if _.isEqual(combined, self.departures.get())
-      return combined
+    
+    # do not allow this to run prior to jQuery/DOM
+    if _.isUndefined($)
+      return
+    
+    totalRecords = Session.get('grits-net-meteor:totalRecords')
+    loadedRecords = Session.get('grits-net-meteor:loadedRecords')
+    
+    if (loadedRecords < totalRecords)
+      self.offset.set(loadedRecords)
     else
-      self.setDeparture(combined)
-      return combined
-  # reads the 'arrival' input currently displayed on the filter UI,
-  # then creates and/or updates the underlying FilterCriteria
-  readArrival: () ->
-    self = this
-    if typeof Template.gritsFilter.getDepartureSearch() != 'undefined'
-      tokens =  Template.gritsFilter.getArrivalSearch().tokenfield('getTokens')
-      codes = _.pluck(tokens, 'label')
-    if _.isEmpty(codes)
-      self.remove('arrival')
-    else
-      self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: codes})
-    return
-  # reads the 'weeklyFrequency' input currently displayed on the filter UI,
-  # then creates and/or updates the underlying FilterCriteria
-  readWeeklyFrequency: () ->
-    self = this
-    val = parseInt($("#weeklyFrequencyInput").val())
-    op = $('#weekly-frequency-operand').val()
-    if _.isUndefined(op)
-        return
-    if _.isUndefined(val) or isNaN(val)
-      self.remove('weeklyFrequency')
-    else
-      self.createOrUpdate('weeklyFrequency', {key: 'weeklyFrequency', operator: op, value: val})
-    return
-
+      self.offset.set(0)
+    
+    self.more()
+    
 GritsFilterCriteria = new GritsFilterCriteria() # exports as a singleton
