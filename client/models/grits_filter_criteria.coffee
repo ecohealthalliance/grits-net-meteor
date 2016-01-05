@@ -801,7 +801,6 @@ class GritsFilterCriteria
   # @note This is not part of the query, but is included to maintain the UI state.  Upon 'apply' the value is deleted from the query and used as an arguement to the server-side method
   setOffset: () ->
     self = this
-    
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
@@ -813,7 +812,7 @@ class GritsFilterCriteria
       self.offset.set(loadedRecords)
     else
       self.offset.set(0)
-    
     self.more()
+    return
     
 GritsFilterCriteria = new GritsFilterCriteria() # exports as a singleton
