@@ -462,7 +462,7 @@ class GritsFilterCriteria
       departures = self.readDeparture()
       if departures.length >= 0
         Meteor.call('findAirportById', departures[0], (err, airport) ->
-          self.setIncludeNearbyAirports(true, miles, airport.loc.coordinates)
+          #self.setIncludeNearbyAirports(true, miles, airport.loc.coordinates)
         )
     return
   # reads the 'seats' input currently displayed on the filter UI,
