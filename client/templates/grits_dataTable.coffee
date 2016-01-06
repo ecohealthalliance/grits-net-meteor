@@ -14,8 +14,20 @@ highlightPathTableRow = (path) ->
   # remove any previously clicked rows
   $table = $row.closest('table')
   $table.find('.activeRow').removeClass('activeRow')
-  # add the active class to this row
-  $row.addClass('activeRow')
+  if _previousPath != path
+    # add the active class to this row and remove any background-color
+    $row.addClass('activeRow').css({'background-color':''})
+    # reset the previous path background-color
+    if !_.isNull(_previousPath)
+      $previousPath = $("tr[data-id=#{_previousPath._id}]")
+      $previousPath.css({'background-color':_previousPath.color})
+    # this path becomes the previousPath
+    _previousPath = path
+  else
+    # clicked on same path, reset the color and set _previousPath to null
+    $row.css({'background-color':path.color})
+    _previousPath = null
+  return
 
 # formats the heatmap data for display in the template
 #
@@ -57,26 +69,17 @@ Template.gritsDataTable.events({
   'click .pathTableRow': (event, template) ->
     # get the clicked row
     $row = $(event.currentTarget)
-    # remove any previously clicked rows
-    $table = $row.closest('table')
-    $table.find('.activeRow').removeClass('activeRow')
     # find the path from template.paths using the DOM's id
     _id = $row.data('id')
-    paths = template.paths.get()
+    paths = template.paths.get()    
     path = _.find(paths, (path) -> path._id == _id)
     if _.isUndefined(path)
       return
     element = $('#'+path.elementID)[0]
-    console.log('element: ', element)
     if _.isUndefined(element)
       return
     # simulate a click on the path
-    path.eventHandlers.click(element)
-    # if we're not clicking on ourself
-    if _previousPath != path
-      # add the active class to this row
-      $row.addClass('activeRow')
-    _previousPath = path
+    path.eventHandlers.click(element)   
     return
   'click .exportData': (event) ->
     fileType = $(event.currentTarget).attr("data-type")
@@ -102,6 +105,18 @@ Template.gritsDataTable.helpers({
       return []
     else
       return Template.instance().heatmaps.get()
+  getPathThroughputColor: (path) ->
+    if _.isUndefined(path)
+      return ''
+    if _.isUndefined(Template.instance().pathsLayer)
+      return ''
+    return Template.instance().pathsLayer._getNormalizedColor(path)
+  getNodeThroughputColor: (node) ->
+    if _.isUndefined(node)
+      return ''
+    if _.isUndefined(Template.instance().nodesLayer)
+      return ''
+    return Template.instance().nodesLayer._getNormalizedColor(node)
 })
 
 Template.gritsDataTable.onCreated ->
@@ -116,16 +131,16 @@ Template.gritsDataTable.onRendered ->
   self = this
 
   # get the map instance and layers
-  map = Template.gritsMap.getInstance()
-  pathsLayer = map.getGritsLayer('Paths')
-  nodesLayer = map.getGritsLayer('Nodes')
-  heatmapLayer = map.getGritsLayer('Heatmap')
+  self.map = Template.gritsMap.getInstance()
+  self.pathsLayer = self.map.getGritsLayer('Paths')
+  self.nodesLayer = self.map.getGritsLayer('Nodes')
+  self.heatmapLayer = self.map.getGritsLayer('Heatmap')
 
   self.autorun ->
     # when the paths are finished loading, set the template data to the result
-    pathsLoaded = pathsLayer.hasLoaded.get()
+    pathsLoaded = self.pathsLayer.hasLoaded.get()
     if pathsLoaded
-      data = pathsLayer.getPaths()
+      data = self.pathsLayer.getPaths()
       if _.isEmpty(data)
         self.paths.set([])
       else
@@ -134,9 +149,9 @@ Template.gritsDataTable.onRendered ->
         )
         self.paths.set(sorted)
     # when the nodes are finished loading, set the template data to the result
-    nodesLoaded = nodesLayer.hasLoaded.get()
+    nodesLoaded = self.nodesLayer.hasLoaded.get()
     if nodesLoaded
-      data = nodesLayer.getNodes()
+      data = self.nodesLayer.getNodes()
       if _.isEmpty(data)
         self.nodes.set([])
       else
@@ -146,9 +161,9 @@ Template.gritsDataTable.onRendered ->
         nodes = _formatNodeData(sorted)
         self.nodes.set(nodes)
     # when the heatmap is finished loading, set the template data to the result
-    heatmapLoaded = heatmapLayer.hasLoaded.get()
+    heatmapLoaded = self.heatmapLayer.hasLoaded.get()
     if heatmapLoaded
-      data = heatmapLayer.getData()
+      data = self.heatmapLayer.getData()
       if _.isEmpty(data)
         self.heatmaps.set([])
       else
