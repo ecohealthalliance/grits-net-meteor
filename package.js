@@ -61,12 +61,12 @@ Package.on_use(function(api){
     'client/templates/grits_legend.html',
     'client/templates/grits_legend.coffee',
     'client/templates/grits_elementDetails.html',
-    'client/templates/grits_elementDetails.coffee',
-    'client/subscription.coffee'
+    'client/templates/grits_elementDetails.coffee'
   ], 'client');
 
   api.addAssets([
-    'client/images/flirt.png'
+    'client/images/flirt.png',
+    'client/images/origin-marker-icon.svg'
   ], 'client');
 
   // both client and server files
