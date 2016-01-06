@@ -77,3 +77,19 @@ NOTE: mongodb will need to be populated by the grits-net-consume script.  Please
  2. Run the following Docker command, making substitutions to the environmental variables as needed:
 
  ``` docker run -e MONGO_URL='mongodb://mongo:27017/test' -e ROOT_URL='http://localhost' -e PORT=8080 --link mongo:mongo -d -p 8080:8080 grits/grits-net-meteor ```
+
+
+## License
+Copyright 2016 EcoHealth Alliance
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
