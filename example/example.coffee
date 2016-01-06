@@ -45,7 +45,7 @@ if Meteor.isClient
           subdomains: '1234')
         Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
           layerName: 'Esri_WorldImagery')
-    
+
         baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
         element = 'grits-map'
         height = window.innerHeight
@@ -59,15 +59,17 @@ if Meteor.isClient
           center: L.latLng(30,-20)
           layers: baseLayers
         }
-    
+
+        # the map instance
         map = new GritsMap(element, options, baseLayers)
         map.addGritsLayer(new GritsHeatmapLayer(map))
         map.addGritsLayer(new GritsPathLayer(map))
         map.addGritsLayer(new GritsNodeLayer(map))
-    
+
         # Add the default controls to the map.
         Template.gritsMap.addDefaultControls(map)
-    
+
+
         # Add test control
         Meteor.call('isTestEnvironment', (err, result) ->
           if err
@@ -75,8 +77,10 @@ if Meteor.isClient
           if result
             map.addControl(new GritsControl('<b> Select a Module </b><div id="moduleSelectorDiv"></div>', 7, 'topleft', 'info'))
             Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
+          else
+            map.addGritsLayer(new GritsAllNodesLayer(map))
         )
-         
+
         Template.gritsMap.setInstance(map)
         return
     return
