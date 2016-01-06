@@ -1,4 +1,4 @@
-_debounceInMilliseconds = 500 # time to delay the auto-submission of the filter
+_debounceInMilliseconds = 2000 # time to delay the auto-submission of the filter
 _ignoreFields = ['levels', 'limit', 'offset'] # fields that are used for maintaining state but will be ignored when sent to the server
 _validFields = ['weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels', 'effectiveDate', 'discontinuedDate', 'levels', 'limit']
 _validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in', '$near', null]
@@ -37,7 +37,7 @@ class GritsFilterCriteria
 
     # debounce wrapper to limit the amount of calls to this function within
     # the specified time period
-    self.apply = _.debounce(self.apply, _debounceInMilliseconds)
+    self.autoApply = _.debounce(self.autoApply, _debounceInMilliseconds)
 
     # lastFlightId used for query with more than one level
     self.lastFlightId = null
@@ -421,6 +421,14 @@ class GritsFilterCriteria
         self.more()
     )
     return
+  # automatically applies the filter; resets the offset, loadedRecords, and
+  # totalRecords
+  #
+  # @note this method is debounced in the constructor
+  autoApply: () ->
+    self = this
+    if !Session.get('grits-net-meteor:isUpdating')
+      self.apply()
   # sets the 'start' date from the filter and updates the filter criteria
   #
   # @param [Object] date, Date object or null to clear the criteria
