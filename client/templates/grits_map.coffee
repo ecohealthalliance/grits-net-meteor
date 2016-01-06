@@ -26,9 +26,7 @@ setInstance = (map) ->
 #
 # @param [GritsMap] map - map to apply the default controls
 addDefaultControls = (map) ->
-  legendControl = new GritsControl('<div id="legendContainer"></div>', 8, 'bottomright', 'info')
-  map.addControl(legendControl)
-  Blaze.render(Template.gritsLegend, $('#legendContainer')[0])
+  Blaze.render(Template.gritsLegend, $('#sidebar-slider')[0])
 
   elementDetails = new GritsControl('<div id="elementDetailsContainer"></div>', 7, 'bottomright', 'info element-details')
   map.addControl(elementDetails)
