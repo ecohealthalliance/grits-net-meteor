@@ -7,7 +7,7 @@
   <div>
     {{#if state }}
       <i class="fa fa-exclamation-circle filter-status" title="Recent changes have not been applied"></i>
-    {{/if}}    
+    {{/if}}
     <div class="spinner">
       <i id="filterLoading" class="fa fa-spinner fa-spin"></i>
     </div>
@@ -75,7 +75,7 @@
         </div>
         <div class="row filter-row">
           <div class="col-xs-3">
-            <select id="stops-operand" class="form-control input-sm advanced-filter-status">
+            <select id="stopsOperator" class="form-control input-sm advanced-filter-status">
               <option value="$gte"><span> &gt;= </span></option>
               <option value="$gt"><span> &gt; </span></option>
               <option value="$lte"><span> &lt;= </span></option>
@@ -85,7 +85,7 @@
             </select>
           </div>
           <div class="col-xs-3">
-            <input type="number" id="stopsInput" class="form-control input-sm advanced-filter-status" min="0" max="5">
+            <input type="number" id="stopsInput" class="form-control input-sm advanced-filter-status" min="0" max="5" value="{{stops}}">
           </div>
           <div class="col-xs-6"></div>
         </div>
@@ -96,7 +96,7 @@
         </div>
         <div class="row filter-row">
           <div class="col-xs-3">
-            <select id="seats-operand" class="form-control input-sm advanced-filter-status">
+            <select id="seatsOperator" class="form-control input-sm advanced-filter-status">
               <option value="$gte"><span> &gt;= </span></option>
               <option value="$gt"><span> &gt; </span></option>
               <option value="$lte"><span> &lt;= </span></option>
@@ -106,7 +106,7 @@
             </select>
           </div>
           <div class="col-xs-3">
-            <input type="number" id="seatsInput" class="form-control input-sm advanced-filter-status" min="0" max="525">
+            <input type="number" id="seatsInput" class="form-control input-sm advanced-filter-status" min="0" max="525" value="{{seats}}">
           </div>
           <div class="col-xs-6"></div>
         </div>
@@ -117,7 +117,7 @@
         </div>
         <div class="row filter-last-row">
           <div class="col-xs-3">
-            <input type="number" id="connectednessLevels" min="1" value="1" class="form-control input-sm advanced-filter-status">
+            <input type="number" id="connectednessLevels" min="1" value="{{levels}}" class="form-control input-sm advanced-filter-status">
           </div>
         </div>
         <!-- end flight tab content -->
@@ -158,7 +158,7 @@
         </div>
         <div class="row filter-last-row">
           <div class="col-xs-3">
-            <select id="weekly-frequency-operand" class="form-control input-sm advanced-filter-status">
+            <select id="weeklyFrequencyOperator" class="form-control input-sm advanced-filter-status">
               <option value="$gte"><span> &gt;= </span></option>
               <option value="$gt"><span> &gt; </span></option>
               <option value="$lte"><span> &lt;= </span></option>
@@ -168,7 +168,7 @@
             </select>
           </div>
           <div class="col-xs-3">
-            <input type="number" id="weeklyFrequencyInput" class="form-control input-sm advanced-filter-status" min="0" max="7">
+            <input type="number" id="weeklyFrequencyInput" class="form-control input-sm advanced-filter-status" min="0" max="7" value="{{weeklyFrequency}}">
           </div>
           <div class="col-xs-6"></div>
         </div>
@@ -181,7 +181,7 @@
           <span class="filter-label">{{_ "gritsFilter.limit-label"}}:</span>
         </div>
         <div class="col-xs-4">
-          <input type="number" id="limit" class="form-control input-sm advanced-filter-status" value="1000">
+          <input type="number" id="limit" class="form-control input-sm advanced-filter-status" value={{limit}}>
         </div>
         <div class="col-xs-5">
           <button id="loadMore" class="btn btn-sm btn-default pull-right" disabled="true">
@@ -189,6 +189,7 @@
           </button>
         </div>
       </div>
+      <!--
       <div class="row filter-row">
         <div class="col-xs-12">
           <button id="applyFilter" class="btn btn-sm btn-default">
@@ -201,6 +202,7 @@
           {{/if}}
         </div>
       </div>
+      -->
       <div class="row row-status-bar">
         <div class="col-xs-6 col-status-bar">
           <span class="status-bar-text">{{_ "gritsFilter.loaded-records"}}:</span>

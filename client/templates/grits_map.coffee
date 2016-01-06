@@ -2,7 +2,6 @@
 #
 # When another meteor app adds grits:grits-net-meteor as a package
 # Template.gritsFilter will be available globally.
-
 _instance = null
 
 # returns the map instance

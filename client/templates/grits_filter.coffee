@@ -2,9 +2,11 @@
 #
 # When another meteor app adds grits:grits-net-meteor as a package
 # Template.gritsFilter will be available globally.
-_startDate = null # onCreated will initialize the date through GritsFilterCriteria
-_endDate = null # onCreated will initialize the date through GritsFilterCriteria
-_lastFlightId = null # stores the last flight _id from the collection, used in limit/offset
+_init = true # flag, set to false when initialization is done
+_initStartDate = null # onCreated will initialize the date through GritsFilterCriteria
+_initEndDate = null # onCreated will initialize the date through GritsFilterCriteria
+_initLimit = null # onCreated will initialize the limt through GritsFilterCriteria
+_initLevels = null # onCreated will initialize the limt through GritsFilterCriteria
 _departureSearchMain = null # onRendered will set this to a typeahead object
 _departureSearch = null # onRendered will set this to a typeahead object
 _arrivalSearch = null # onRendered will set this to a typeahead object
@@ -76,21 +78,6 @@ _syncRemovedSharedToken = (newToken, id) ->
       tokens.splice(_.indexOf(tokens, newToken), 1)
       _departureSearch.tokenfield('setTokens', tokens)
   return
-
-# returns the last flight _id, used for the [More] button in limit/offset
-#
-# @return [String] lastFlightId, the last _id of a flight record
-getLastFlightId = () ->
-  _lastFlightId
-
-# sets the last flight _id
-#
-# @param [String] lastId, the last _id of a flight record
-setLastFlightId = (lastId) ->
-  if _.isUndefined(lastId)
-    return
-  _lastFlightId = lastId
-
 
 # returns the first origin within GritsFilterCriteria
 #
@@ -239,22 +226,56 @@ Template.gritsFilter.helpers({
     else
       return false
   start: () ->
-    # set inital date
-    return _startDate
+    return _initStartDate
   end: () ->
-    # set inital date
-    return _endDate
+    return _initEndDate
+  levels: () ->
+    if _init
+      # set inital level
+      return _initLevels
+    else
+      # reactive var
+      return GritsFilterCriteria.levels.get()
+  limit: () ->
+    if _init
+      # set inital limit
+      return _initLimit
+    else
+      # reactive var
+      return GritsFilterCriteria.limit.get()
+  stops: () ->
+    # reactive var
+    obj = GritsFilterCriteria.stops.get()
+    if _.isNull(obj)
+      return ''
+    else
+      return obj.value
+  seats: () ->
+    # reactive var
+    obj = GritsFilterCriteria.seats.get()
+    if _.isNull(obj)
+      return ''
+    else
+      return obj.value
+  weeklyFrequency: () ->
+    # reactive var
+    obj = GritsFilterCriteria.weeklyFrequency.get()
+    if _.isNull(obj)
+      return ''
+    else
+      return obj.value
 })
 
 Template.gritsFilter.onCreated ->
-  _startDate = GritsFilterCriteria.initStart()
-  _endDate = GritsFilterCriteria.initEnd()
+  _initStartDate = GritsFilterCriteria.initStart()
+  _initEndDate = GritsFilterCriteria.initEnd()
+  _initLimit = GritsFilterCriteria.initLimit()
+  _initLevels = GritsFilterCriteria.initLevels()
+  _init = false # done initializing initial input values
 
   # Public API
   # Currently we declare methods above for documentation purposes then assign
   # to the Template.gritsFilter as a global export
-  Template.gritsFilter.getLastFlightId = getLastFlightId
-  Template.gritsFilter.setLastFlightId = setLastFlightId
   Template.gritsFilter.getOrigin = getOrigin
   Template.gritsFilter.getDepartureSearchMain = getDepartureSearchMain
   Template.gritsFilter.getDepartureSearch = getDepartureSearch
@@ -330,7 +351,7 @@ Template.gritsFilter.onRendered ->
     return
 
   departureSearchMain = $('#departureSearchMain').tokenfield({
-    typeahead: [{hint:false, highlight:true}, {
+    typeahead: [{hint:false, highlight: true}, {
       display: (match) ->
         if _.isUndefined(match)
           return
@@ -397,7 +418,7 @@ Template.gritsFilter.onRendered ->
     _setDiscontinuedDatePicker(discontinuedDatePicker)
   )
 
-  # set the originals state of the filter on document ready
+  # set the original state of the filter on document ready
   GritsFilterCriteria.setState()
 
   # When the template is rendered, setup a Tracker autorun to listen to changes
@@ -408,10 +429,10 @@ Template.gritsFilter.onRendered ->
     loadedRecords = Session.get 'grits-net-meteor:loadedRecords'
     totalRecords = Session.get 'grits-net-meteor:totalRecords'
     if loadedRecords < totalRecords
-      # disable the [More] button
+      # enable the [More] button when loaded is less than total
       $('#loadMore').prop('disabled', false)
     else
-      # enable the [More] button
+      # disable the [More] button
       $('#loadMore').prop('disabled', true)
 
     # update the ajax-loader
@@ -423,18 +444,87 @@ Template.gritsFilter.onRendered ->
       $('#applyFilter').prop('disabled', false)
       $('#filterLoading').hide()
 
+_changeWeeklyFrequencyHandler = (e) ->
+    val = parseInt($("#weeklyFrequencyInput").val(), 10)
+    if _.isNaN(val)
+      val = null
+    op = $('#weeklyFrequencyOperator').val()
+    GritsFilterCriteria.weeklyFrequency.set({'value': val, 'operator': op})
+    return
+_changeStopsHandler = (e) ->
+  val = parseInt($("#stopsInput").val(), 10)
+  if _.isNaN(val)
+    val = null
+  op = $('#stopsOperator').val()
+  GritsFilterCriteria.stops.set({'value': val, 'operator': op})
+  return
+_changeSeatsHandler = (e) ->
+  val = parseInt($("#seatsInput").val(), 10)
+  if _.isNaN(val)
+    val = null
+  op = $('#seatsOperator').val()
+  GritsFilterCriteria.seats.set({'value': val, 'operator': op})
+  return
+_changeDepartureHandler = (e) ->
+  combined = []
+  tokens =  _departureSearchMain.tokenfield('getTokens')
+  codes = _.pluck(tokens, 'label')
+  combined = _.union(codes, combined)
+  tokens =  _departureSearch.tokenfield('getTokens')
+  codes = _.pluck(tokens, 'label')
+  combined = _.union(codes, combined)
+  if _.isEqual(combined, GritsFilterCriteria.departures.get())
+    # do nothing
+    return
+  GritsFilterCriteria.departures.set(combined)
+  return
+_changeArrivalHandler = (e) ->
+  tokens =  _arrivalSearch.tokenfield('getTokens')
+  codes = _.pluck(tokens, 'label')
+  if _.isEqual(codes, GritsFilterCriteria.arrivals.get())
+    # do nothing
+    return
+  GritsFilterCriteria.arrivals.set(codes)
+  return
+_changeDateHandler = (e) ->
+  $target = $(e.target)
+  id = $target.attr('id')
+  if id == 'discontinuedDate'
+    if _.isNull(_discontinuedDatePicker)
+      return
+    date = _discontinuedDatePicker.data('DateTimePicker').date()
+    GritsFilterCriteria.operatingDateRangeStart.set(date)
+    return
+  if id == 'effectiveDate'
+    if _.isNull(_effectiveDatePicker)
+      return
+    date = _effectiveDatePicker.data('DateTimePicker').date()
+    GritsFilterCriteria.operatingDateRangeEnd.set(date)
+    return
+_changeLevelsHandler = (e) ->
+  val = $("#connectednessLevels").val()
+  GritsFilterCriteria.levels.set(val)
+  return
+_changeLimitHandler = (e) ->
+  val = $("#limit").val()
+  GritsFilterCriteria.limit.set(val)
+  return
 # events
 #
 # Event handlers for the grits_filter.html template
 Template.gritsFilter.events
-  'change .advanced-filter-status': (event) ->
-    # compare the state of the filter so that an indicator may be shown to the user
-    GritsFilterCriteria.compareStates()
-    return
-  'dp.change': (event) ->
-    # compare the state of the filter so that an indicator may be shown to the user
-    GritsFilterCriteria.compareStates()
-    return
+  'change #weeklyFrequencyInput': _changeWeeklyFrequencyHandler
+  'change #weeklyFrequencyOperator': _changeWeeklyFrequencyHandler
+  'change #stopsInput': _changeStopsHandler
+  'change #stopsOperator': _changeStopsHandler
+  'change #seatsInput': _changeSeatsHandler
+  'change #seatsOperator': _changeSeatsHandler
+  'change #departureSearchMain': _changeDepartureHandler
+  'change #departureSearch': _changeDepartureHandler
+  'change #arrivalSearch': _changeArrivalHandler
+  'change #connectednessLevels': _changeLevelsHandler
+  'change #limit': _changeLimitHandler
+  'dp.change': _changeDateHandler
   'dp.show': (event) ->
     # in order to not be contained within the scrolling div, the style of the
     # .bootstrap-datetimepicker-widget.dropdown-menu is set to fixed then we
@@ -447,7 +537,7 @@ Template.gritsFilter.events
     return
   'click #includeNearbyAirports': (event) ->
     miles = parseInt($("#includeNearbyAirportsRadius").val(), 10)
-    departures = GritsFilterCriteria.readDeparture()
+    departures = GritsFilterCriteria.departures.get()
 
     if departures.length <= 0
       toastr.error('Include Nearby requires a Departure')
@@ -471,10 +561,9 @@ Template.gritsFilter.events
     return
   'keyup #departureSearchMain-tokenfield': (event) ->
     if event.keyCode == 13
-      if GritsFilterCriteria.readDeparture() <= 0
+      if GritsFilterCriteria.departures.get() <= 0
         # do not apply without any departures
         return
-      GritsFilterCriteria.scanAll()
       GritsFilterCriteria.apply()
     return
   'click #toggleFilter': (e) ->
@@ -482,11 +571,10 @@ Template.gritsFilter.events
     $("#filter").toggle("fast")
     return
   'click #applyFilter': (event, template) ->
-    GritsFilterCriteria.scanAll()
     GritsFilterCriteria.apply()
     return
   'click #loadMore': () ->
-    Session.set 'grits-net-meteor:lastId',  Template.gritsFilter.getLastFlightId()
+    GritsFilterCriteria.setOffset()
     return
   'tokenfield:initialize': (e) ->
     $target = $(e.target)

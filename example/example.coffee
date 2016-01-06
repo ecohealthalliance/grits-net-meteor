@@ -30,10 +30,8 @@ if Meteor.isClient
 
   Template.gritsMap.onRendered ->
     self = Template.instance()
-    console.log('self:', self)
     self.autorun ->
       isReady = Session.get('grits-net-meteor:isReady')
-      console.log('isReady:', isReady)
       if isReady
         OpenStreetMap = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
           layerName: 'CartoDB_Positron'
