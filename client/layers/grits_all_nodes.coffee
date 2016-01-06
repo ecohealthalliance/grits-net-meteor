@@ -24,14 +24,14 @@ _eventHandlers = {
           # set the clicked element as the new origin
           departureSearchMain = Template.gritsFilter.getDepartureSearchMain()
           departureSearchMain.tokenfield('setTokens', [self._id])
-
+          map = Template.gritsMap.getInstance()
+          pathLayer = map.getGritsLayer('Paths')
+          nodeLayer = map.getGritsLayer('Nodes')
+          allNodesLayer = map.getGritsLayer('AllNodes')
           async.nextTick(() ->
             # apply the filter
             GritsFilterCriteria.apply((err, res) ->
               if res
-                map = Template.gritsMap.getInstance()
-                pathLayer = map.getGritsLayer('Paths')
-                nodeLayer = map.getGritsLayer('Nodes')
                 if map.getZoom() > 2
                   # panto the map if we're at zoom level 3 or greater
                   map.panTo(self.latLng)
@@ -42,6 +42,9 @@ _eventHandlers = {
                 pathLayer.currentPath.set(null)
                 # set nodeLayer previous/current node
                 nodeLayer.currentNode.set(self)
+                # remove the allNodesLayer if we had results
+                if res.length > 0
+                  allNodesLayer.remove()
             )
           )
     return
@@ -84,13 +87,36 @@ class GritsAllNodesLayer extends GritsLayer
     self._populateAllNodes()
     return
 
-  # clears the layer
+  # removes the layer
+  #
+  remove: () ->
+    self = this
+    self._removeLayerGroup()
+
+  # adds the layer
+  #
+  add: () ->
+    self = this
+    self._addLayerGroup()
+
+  # removes the layerGroup from the map
   #
   # @override
-  clear: () ->
-    @_removeLayerGroup()
-    @_addLayerGroup()
-    @hasLoaded.set(false)
+  _removeLayerGroup: () ->
+    self = this
+    if !(typeof self._layerGroup == 'undefined' or self._layerGroup == null)
+      self._map.removeLayer(self._layerGroup)
+    return
+
+  # adds the layer group to the map
+  #
+  # @override
+  _addLayerGroup: () ->
+    self = this
+    self._layerGroup = L.layerGroup([self._layer])
+    self._map.addOverlayControl(self._displayName, self._layerGroup)
+    self._map.addLayer(self._layerGroup)
+    return
 
   # draws the layer
   #
@@ -104,14 +130,16 @@ class GritsAllNodesLayer extends GritsLayer
   #
   # @return [Array] array of nodes
   getNodes: () ->
-    return _.values(@_data)
+    self = this
+    return _.values(self._data)
 
   # gets the element ID within the DOM of a path
   #
   # @param [Object] obj, a gritsNode object
   # @return [String] elementID
   getElementID: (obj) ->
-    return @_prefixDOMID + obj._id
+    self = this
+    return self._prefixDOMID + obj._id
 
   # The D3 callback that renders the svg elements on the map
   #
