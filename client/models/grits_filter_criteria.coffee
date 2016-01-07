@@ -34,17 +34,17 @@ _Filter = Astro.Class(
 class GritsFilterCriteria
   constructor: () ->
     self = this
-    
+
     # debounce wrapper to limit the amount of calls to this function within
     # the specified time period
     self.autoApply = _.debounce(self.autoApply, _debounceInMilliseconds)
-    
+
     # lastFlightId used for query with more than one level
     self.lastFlightId = null
-    
+
     # reactive var used to update the UI when the query state has changed
     self.stateChanged = new ReactiveVar(null)
-    
+
     # setup an instance variable that contains todays date.  This will be used
     # to set the initial Start and End dates to the Operating Date Range
     now = new Date()
@@ -55,7 +55,7 @@ class GritsFilterCriteria
     # this._baseState keeps track of the initial plugin state after any init
     # methods have run
     self._baseState = {}
-    
+
     # reactive vars to track form binding
     #   departures
     self.departures = new ReactiveVar([])
@@ -65,10 +65,10 @@ class GritsFilterCriteria
     self.trackArrivals()
     #   weeklyFrequency
     self.weeklyFrequency = new ReactiveVar(null)
-    self.trackWeeklyFrequency()    
+    self.trackWeeklyFrequency()
     #   stops
     self.stops = new ReactiveVar(null)
-    self.trackStops()    
+    self.trackStops()
     #   seats
     self.seats = new ReactiveVar(null)
     self.trackSeats()
@@ -83,8 +83,8 @@ class GritsFilterCriteria
     self.trackLevels()
     #   limit
     self.limit = new ReactiveVar(1000)
-    self.trackLimit()    
-       
+    self.trackLimit()
+
     #   offset
     self.offset = new ReactiveVar(0)
     return
@@ -116,7 +116,7 @@ class GritsFilterCriteria
     # get the query object
     query = self.getQueryObject()
     # update the state logic for the indicator
-    _state = JSON.stringify(query)    
+    _state = JSON.stringify(query)
     self._baseState = JSON.stringify(query)
     month = end.getMonth() + 1
     date = end.getDate()
@@ -125,7 +125,7 @@ class GritsFilterCriteria
     self.operatingDateRangeEnd.set(new Date(year, month, date))
     return "#{month}/#{date}/#{yearStr}"
   # initialize the end date through the 'effectiveDate' filter
-  #  
+  #
   # @return [Integer] level
   initLevels: () ->
     self = this
@@ -213,13 +213,13 @@ class GritsFilterCriteria
       if current != _state
         # do not notifiy on an empty query or the base state
         if current == "{}" || current == self._baseState
-          self.stateChanged.set(false)      
+          self.stateChanged.set(false)
         else
           self.stateChanged.set(true)
-          
+
           # auto-apply the filter
           self.autoApply()
-          
+
           # disable [More...] button when filter has changed
           $('#loadMore').prop('disabled', true)
       else
@@ -237,14 +237,14 @@ class GritsFilterCriteria
   #
   # @return [String] the query object JSON.strigify
   getState: () ->
-    _state  
+    _state
   # sets the original/previous state of the filter, this method will read the
   # current query object and store is as a JSON string
   setState: () ->
     self = this
     query = self.getQueryObject()
     _state = JSON.stringify(query)
-    return  
+    return
   # process the results of the meteor methods to get flights
   #
   # @param [Array] flights, an Array of flights to process
@@ -254,12 +254,12 @@ class GritsFilterCriteria
     map = Template.gritsMap.getInstance()
     nodeLayer = map.getGritsLayer('Nodes')
     pathLayer = map.getGritsLayer('Paths')
-    
+
     # if the offset is equal to zero, clear the layers
     if offset == 0
       nodeLayer.clear()
       pathLayer.clear()
-    
+
     count = Session.get('grits-net-meteor:loadedRecords')
     processQueue = async.queue(((flight, callback) ->
       nodes = nodeLayer.convertFlight(flight, 1, self.departures.get())
@@ -271,7 +271,7 @@ class GritsFilterCriteria
         Session.set('grits-net-meteor:loadedRecords', ++count)
         callback()
     ), 1)
-    
+
     # final method for when all items within the queue are processed
     processQueue.drain = ->
       nodeLayer.draw()
@@ -280,12 +280,12 @@ class GritsFilterCriteria
       pathLayer.hasLoaded.set(true)
       Session.set('grits-net-meteor:loadedRecords', count)
       Session.set('grits-net-meteor:isUpdating', false)
-    
+
     # add the flights to thet queue which will start processing
     processQueue.push(flights)
     return
   # applies the filter but does not reset the offset
-  # 
+  #
   # @param [Function] cb, the callback function
   more: (cb) ->
     self = this
@@ -303,19 +303,19 @@ class GritsFilterCriteria
     # set the state
     self.setState()
     self.compareStates()
-    
+
     # set the arguments
     levels = query.levels
     limit = query.limit
     lastId = self.lastFlightId
     offset = self.offset.get()
-    
+
     # remove the ignoreFields from the query
     _.each(_ignoreFields, (field) ->
       if query.hasOwnProperty(field)
         delete query[field]
     )
-    
+
     if levels > 1
       origin = Template.gritsFilter.getOrigin()
       if !_.isNull(origin)
@@ -341,7 +341,7 @@ class GritsFilterCriteria
           )
         return
       return
-    
+
     # show the loading indicator and call the server-side method
     Session.set 'grits-net-meteor:isUpdating', true
     async.auto({
@@ -351,36 +351,36 @@ class GritsFilterCriteria
           if (err)
             callback(err)
             return
-          
+
           if Meteor.gritsUtil.debug
             console.log 'totalRecords: ', totalRecords
-            
+
           if levels <= 1
             Session.set 'grits-net-meteor:totalRecords', totalRecords
-            
+
           callback(null, totalRecords)
         )
       # when count is finished, get the flights if greater than 0
       'getFlights': ['getCount', (callback, result) ->
         totalRecords = result.getCount
-        
+
         if totalRecords.length <= 0
           toastr.info('The filter did not return any results')
           Session.set('grits-net-meteor:isUpdating', false)
           callback(null)
           return
-        
+
         Meteor.call('flightsByQuery', query, limit, offset, (err, flights) ->
           if (err)
             callback(err)
             return
-          
+
           if _.isUndefined(flights) || flights.length <= 0
             toastr.info('The filter did not return any results')
             Session.set('grits-net-meteor:isUpdating', false)
             callback(null, [])
             return
-          
+
           callback(null, flights)
         )
       ]
@@ -398,7 +398,7 @@ class GritsFilterCriteria
       self.process(flights, offset)
       return
     )
-    return    
+    return
   # applies the filter; resets the offset, loadedRecords, and totalRecords
   #
   # @param [Function] cb, the callback function
@@ -427,22 +427,23 @@ class GritsFilterCriteria
   # @note this method is debounced in the constructor
   autoApply: () ->
     self = this
-    self.apply()
+    if !Session.get('grits-net-meteor:isUpdating')
+      self.apply()
   # sets the 'start' date from the filter and updates the filter criteria
   #
   # @param [Object] date, Date object or null to clear the criteria
   setOperatingDateRangeStart: (date) ->
     self = this
-    
+
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
-      return    
-    discontinuedDatePicker = Template.gritsFilter.getDiscontinuedDatePicker()        
+      return
+    discontinuedDatePicker = Template.gritsFilter.getDiscontinuedDatePicker()
     if _.isNull(discontinuedDatePicker)
       return
-    
+
     discontinuedDate = discontinuedDatePicker.data('DateTimePicker').date()
-    
+
     if _.isNull(date) || _.isNull(discontinuedDate)
       if _.isEqual(date, discontinuedDate)
         self.remove('discontinuedDate')
@@ -450,7 +451,7 @@ class GritsFilterCriteria
         discontinuedDatePicker.data('DateTimePicker').date(null)
         self.operatingDateRangeStart.set(null)
       return
-    
+
     if _.isEqual(date.toISOString(), discontinuedDate.toISOString())
       # the reactive var is already set, change is from the UI
       self.createOrUpdate('discontinuedDate', {key: 'discontinuedDate', operator: '$gte', value: discontinuedDate})
@@ -463,7 +464,7 @@ class GritsFilterCriteria
     Tracker.autorun ->
       obj = self.operatingDateRangeStart.get()
       self.setOperatingDateRangeStart(obj)
-      async.nextTick(()-> 
+      async.nextTick(()->
         self.compareStates()
       )
     return
@@ -472,16 +473,16 @@ class GritsFilterCriteria
   # @param [Object] date, Date object or null to clear the criteria
   setOperatingDateRangeEnd: (date) ->
     self = this
-    
+
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
     effectiveDatePicker = Template.gritsFilter.getEffectiveDatePicker()
     if _.isNull(effectiveDatePicker)
       return
-    
+
     effectiveDate = effectiveDatePicker.data('DateTimePicker').date()
-    
+
     if _.isNull(date) || _.isNull(effectiveDate)
       if _.isEqual(date, effectiveDate)
         self.remove('effectiveDate')
@@ -489,7 +490,7 @@ class GritsFilterCriteria
         effectiveDatePicker.data('DateTimePicker').date(null)
         self.operatingDateRangeEnd.set(null)
       return
-    
+
     if _.isEqual(date.toISOString(), effectiveDate.toISOString())
       # the reactive var is already set, change is from the UI
       self.createOrUpdate('effectiveDate', {key: 'effectiveDate', operator: '$lte', value: effectiveDate})
@@ -502,7 +503,7 @@ class GritsFilterCriteria
     Tracker.autorun ->
       obj = self.operatingDateRangeEnd.get()
       self.setOperatingDateRangeEnd(obj)
-      async.nextTick(()-> 
+      async.nextTick(()->
         self.compareStates()
       )
     return
@@ -513,7 +514,7 @@ class GritsFilterCriteria
   # @param [Integer] value
   setWeeklyFrequency: (operator, value) ->
     self = this
-    
+
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
@@ -539,7 +540,7 @@ class GritsFilterCriteria
       if _.isNull(obj)
         return
       self.setWeeklyFrequency(obj.operator, obj.value)
-      async.nextTick(()-> 
+      async.nextTick(()->
         self.compareStates()
       )
     return
@@ -550,7 +551,7 @@ class GritsFilterCriteria
   # @param [Integer] value
   setStops: (operator, value) ->
     self = this
-    
+
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
@@ -576,7 +577,7 @@ class GritsFilterCriteria
       if _.isNull(obj)
         return
       self.setStops(obj.operator, obj.value)
-      async.nextTick(()-> 
+      async.nextTick(()->
         self.compareStates()
       )
     return
@@ -587,7 +588,7 @@ class GritsFilterCriteria
   # @param [Integer] value
   setSeats: (operator, value) ->
     self = this
-    
+
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
@@ -595,10 +596,10 @@ class GritsFilterCriteria
       throw new Error('Invalid operator: ', operator)
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
-    
+
     if _.isEqual(self.seats.get(), {value: value, operator: operator})
       # the reactive var is already set, change is from the UI
-      if _.isNull(value)        
+      if _.isNull(value)
         self.remove('seats')
       else
         self.createOrUpdate('seats', {key: 'totalSeats', operator: operator, value: value})
@@ -613,9 +614,9 @@ class GritsFilterCriteria
       if _.isNull(obj)
         return
       self.setSeats(obj.operator, obj.value)
-      async.nextTick(()-> 
+      async.nextTick(()->
         self.compareStates()
-      ) 
+      )
     return
   # sets the departure input on the UI to the 'code'
   # specified, as well as, updating the underlying FilterCriteria.
@@ -624,13 +625,13 @@ class GritsFilterCriteria
   # @see http://www.iata.org/Pages/airports.aspx
   setDepartures: (code) ->
     self = this
-    
+
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
     if _.isUndefined(code)
       throw new Error('A code must be defined or null.')
-    
+
     if _.isEqual(self.departures.get(), code)
       # the call is from the UI
       if _.isNull(code)
@@ -667,7 +668,7 @@ class GritsFilterCriteria
       async.nextTick(()->
         self.compareStates()
       )
-    return  
+    return
   # sets the arrival input on the UI to the 'code'
   # specified, as well as, updating the underlying FilterCriteria.
   #
@@ -675,13 +676,13 @@ class GritsFilterCriteria
   # @see http://www.iata.org/Pages/airports.aspx
   setArrivals: (code) ->
     self = this
-    
+
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
     if _.isUndefined(code)
       throw new Error('A code must be defined or null.')
-    
+
     if _.isEqual(self.arrivals.get(), code)
       # the call is from the UI
       if _.isNull(code)
@@ -718,7 +719,7 @@ class GritsFilterCriteria
       async.nextTick(()->
         self.compareStates()
       )
-    return  
+    return
   # sets the level input on the UI to the 'value'
   # specified, as well as, updating the underlying FilterCriteria.
   #
@@ -726,14 +727,14 @@ class GritsFilterCriteria
   # @param [Integer] value
   setLevels: (value) ->
     self = this
-    
+
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
-    
+
     if _.isUndefined(value)
       throw new Error('Level must be defined.')
-    
+
     if _.isEqual(self.levels.get(), value)
       if _.isNull(value)
         self.remove('levels')
@@ -742,20 +743,20 @@ class GritsFilterCriteria
         if isNaN(val) or val < 1
           throw new Error('Level must be positive')
         self.createOrUpdate('levels', {key: 'levels', operator: '$eq', value: val})
-    else      
+    else
       self.levels.set(value)
     return
   trackLevels: () ->
     self = this
     Tracker.autorun ->
-      obj = self.levels.get()      
+      obj = self.levels.get()
       try
         self.setLevels(obj)
-        async.nextTick(()-> 
+        async.nextTick(()->
           self.compareStates()
         )
       catch e
-        Meteor.gritsUtil.errorHandler(e)      
+        Meteor.gritsUtil.errorHandler(e)
     return
   # sets the limit input on the UI to the 'value'
   # specified, as well as, updating the underlying FilterCriteria.
@@ -764,14 +765,14 @@ class GritsFilterCriteria
   # @param [Integer] value
   setLimit: (value) ->
     self = this
-    
+
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
-    
+
     if _.isUndefined(value)
       throw new Error('Limit must be defined.')
-    
+
     if _.isEqual(self.limit.get(), value)
       if _.isNull(value)
         self.remove('limit')
@@ -780,7 +781,7 @@ class GritsFilterCriteria
         if isNaN(val) or val < 1
           throw new Error('Limit must be positive')
         self.createOrUpdate('limit', {key: 'limit', operator: '$eq', value: val})
-    else      
+    else
       self.limit.set(value)
     return
   trackLimit: () ->
@@ -789,7 +790,7 @@ class GritsFilterCriteria
       obj = self.limit.get()
       try
         self.setLimit(obj)
-        async.nextTick(()-> 
+        async.nextTick(()->
           self.compareStates()
         )
       catch e
@@ -804,15 +805,15 @@ class GritsFilterCriteria
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
-    
+
     totalRecords = Session.get('grits-net-meteor:totalRecords')
     loadedRecords = Session.get('grits-net-meteor:loadedRecords')
-    
+
     if (loadedRecords < totalRecords)
       self.offset.set(loadedRecords)
     else
       self.offset.set(0)
     self.more()
     return
-    
+
 GritsFilterCriteria = new GritsFilterCriteria() # exports as a singleton
