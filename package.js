@@ -49,6 +49,7 @@ Package.on_use(function(api){
     'client/grits_util.coffee',
     'client/models/grits_filter_criteria.coffee',
     'client/layers/grits_nodes.coffee',
+    'client/layers/grits_all_nodes.coffee',
     'client/layers/grits_paths.coffee',
     'client/layers/grits_heatmap.coffee',
     'client/templates/header.html',
@@ -96,6 +97,7 @@ Package.on_use(function(api){
     'GritsMap',
     'GritsHeatmapLayer',
     'GritsNodeLayer',
+    'GritsAllNodesLayer',
     'GritsPathLayer',
     'i18n'
   ], ['client', 'server']);

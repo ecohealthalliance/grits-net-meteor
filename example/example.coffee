@@ -60,6 +60,7 @@ if Meteor.isClient
           layers: baseLayers
         }
 
+        # the map instance
         map = new GritsMap(element, options, baseLayers)
         map.addGritsLayer(new GritsHeatmapLayer(map))
         map.addGritsLayer(new GritsPathLayer(map))
@@ -79,6 +80,8 @@ if Meteor.isClient
           if result
             map.addControl(new GritsControl('<b> Select a Module </b><div id="moduleSelectorDiv"></div>', 7, 'topleft', 'info'))
             Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
+          else
+            map.addGritsLayer(new GritsAllNodesLayer(map))
         )
 
         Template.gritsMap.setInstance(map)

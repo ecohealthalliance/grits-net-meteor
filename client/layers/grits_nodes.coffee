@@ -1,8 +1,8 @@
 _previousNode = new ReactiveVar(null) # placeholder for a previously selected node
 _eventHandlers = {
-  #mouseover: (element, selection, projection) ->
-  #  if not Session.get('grits-net-meteor:isUpdating')
-  #    _previousNode.set(this)
+  mouseover: (element, selection, projection) ->
+    if not Session.get('grits-net-meteor:isUpdating')
+      _previousNode.set(this)
   click: (element, selection, projection) ->
     self = this
     if not Session.get('grits-net-meteor:isUpdating')
@@ -21,7 +21,7 @@ _eventHandlers = {
           # set the clicked element as the new origin
           departureSearchMain = Template.gritsFilter.getDepartureSearchMain()
           departureSearchMain.tokenfield('setTokens', [self._id])
-          
+
           async.nextTick(() ->
             # apply the filter
             GritsFilterCriteria.apply((err, res) ->
@@ -64,6 +64,8 @@ _size = [7, 7]
 class GritsNodeLayer extends GritsLayer
   constructor: (map) ->
     GritsLayer.call(this) # invoke super constructor
+    self = this
+
     if typeof map == 'undefined'
       throw new Error('A layer requires a map to be defined')
       return
@@ -71,28 +73,29 @@ class GritsNodeLayer extends GritsLayer
       throw new Error('A layer requires a valid map instance')
       return
 
-    @_name = 'Nodes'
-    @_map = map
+    self._name = 'Nodes'
+    self._map = map
 
-    @_layer = L.d3SvgOverlay(_.bind(@_drawCallback, this), {})
+    self._layer = L.d3SvgOverlay(_.bind(self._drawCallback, this), {})
 
-    @_prefixDOMID = 'node-'
+    self._prefixDOMID = 'node-'
 
-    @hasLoaded = new ReactiveVar(false)
-    @currentNode = _previousNode
+    self.hasLoaded = new ReactiveVar(false)
+    self.currentNode = _previousNode
 
-    @_bindMapEvents()
+    self._bindMapEvents()
     return
 
   # clears the layer
   #
   # @override
   clear: () ->
-    @_data = {}
-    @_normalizedCI = 1
-    @_removeLayerGroup()
-    @_addLayerGroup()
-    @hasLoaded.set(false)
+    self = this
+    self._data = {}
+    self._normalizedCI = 1
+    self._removeLayerGroup()
+    self._addLayerGroup()
+    self.hasLoaded.set(false)
 
   # draws the layer
   #
@@ -102,7 +105,7 @@ class GritsNodeLayer extends GritsLayer
     self._layer.draw()
     self._moveOriginsToTop()
     return
-  
+
   # moves the origins to the top of the node layer
   _moveOriginsToTop: () ->
     self = this
@@ -113,7 +116,7 @@ class GritsNodeLayer extends GritsLayer
       $n.detach().appendTo($g)
     )
     return
-  
+
   # gets the nodes from the layer
   #
   # @return [Array] array of nodes
@@ -179,10 +182,10 @@ class GritsNodeLayer extends GritsLayer
     self._destinationDrawCallback(selection, projection)
     self._originDrawCallback(selection, projection)
     return
-  
+
   _destinationDrawCallback: (selection, projection) ->
     self = this
-    
+
     destinations = self.getDestinations()
     destinationCount = destinations.length
     if destinationCount <= 0
@@ -201,7 +204,7 @@ class GritsNodeLayer extends GritsLayer
     destinationMarkers = selection.selectAll('.destination.marker-icon').data(destinations, (destination) ->
       destination._id
     )
-    
+
     #work on existing nodes
     destinationMarkers
       .attr('cx', (node) ->
@@ -264,15 +267,15 @@ class GritsNodeLayer extends GritsLayer
       )
     destinationMarkers.exit()
     return
-  
+
   _originDrawCallback: (selection, projection) ->
     self = this
-    
+
     origins = self.getOrigins()
     originCount = origins.length
     if originCount <= 0
       return
-    
+
     count = 0
     lastNode = null
     # select any existing circles and store data onto elements
@@ -347,7 +350,7 @@ class GritsNodeLayer extends GritsLayer
             node.eventHandlers.mouseover(this, selection, projection)
         return
       )
-    originMarkers.exit()    
+    originMarkers.exit()
     return
 
   _projectCX: (projection, node) ->
@@ -468,7 +471,7 @@ class GritsNodeLayer extends GritsLayer
         return n
     )
     return filtered
-  
+
   getMarkerHref: (node) ->
     if node.isOrigin
       return '/packages/grits_grits-net-meteor/client/images/origin-marker-icon.svg'
