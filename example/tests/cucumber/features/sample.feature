@@ -26,7 +26,7 @@ Feature: Map display
     When I navigate to "/"
     And I search for JFK
     And I click on #sidebar-advanced-filter-tab
-    Then I click on #applyFilter
+    #Then I click on #applyFilter
     Then I should see some map markers
     And I should see paths between them
 

@@ -39,6 +39,9 @@ do ->
       @client.waitForVisible('#discontinuedDate')
       @client.addValue('#discontinuedDate .form-control', startDate)
 
+    @When /^I click on module ([^"]*)$/, (module) ->
+      @client.waitForVisible('#moduleA').click('#moduleA')
+
     @When /^I click on ([^"]*)$/, (id) ->
       @client.waitForVisible id
       @client.click id
