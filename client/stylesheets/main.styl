@@ -6,7 +6,9 @@ border-radius()
 filter-tab-content-background-color()
   background-color #ffffff
 filter-container-width()
-  width: 479px
+  width: 500px
+dataTable-container-width()
+  width: 550px
 
 html, body
 	margin 0
@@ -34,7 +36,6 @@ body
   cursor pointer
 
 .tab-content
-  max-height 800px
   overflow-x hidden
   overflow-y auto
   border-left: 1px solid #ddd
@@ -70,7 +71,7 @@ body
   filter-container-width()
 
 #sidebar-flightData
-  ilter-container-width()
+  dataTable-container-width()
 
 .filter-heading
   font-size: 16px;
@@ -266,7 +267,7 @@ p.intro
 .my-legend .legend-scale ul li
   display block
   float left
-  width 50px
+  width 74px
   margin-bottom 6px
   text-align center
   font-size 80%
@@ -276,7 +277,7 @@ p.intro
   display block
   float left
   height 15px
-  width 50px
+  width 74px
 
 .my-legend .legend-source
   font-size 70%
@@ -290,15 +291,11 @@ p.intro
 #dataTableContainer
   font-size small
 
-#dataTableDiv
-  width 405px
-
-.dataTable
-  width 500px
-
 .dataTableContent
-  overflow-x auto
-  overflow-y auto
+  height 100%
+  width 518px
+  overflow-x inherit
+  overflow-y inherit
 
 .pathTableRow
   width 350px
@@ -372,6 +369,7 @@ p.intro
 
 .slider.slider-horizontal
   width 250px
+  cursor pointer
 
 .slider.slider-horizontal .slider-handle
   margin-left -7px
@@ -407,6 +405,3 @@ p.intro
       color #555
   strong
     color #000
-
-.sidebar-pane
-    width 550px
