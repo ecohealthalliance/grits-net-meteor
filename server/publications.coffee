@@ -1,16 +1,25 @@
+_useAggregation = true # enable/disable using the aggregation framework
+_profile = false # enable/disable inserting profiling times to the database
+
+# collection to record profiling results
+Profiling = new Mongo.Collection('profiling')
+recordProfile = (methodName, elapsedTime) ->
+  Profiling.insert({methodName: methodName, elapsedTime: elapsedTime, created: new Date()})
+  return
+
 extendQuery = (query, lastId) ->
   # all flights are filtered by current date being past the discontinuedDate
-  # or before the effectiveDate  
+  # or before the effectiveDate
   now = new Date()
   if !_.isUndefined(query.effectiveDate)
     query.effectiveDate.$lte = new Date(query.effectiveDate.$lte)
   else
-    query.effectiveDate = {$lte: now}    
+    query.effectiveDate = {$lte: now}
   if !_.isUndefined(query.discontinuedDate)
     query.discontinuedDate.$gte = new Date(query.discontinuedDate.$gte)
   else
     query.discontinuedDate = {$gte: now}
-  
+
   # offset
   if !(_.isUndefined(lastId) or _.isNull(lastId))
     offsetFilter = _id: $gt: lastId
@@ -50,33 +59,42 @@ Meteor.methods
   #
   # @param [Object] query, a mongodb query object
   # @param [Integer] limit, the amount of records to limit
-  # @param [Integer] offset, the amount of records to skip
+  # @param [Integer] skip, the amount of records to skip
   # @return [Array] an array of flights
-  flightsByQuery: (query, limit, offset) ->
+  flightsByQuery: (query, limit, skip) ->
+    if _profile
+      start = new Date()
+
     if _.isUndefined(query) or _.isEmpty(query)
       return []
 
-    if _.isUndefined(offset)
-      offset = 0
-    
+    if _.isUndefined(limit)
+      limit = 0
+    if _.isUndefined(skip)
+      skip = 0
+
     # make sure dates are set
     extendQuery(query, null)
-    
-    # prepare the aggregate pipeline
-    pipeline = [      
-      {$skip: offset},
-      {$limit: limit}
-    ]
-    
-    _.each(arrangeQueryKeys(query), (key) ->
-      obj = {$match:{}}
-      value = query[key]
-      obj['$match'][key] = value
-      pipeline.unshift(obj)
-    )
-    console.log('pipeline: %j', pipeline)
-    matches = Flights.aggregate(pipeline)
-    console.log('matches.length:', matches.length)
+
+    matches = []
+    if _useAggregation
+      # prepare the aggregate pipeline
+      pipeline = [
+        {$skip: skip},
+        {$limit: limit}
+      ]
+      _.each(arrangeQueryKeys(query), (key) ->
+        obj = {$match:{}}
+        value = query[key]
+        obj['$match'][key] = value
+        pipeline.unshift(obj)
+      )
+      matches = Flights.aggregate(pipeline)
+    else
+      matches = Flights.find(query, {limit: limit, skip: skip, transform: null}).fetch()
+
+    if _profile
+      recordProfile('flightsByQuery', new Date() - start)
     return matches
 
 Meteor.methods
@@ -206,25 +224,32 @@ Meteor.methods
 Meteor.methods
   # method to count the total flights for the specified query
   #
-  # @param [Object] query, a mongodb query object 
+  # @param [Object] query, a mongodb query object
   # @return [Integer] totalRecorts, the count of the query
   countFlightsByQuery: (query) ->
+    if _profile
+      start = new Date()
+
     if _.isUndefined(query) or _.isEmpty(query)
       return 0
 
-    extendQuery(query, null)
-    
-    pipeline = []
-    
-    _.each(arrangeQueryKeys(query), (key) ->
-      obj = {$match:{}}
-      value = query[key]
-      obj['$match'][key] = value
-      pipeline.unshift(obj)
-    )
+    extendQuery(query)
 
-    count = Flights.aggregate(pipeline).length
-    console.log('countFlightsByQuery:count: %j', count)
+    count = 0
+    if _useAggregation
+      pipeline = []
+      _.each(arrangeQueryKeys(query), (key) ->
+        obj = {$match:{}}
+        value = query[key]
+        obj['$match'][key] = value
+        pipeline.unshift(obj)
+      )
+      count = Flights.aggregate(pipeline).length
+    else
+      count = Flights.find(query, {transform:null}).count()
+
+    if _profile
+      recordProfile('countFlightsByQuery', new Date() - start)
     return count
   findHeatmapByCode: (code) ->
     if _.isUndefined(code) or _.isEmpty(code)
@@ -232,16 +257,24 @@ Meteor.methods
     heatmap = Heatmaps.findOne({'_id': code})
     return heatmap
   findHeatmapsByCodes: (codes) ->
-    console.log('findHeatmapsByCodes: %j', codes)
     if _.isUndefined(codes) or _.isEmpty(codes)
       return []
-    heatmaps = Heatmaps.find({'_id': {'$in': codes}}).fetch()
+    heatmaps = Heatmaps.find({'_id': {'$in': codes}}, {transform: null}).fetch()
     return heatmaps
+  findAirports: () ->
+    if _profile
+      start = new Date()
+    airports = Airports.find({}, {transform: null}).fetch()
+    if _profile
+      recordProfile('findAirports', new Date() - start)
+    return airports
   findAirportById: (id) ->
     if _.isUndefined(id) or _.isEmpty(id)
       return []
     return Airports.findOne({'_id': id})
   findNearbyAirports: (id, miles) ->
+    if _profile
+      start = new Date()
     if _.isUndefined(id) or _.isEmpty(id)
       return []
     miles = parseInt(miles, 10)
@@ -260,44 +293,61 @@ Meteor.methods
       $maxDistance: metersToMiles * miles
     query =
       loc: {$near: value}
-    console.log('findNearbyAirports:query: %j', query)
-    airports = Airports.find(query).fetch()
+    airports = Airports.find(query, {transform:null}).fetch()
+    if _profile
+      recordProfile('findNearbyAirports', new Date() - start)
     return airports
   # finds the min and max date range of a 'Date' key to the flights collection
   #
   # @param [String] the key of the flight documents the contains a date value
   # @return [Array] array of two dates, defaults to 'null' if not found [min, max]
   findMinMaxDateRange: (key) ->
+    if _profile
+      start = new Date()
+
     # determine minimum date by sort ascending
     minDate = null
-    minPipeline = [
-      {$sort: {"#{key}": 1}},
-      {$limit: 1}
-    ]
-    minResults = Flights.aggregate(minPipeline)
+    minResults = []
+    if _useAggregation
+      minPipeline = [
+        {$sort: {"#{key}": 1}},
+        {$limit: 1}
+      ]
+      minResults = Flights.aggregate(minPipeline)
+    else
+      minResults = Flights.find({}, {sort: {"#{key}": 1}, limit:1, transform: null}).fetch()
     if !(_.isUndefined(minResults) || _.isEmpty(minResults))
       min = minResults[0]
       if min.hasOwnProperty(key)
         minDate = min[key]
+
     # determine maximum date by sort descending
     maxDate = null
-    maxPipeline = [
-      {$sort: {"#{key}": -1}},
-      {$limit: 1}
-    ]
-    maxResults = Flights.aggregate(maxPipeline)
+    maxResults = []
+    if _useAggregation
+      maxPipeline = [
+        {$sort: {"#{key}": -1}},
+        {$limit: 1}
+      ]
+      maxResults = Flights.aggregate(maxPipeline)
+    else
+      maxResults = Flights.find({}, {sort: {"#{key}": -1}, limit:1, transform: null}).fetch()
     if !(_.isUndefined(maxResults) || _.isEmpty(maxResults))
       max = maxResults[0]
       if max.hasOwnProperty(key)
         maxDate = max[key]
+
+    if _profile
+      recordProfile('findMinMaxDateRange', new Date() - start)
     return [minDate, maxDate]
-  isTestEnvironment: () ->    
+  isTestEnvironment: () ->
     return process.env.hasOwnProperty('VELOCITY_MAIN_APP_PATH')
-  
+
 Meteor.methods
   # find airports that match the search
   typeaheadAirport: (search, skip, options) ->
-    start = new Date()
+    if _profile
+      start = new Date()
     if typeof skip == 'undefined'
       skip = 0
     fields = []
@@ -305,24 +355,35 @@ Meteor.methods
       field = {}
       field[fieldName] = {$regex: new RegExp(matcher.regexSearch({search: search}), matcher.regexOptions)}
       fields.push(field)
-    pipeline = [
-      {$match: {$or: fields}},
-      {$sort: {_id: 1}},
-      {$skip: skip},
-      {$limit: 10}
-    ]
-    matches = Airports.aggregate(pipeline)
-    ###
-    query = { $or: fields }
-    matches = Airports.find(query, {limit: 10, sort: {_id: 1}, skip: skip}).fetch()
-    ###
-    console.log('typeaheadAirport:timeTaken(ms): ', new Date() - start)
+
+    matches = []
+    if _useAggregation
+      pipeline = [
+        {$match: {$or: fields}},
+        {$sort: {_id: 1}},
+        {$skip: skip},
+        {$limit: 10}
+      ]
+      matches = Airports.aggregate(pipeline)
+    else
+      query = { $or: fields }
+      matches = Airports.find(query, {limit: 10, sort: {_id: 1}, skip: skip, transform: null}).fetch()
+    if _profile
+      recordProfile('typeaheadAirport', new Date() - start)
     return matches
   countTypeaheadAirports: (search, options) ->
+    if _profile
+      start = new Date()
+
     fields = []
     for fieldName, matcher of Airport.typeaheadMatcher()
       field = {}
       field[fieldName] = {$regex: new RegExp(matcher.regexSearch({search: search}), matcher.regexOptions)}
       fields.push(field)
+
     query = { $or: fields }
-    return Airports.find(query, {sort: {_id: 1}}).count()
+    count = Airports.find(query, {sort: {_id: 1}, transform: null}).count()
+
+    if _profile
+      recordProfile('countTypeaheadAirports', new Date() - start)
+    return count

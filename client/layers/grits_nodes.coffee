@@ -1,8 +1,8 @@
 _previousNode = new ReactiveVar(null) # placeholder for a previously selected node
 _eventHandlers = {
-  #mouseover: (element, selection, projection) ->
-  #  if not Session.get('grits-net-meteor:isUpdating')
-  #    _previousNode.set(this)
+  mouseover: (element, selection, projection) ->
+    if not Session.get('grits-net-meteor:isUpdating')
+      _previousNode.set(this)
   click: (element, selection, projection) ->
     self = this
     if not Session.get('grits-net-meteor:isUpdating')
@@ -61,8 +61,9 @@ _size = [7, 7]
 # Creates an instance of a GritsNodeLayer, extends  GritsLayer
 #
 # @param [Object] map, an instance of GritsMap
+# @param [String] displayName, the displayName for the layer selector
 class GritsNodeLayer extends GritsLayer
-  constructor: (map) ->
+  constructor: (map, displayName) ->
     GritsLayer.call(this) # invoke super constructor
     self = this
     if typeof map == 'undefined'
@@ -71,6 +72,10 @@ class GritsNodeLayer extends GritsLayer
     if !map instanceof GritsMap
       throw new Error('A layer requires a valid map instance')
       return
+    if typeof displayName == 'undefined'
+      self._displayName = 'Nodes'
+    else
+      self._displayName = displayName
 
     self._name = 'Nodes'
     self._map = map
@@ -87,7 +92,6 @@ class GritsNodeLayer extends GritsLayer
     self.trackMinMaxThroughput()
 
     self.currentNode = _previousNode
-
     self._bindMapEvents()
     return
 
@@ -95,11 +99,12 @@ class GritsNodeLayer extends GritsLayer
   #
   # @override
   clear: () ->
-    @_data = {}
-    @_normalizedCI = 1
-    @_removeLayerGroup()
-    @_addLayerGroup()
-    @hasLoaded.set(false)
+    self = this
+    self._data = {}
+    self._normalizedCI = 1
+    self._removeLayerGroup()
+    self._addLayerGroup()
+    self.hasLoaded.set(false)
 
   # draws the layer
   #
@@ -113,6 +118,37 @@ class GritsNodeLayer extends GritsLayer
     min = self.min.get()
     max = self.max.get()
     self.visibleNodes.set(self.filterMinMaxThroughput(min, max))
+    return
+
+  # removes the layer
+  #
+  remove: () ->
+    self = this
+    self._removeLayerGroup()
+
+  # adds the layer
+  #
+  add: () ->
+    self = this
+    self._addLayerGroup()
+
+  # removes the layerGroup from the map
+  #
+  # @override
+  _removeLayerGroup: () ->
+    self = this
+    if !(typeof self._layerGroup == 'undefined' or self._layerGroup == null)
+      self._map.removeLayer(self._layerGroup)
+    return
+
+  # adds the layer group to the map
+  #
+  # @override
+  _addLayerGroup: () ->
+    self = this
+    self._layerGroup = L.layerGroup([self._layer])
+    self._map.addOverlayControl(self._displayName, self._layerGroup)
+    self._map.addLayer(self._layerGroup)
     return
 
   # moves the origins to the top of the node layer
@@ -130,7 +166,8 @@ class GritsNodeLayer extends GritsLayer
   #
   # @return [Array] array of nodes
   getNodes: () ->
-    return _.values(@_data)
+    self = this
+    return _.values(self._data)
 
   # gets the origins from the layer
   #
@@ -165,14 +202,16 @@ class GritsNodeLayer extends GritsLayer
   # @param [Object] obj, a gritsNode object
   # @return [String] elementID
   getElementID: (obj) ->
-    return @_prefixDOMID + obj._id
+    self = this
+    return self._prefixDOMID + obj._id
 
   # find a node by the latLng pair
   #
   # @param [Array] an array [lat,lng]
   # @return [Object] a GritsNode object
   findByLatLng: (latLng) ->
-    nodes = @getNodes()
+    self = this
+    nodes = self.getNodes()
     node = _.find(nodes, (node) ->
       return _.isEqual(node.latLng, latLng)
     )
@@ -425,10 +464,11 @@ class GritsNodeLayer extends GritsLayer
   #
   # @return [Number] normalizedThroughput, 0 >= n <= .9
   _getNormalizedThroughput: (node) ->
+    self = this
     maxAllowed = 100
     r = 0
-    if @_normalizedCI > 0
-      r = ((node.incomingThroughput + node.outgoingThroughput) / @_normalizedCI) * 100
+    if self._normalizedCI > 0
+      r = ((node.incomingThroughput + node.outgoingThroughput) / self._normalizedCI) * 100
     if r > maxAllowed
       return maxAllowed
     node.normalizedPercent = +(r).toFixed(0)
@@ -438,7 +478,8 @@ class GritsNodeLayer extends GritsLayer
   #
   # @return [String] color, the marker image color
   _getNormalizedColor: (node) ->
-    np = @_getNormalizedThroughput(node)
+    self = this
+    np = self._getNormalizedThroughput(node)
     if np < 10
       node.color = _colorScale[10]
     else if np < 20
@@ -497,6 +538,7 @@ class GritsNodeLayer extends GritsLayer
       self.visibleNodes.set(self.filterMinMaxThroughput(min, max))
     return
 
+  # return image file for the marker
   getMarkerHref: (node) ->
     if node.isOrigin
       return '/packages/grits_grits-net-meteor/client/images/origin-marker-icon.svg'
@@ -511,13 +553,13 @@ class GritsNodeLayer extends GritsLayer
       return
     self._map.on(
       overlayadd: (e) ->
-        if e.name == self._name
+        if e.name == self._displayName
           if Meteor.gritsUtil.debug
-            console.log self._name + ' added'
+            console.log("#{self._displayName} layer was added")
       overlayremove: (e) ->
-        if e.name == self._name
+        if e.name == self._displayName
           if Meteor.gritsUtil.debug
-            console.log self._name + ' removed'
+            console.log("#{self._displayName} layer was removed")
     )
 
 # Static reference to the colorScale

@@ -64,8 +64,9 @@ _colorScale =
 # Creates an instance of a GritsNodeLayer, extends  GritsLayer
 #
 # @param [Object] map, an instance of GritsMap
+# @param [String] displayName, the displayName for the layer selector
 class GritsPathLayer extends GritsLayer
-  constructor: (map) ->
+  constructor: (map, displayName) ->
     GritsLayer.call(this) # invoke super constructor
     self = this
     if typeof map == 'undefined'
@@ -74,6 +75,10 @@ class GritsPathLayer extends GritsLayer
     if !map instanceof GritsMap
       throw new Error('A layer requires a valid map instance')
       return
+    if typeof displayName == 'undefined'
+      self._displayName = 'Paths'
+    else
+      self._displayName = displayName
 
     self._name = 'Paths'
     self._map = map
@@ -98,11 +103,12 @@ class GritsPathLayer extends GritsLayer
   #
   # @override
   clear: () ->
-    @_data = {}
-    @_normalizedCI = 1
-    @_removeLayerGroup()
-    @_addLayerGroup()
-    @hasLoaded.set(false)
+    self = this
+    self._data = {}
+    self._normalizedCI = 1
+    self._removeLayerGroup()
+    self._addLayerGroup()
+    self.hasLoaded.set(false)
 
   # draws the layer
   #
@@ -117,18 +123,51 @@ class GritsPathLayer extends GritsLayer
     self.visiblePaths.set(self.filterMinMaxThroughput(min, max))
     return
 
+  # removes the layer
+  #
+  remove: () ->
+    self = this
+    self._removeLayerGroup()
+
+  # adds the layer
+  #
+  add: () ->
+    self = this
+    self._addLayerGroup()
+
+  # removes the layerGroup from the map
+  #
+  # @override
+  _removeLayerGroup: () ->
+    self = this
+    if !(typeof self._layerGroup == 'undefined' or self._layerGroup == null)
+      self._map.removeLayer(self._layerGroup)
+    return
+
+  # adds the layer group to the map
+  #
+  # @override
+  _addLayerGroup: () ->
+    self = this
+    self._layerGroup = L.layerGroup([self._layer])
+    self._map.addOverlayControl(self._displayName, self._layerGroup)
+    self._map.addLayer(self._layerGroup)
+    return
+
   # gets the paths from the layer
   #
   # @return [Array] array of nodes
   getPaths: () ->
-    return _.values(@_data)
+    self = this
+    return _.values(self._data)
 
   # gets the element ID within the DOM of a path
   #
   # @param [Object] gritsPath
   # @return [String] elementID
   getElementID: (obj) ->
-    return @_prefixDOMID + obj._id
+    self = this
+    return self._prefixDOMID + obj._id
 
   # The D3 callback that renders the svg elements on the map
   #
@@ -249,7 +288,8 @@ class GritsPathLayer extends GritsLayer
   #
   # @return [String] normalizedColor, a hex string
   _getNormalizedColor: (path) ->
-    np = @_getNormalizedThroughput(path)
+    self = this
+    np = self._getNormalizedThroughput(path)
     if np < 10
       path.color = _colorScale[10]
     else if np < 20
@@ -279,17 +319,18 @@ class GritsPathLayer extends GritsLayer
   # @param [Object] flight, an Astronomy class 'Flight' represending a single
   #   record from a MongoDB collection
   convertFlight: (flight, level, origin, destination) ->
+    self = this
     if typeof flight == 'undefined' or flight == null
       return
     if typeof level == 'undefined'
       level = 0
     _id = CryptoJS.MD5(origin._id + destination._id).toString()
-    path = @_data[_id]
+    path = self._data[_id]
     if (typeof path == 'undefined' or path == null)
       try
         path = new GritsPath(flight, flight.totalSeats, level, origin, destination)
         path.setEventHandlers(_eventHandlers)
-        @_data[path._id] = path
+        self._data[path._id] = path
       catch e
         console.error(e.message)
         return
@@ -303,10 +344,11 @@ class GritsPathLayer extends GritsLayer
   #
   # @return [Number] normalizedThroughput, 0 >= n <= 100
   _getNormalizedThroughput: (path) ->
+    self = this
     maxAllowed = 100
     r = 0
-    if @_normalizedCI > 0
-      r = (path.throughput / @_normalizedCI ) * 100
+    if self._normalizedCI > 0
+      r = (path.throughput / self._normalizedCI ) * 100
     if r > maxAllowed
       return maxAllowed
     path.normalizedPercent = +(r).toFixed(0)
@@ -354,13 +396,13 @@ class GritsPathLayer extends GritsLayer
       return
     self._map.on(
       overlayadd: (e) ->
-        if e.name == self._name
+        if e.name == self._displayName
           if Meteor.gritsUtil.debug
-            console.log self._name + ' added'
+            console.log("#{self._displayName} layer was added")
       overlayremove: (e) ->
-        if e.name == self._name
+        if e.name == self._displayName
           if Meteor.gritsUtil.debug
-            console.log self._name + ' removed'
+            console.log("#{self._displayName} layer was removed")
     )
 
 # Static reference to the colorScale
