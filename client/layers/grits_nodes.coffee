@@ -21,7 +21,7 @@ _eventHandlers = {
           # set the clicked element as the new origin
           departureSearchMain = Template.gritsFilter.getDepartureSearchMain()
           departureSearchMain.tokenfield('setTokens', [self._id])
-          
+
           async.nextTick(() ->
             # apply the filter
             GritsFilterCriteria.apply((err, res) ->
@@ -64,6 +64,7 @@ _size = [7, 7]
 class GritsNodeLayer extends GritsLayer
   constructor: (map) ->
     GritsLayer.call(this) # invoke super constructor
+    self = this
     if typeof map == 'undefined'
       throw new Error('A layer requires a map to be defined')
       return
@@ -71,17 +72,23 @@ class GritsNodeLayer extends GritsLayer
       throw new Error('A layer requires a valid map instance')
       return
 
-    @_name = 'Nodes'
-    @_map = map
+    self._name = 'Nodes'
+    self._map = map
 
-    @_layer = L.d3SvgOverlay(_.bind(@_drawCallback, this), {})
+    self._layer = L.d3SvgOverlay(_.bind(self._drawCallback, this), {})
 
-    @_prefixDOMID = 'node-'
+    self._prefixDOMID = 'node-'
 
-    @hasLoaded = new ReactiveVar(false)
-    @currentNode = _previousNode
+    self.hasLoaded = new ReactiveVar(false)
+    # stores the current visible nodes based on the slider filder
+    self.visibleNodes = new ReactiveVar([])
+    self.min = new ReactiveVar(0)
+    self.max = new ReactiveVar(100)
+    self.trackMinMaxThroughput()
 
-    @_bindMapEvents()
+    self.currentNode = _previousNode
+
+    self._bindMapEvents()
     return
 
   # clears the layer
@@ -101,8 +108,13 @@ class GritsNodeLayer extends GritsLayer
     self = this
     self._layer.draw()
     self._moveOriginsToTop()
+    # set visiblePaths to the current paths on every draw so that current slider
+    # inputs are applied.
+    min = self.min.get()
+    max = self.max.get()
+    self.visibleNodes.set(self.filterMinMaxThroughput(min, max))
     return
-  
+
   # moves the origins to the top of the node layer
   _moveOriginsToTop: () ->
     self = this
@@ -113,7 +125,7 @@ class GritsNodeLayer extends GritsLayer
       $n.detach().appendTo($g)
     )
     return
-  
+
   # gets the nodes from the layer
   #
   # @return [Array] array of nodes
@@ -179,10 +191,10 @@ class GritsNodeLayer extends GritsLayer
     self._destinationDrawCallback(selection, projection)
     self._originDrawCallback(selection, projection)
     return
-  
+
   _destinationDrawCallback: (selection, projection) ->
     self = this
-    
+
     destinations = self.getDestinations()
     destinationCount = destinations.length
     if destinationCount <= 0
@@ -201,7 +213,7 @@ class GritsNodeLayer extends GritsLayer
     destinationMarkers = selection.selectAll('.destination.marker-icon').data(destinations, (destination) ->
       destination._id
     )
-    
+
     #work on existing nodes
     destinationMarkers
       .attr('cx', (node) ->
@@ -264,15 +276,15 @@ class GritsNodeLayer extends GritsLayer
       )
     destinationMarkers.exit()
     return
-  
+
   _originDrawCallback: (selection, projection) ->
     self = this
-    
+
     origins = self.getOrigins()
     originCount = origins.length
     if originCount <= 0
       return
-    
+
     count = 0
     lastNode = null
     # select any existing circles and store data onto elements
@@ -347,7 +359,7 @@ class GritsNodeLayer extends GritsLayer
             node.eventHandlers.mouseover(this, selection, projection)
         return
       )
-    originMarkers.exit()    
+    originMarkers.exit()
     return
 
   _projectCX: (projection, node) ->
@@ -451,24 +463,40 @@ class GritsNodeLayer extends GritsLayer
       node.color = _colorScale[10]
     return node.color
 
-  filterByMinMaxThroughput: (min, max) ->
+  # returns the visible paths based on min,max values
+  #
+  # @param [Integer] min, the minimum value
+  # @param [Integer] max, the maximum value
+  # @return [Array] visible, the visible paths
+  filterMinMaxThroughput: (min, max) ->
     self = this
     nodes = self.getNodes()
     if _.isEmpty(nodes)
       return
-    filtered = _.filter(nodes, (node) ->
+    visible = _.filter(nodes, (node) ->
       $element = $('#' + node.elementID)
       np = self._getNormalizedThroughput(node)
       if (np < min) || (np > max)
         $element.css({'display': 'none'})
-        n = node
+        node.visible = false
       else
         $element.css({'display': ''})
+        node.visible = true
+        n = node
       if n
         return n
     )
-    return filtered
-  
+    return visible
+
+  # tracks min,max set by the UI slider
+  trackMinMaxThroughput: () ->
+    self = this
+    Tracker.autorun ->
+      min = self.min.get()
+      max = self.max.get()
+      self.visibleNodes.set(self.filterMinMaxThroughput(min, max))
+    return
+
   getMarkerHref: (node) ->
     if node.isOrigin
       return '/packages/grits_grits-net-meteor/client/images/origin-marker-icon.svg'

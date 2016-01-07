@@ -67,6 +67,7 @@ _colorScale =
 class GritsPathLayer extends GritsLayer
   constructor: (map) ->
     GritsLayer.call(this) # invoke super constructor
+    self = this
     if typeof map == 'undefined'
       throw new Error('A layer requires a map to be defined')
       return
@@ -74,17 +75,23 @@ class GritsPathLayer extends GritsLayer
       throw new Error('A layer requires a valid map instance')
       return
 
-    @_name = 'Paths'
-    @_map = map
+    self._name = 'Paths'
+    self._map = map
 
-    @_layer = L.d3SvgOverlay(_.bind(@_drawCallback, this), {})
+    self._layer = L.d3SvgOverlay(_.bind(self._drawCallback, this), {})
 
-    @_prefixDOMID = 'path-'
+    self._prefixDOMID = 'path-'
 
-    @hasLoaded = new ReactiveVar(false)
-    @currentPath = _previousPath
+    self.hasLoaded = new ReactiveVar(false)
+    # stores the current visible paths based on the slider filter
+    self.visiblePaths = new ReactiveVar([])
+    self.min = new ReactiveVar(0)
+    self.max = new ReactiveVar(100)
+    self.trackMinMaxThroughput()
 
-    @_bindMapEvents()
+    self.currentPath = _previousPath
+
+    self._bindMapEvents()
     return
 
   # clears the layer
@@ -101,7 +108,13 @@ class GritsPathLayer extends GritsLayer
   #
   # @override
   draw: () ->
-    @_layer.draw()
+    self = this
+    self._layer.draw()
+    # set visiblePaths to the current paths on every draw so that current slider
+    # inputs are applied.
+    min = self.min.get()
+    max = self.max.get()
+    self.visiblePaths.set(self.filterMinMaxThroughput(min, max))
     return
 
   # gets the paths from the layer
@@ -222,11 +235,15 @@ class GritsPathLayer extends GritsLayer
     lines.exit()
     return
 
-  # returns the path's weight based on throughput
+  # returns the path's weight based on normalized throughput.  The weight is a
+  # scale from 2 to 12.0
   #
   # @return [Number] weight
   _getWeight: (path) ->
-    path.weight = path.throughput / 250  + 2
+    self = this
+    weight = (self._getNormalizedThroughput(path) / 10) + 2
+    path.weight = +(weight).toFixed(2)
+    return path.weight
 
   # returns normalized hex color code for a path
   #
@@ -295,23 +312,39 @@ class GritsPathLayer extends GritsLayer
     path.normalizedPercent = +(r).toFixed(0)
     return path.normalizedPercent
 
-  filterByMinMaxThroughput: (min, max) ->
+  # returns the visible paths based on min,max values
+  #
+  # @param [Integer] min, the minimum value
+  # @param [Integer] max, the maximum value
+  # @return [Array] visible, the visible paths
+  filterMinMaxThroughput: (min, max) ->
     self = this
     paths = self.getPaths()
     if _.isEmpty(paths)
       return
-    filtered = _.filter(paths, (path) ->
+    visible = _.filter(paths, (path) ->
       $element = $('#' + path.elementID)
       np = self._getNormalizedThroughput(path)
       if (np < min) || (np > max)
         $element.attr('display', 'none')
-        p = path
+        path.visible = false
       else
         $element.attr('display', '')
+        path.visible = true
+        p = path
       if p
         return p
     )
-    return filtered
+    return visible
+
+  # tracks min,max set by the UI slider
+  trackMinMaxThroughput: () ->
+    self = this
+    Tracker.autorun ->
+      min = self.min.get()
+      max = self.max.get()
+      self.visiblePaths.set(self.filterMinMaxThroughput(min, max))
+    return
 
   # binds to the Tracker.gritsMap.getInstance() map event listener .on
   # 'overlyadd' and 'overlayremove' methods
