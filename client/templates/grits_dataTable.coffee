@@ -71,7 +71,7 @@ Template.gritsDataTable.events({
     $row = $(event.currentTarget)
     # find the path from template.paths using the DOM's id
     _id = $row.data('id')
-    paths = template.paths.get()    
+    paths = template.paths.get()
     path = _.find(paths, (path) -> path._id == _id)
     if _.isUndefined(path)
       return
@@ -79,7 +79,7 @@ Template.gritsDataTable.events({
     if _.isUndefined(element)
       return
     # simulate a click on the path
-    path.eventHandlers.click(element)   
+    path.eventHandlers.click(element)
     return
   'click .exportData': (event) ->
     fileType = $(event.currentTarget).attr("data-type")
@@ -137,29 +137,29 @@ Template.gritsDataTable.onRendered ->
   self.heatmapLayer = self.map.getGritsLayer('Heatmap')
 
   self.autorun ->
-    # when the paths are finished loading, set the template data to the result
-    pathsLoaded = self.pathsLayer.hasLoaded.get()
-    if pathsLoaded
-      data = self.pathsLayer.getPaths()
-      if _.isEmpty(data)
-        self.paths.set([])
-      else
-        sorted = _.sortBy(data, (path) ->
-          return path.throughput * -1
-        )
-        self.paths.set(sorted)
-    # when the nodes are finished loading, set the template data to the result
-    nodesLoaded = self.nodesLayer.hasLoaded.get()
-    if nodesLoaded
-      data = self.nodesLayer.getNodes()
-      if _.isEmpty(data)
-        self.nodes.set([])
-      else
-        sorted = _.sortBy(data, (node) ->
-          return (node.incomingThroughput + node.outgoingThroughput) * -1
-        )
-        nodes = _formatNodeData(sorted)
-        self.nodes.set(nodes)
+    # when the paths have changed, set the template data to the result
+
+    # update the table reactively to the current visible paths
+    data = self.pathsLayer.visiblePaths.get()
+    if _.isEmpty(data)
+      self.paths.set([])
+    else
+      sorted = _.sortBy(data, (path) ->
+        return path.throughput * -1
+      )
+      self.paths.set(sorted)
+
+    # update the table reactively to the current visible nodes
+    data = self.nodesLayer.visibleNodes.get()
+    if _.isEmpty(data)
+      self.nodes.set([])
+    else
+      sorted = _.sortBy(data, (node) ->
+        return (node.incomingThroughput + node.outgoingThroughput) * -1
+      )
+      nodes = _formatNodeData(sorted)
+      self.nodes.set(nodes)
+
     # when the heatmap is finished loading, set the template data to the result
     heatmapLoaded = self.heatmapLayer.hasLoaded.get()
     if heatmapLoaded
