@@ -10,7 +10,7 @@ showNode = () ->
 
 Template.gritsElementDetails.events({
   'click .element-details-close': (e) ->
-    $('.element-details').hide()  
+    $('.element-details').hide()
 })
 
 Template.gritsElementDetails.helpers({
@@ -29,7 +29,6 @@ Template.gritsElementDetails.helpers({
       return ''
     return +(path.weight).toFixed(2)
   normalized: (obj) ->
-    console.log('obj:', obj)
     if _.isUndefined(obj) || _.isNull(obj)
       return ''
     if !obj.hasOwnProperty('normalizedPercent')
@@ -48,26 +47,26 @@ Template.gritsElementDetails.onCreated ->
   #Public API
   Template.gritsElementDetails.showPath = showPath
   Template.gritsElementDetails.showNode = showNode
-  
-Template.gritsElementDetails.onRendered ->  
+
+Template.gritsElementDetails.onRendered ->
   self = this
   $('.element-details').hide()
   # store reference to the map and layer instances
   self.map = Template.gritsMap.getInstance()
   self.pathLayer = self.map.getGritsLayer('Paths')
   self.nodeLayer = self.map.getGritsLayer('Nodes')
-  
+
   # update the currentPath
-  self.autorun ->    
+  self.autorun ->
     p1 = self.pathLayer.currentPath.get()
     p2 = self.path.get()
     if _.isEqual(p1, p2)
       return
     self.path.set(p1)
     showPath()
-  
+
   # update the currentNode
-  self.autorun ->    
+  self.autorun ->
     n1 = self.nodeLayer.currentNode.get()
     n2 = self.node.get()
     if _.isEqual(n1, n2)
