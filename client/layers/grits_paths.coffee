@@ -64,58 +64,110 @@ _colorScale =
 # Creates an instance of a GritsNodeLayer, extends  GritsLayer
 #
 # @param [Object] map, an instance of GritsMap
+# @param [String] displayName, the displayName for the layer selector
 class GritsPathLayer extends GritsLayer
-  constructor: (map) ->
+  constructor: (map, displayName) ->
     GritsLayer.call(this) # invoke super constructor
+    self = this
     if typeof map == 'undefined'
       throw new Error('A layer requires a map to be defined')
       return
     if !map instanceof GritsMap
       throw new Error('A layer requires a valid map instance')
       return
+    if typeof displayName == 'undefined'
+      self._displayName = 'Paths'
+    else
+      self._displayName = displayName
 
-    @_name = 'Paths'
-    @_map = map
+    self._name = 'Paths'
+    self._map = map
 
-    @_layer = L.d3SvgOverlay(_.bind(@_drawCallback, this), {})
+    self._layer = L.d3SvgOverlay(_.bind(self._drawCallback, this), {})
 
-    @_prefixDOMID = 'path-'
+    self._prefixDOMID = 'path-'
 
-    @hasLoaded = new ReactiveVar(false)
-    @currentPath = _previousPath
+    self.hasLoaded = new ReactiveVar(false)
+    # stores the current visible paths based on the slider filter
+    self.visiblePaths = new ReactiveVar([])
+    self.min = new ReactiveVar(0)
+    self.max = new ReactiveVar(100)
+    self.trackMinMaxThroughput()
 
-    @_bindMapEvents()
+    self.currentPath = _previousPath
+
+    self._bindMapEvents()
     return
 
   # clears the layer
   #
   # @override
   clear: () ->
-    @_data = {}
-    @_normalizedCI = 1
-    @_removeLayerGroup()
-    @_addLayerGroup()
-    @hasLoaded.set(false)
+    self = this
+    self._data = {}
+    self._normalizedCI = 1
+    self._removeLayerGroup()
+    self._addLayerGroup()
+    self.hasLoaded.set(false)
 
   # draws the layer
   #
   # @override
   draw: () ->
-    @_layer.draw()
+    self = this
+    self._layer.draw()
+    # set visiblePaths to the current paths on every draw so that current slider
+    # inputs are applied.
+    min = self.min.get()
+    max = self.max.get()
+    self.visiblePaths.set(self.filterMinMaxThroughput(min, max))
+    return
+
+  # removes the layer
+  #
+  remove: () ->
+    self = this
+    self._removeLayerGroup()
+
+  # adds the layer
+  #
+  add: () ->
+    self = this
+    self._addLayerGroup()
+
+  # removes the layerGroup from the map
+  #
+  # @override
+  _removeLayerGroup: () ->
+    self = this
+    if !(typeof self._layerGroup == 'undefined' or self._layerGroup == null)
+      self._map.removeLayer(self._layerGroup)
+    return
+
+  # adds the layer group to the map
+  #
+  # @override
+  _addLayerGroup: () ->
+    self = this
+    self._layerGroup = L.layerGroup([self._layer])
+    self._map.addOverlayControl(self._displayName, self._layerGroup)
+    self._map.addLayer(self._layerGroup)
     return
 
   # gets the paths from the layer
   #
   # @return [Array] array of nodes
   getPaths: () ->
-    return _.values(@_data)
+    self = this
+    return _.values(self._data)
 
   # gets the element ID within the DOM of a path
   #
   # @param [Object] gritsPath
   # @return [String] elementID
   getElementID: (obj) ->
-    return @_prefixDOMID + obj._id
+    self = this
+    return self._prefixDOMID + obj._id
 
   # The D3 callback that renders the svg elements on the map
   #
@@ -222,17 +274,22 @@ class GritsPathLayer extends GritsLayer
     lines.exit()
     return
 
-  # returns the path's weight based on throughput
+  # returns the path's weight based on normalized throughput.  The weight is a
+  # scale from 2 to 12.0
   #
   # @return [Number] weight
   _getWeight: (path) ->
-    path.weight = path.throughput / 250  + 2
+    self = this
+    weight = (self._getNormalizedThroughput(path) / 10) + 2
+    path.weight = +(weight).toFixed(2)
+    return path.weight
 
   # returns normalized hex color code for a path
   #
   # @return [String] normalizedColor, a hex string
   _getNormalizedColor: (path) ->
-    np = @_getNormalizedThroughput(path)
+    self = this
+    np = self._getNormalizedThroughput(path)
     if np < 10
       path.color = _colorScale[10]
     else if np < 20
@@ -262,17 +319,18 @@ class GritsPathLayer extends GritsLayer
   # @param [Object] flight, an Astronomy class 'Flight' represending a single
   #   record from a MongoDB collection
   convertFlight: (flight, level, origin, destination) ->
+    self = this
     if typeof flight == 'undefined' or flight == null
       return
     if typeof level == 'undefined'
       level = 0
     _id = CryptoJS.MD5(origin._id + destination._id).toString()
-    path = @_data[_id]
+    path = self._data[_id]
     if (typeof path == 'undefined' or path == null)
       try
         path = new GritsPath(flight, flight.totalSeats, level, origin, destination)
         path.setEventHandlers(_eventHandlers)
-        @_data[path._id] = path
+        self._data[path._id] = path
       catch e
         console.error(e.message)
         return
@@ -286,32 +344,49 @@ class GritsPathLayer extends GritsLayer
   #
   # @return [Number] normalizedThroughput, 0 >= n <= 100
   _getNormalizedThroughput: (path) ->
+    self = this
     maxAllowed = 100
     r = 0
-    if @_normalizedCI > 0
-      r = (path.throughput / @_normalizedCI ) * 100
+    if self._normalizedCI > 0
+      r = (path.throughput / self._normalizedCI ) * 100
     if r > maxAllowed
       return maxAllowed
     path.normalizedPercent = +(r).toFixed(0)
     return path.normalizedPercent
 
-  filterByMinMaxThroughput: (min, max) ->
+  # returns the visible paths based on min,max values
+  #
+  # @param [Integer] min, the minimum value
+  # @param [Integer] max, the maximum value
+  # @return [Array] visible, the visible paths
+  filterMinMaxThroughput: (min, max) ->
     self = this
     paths = self.getPaths()
     if _.isEmpty(paths)
       return
-    filtered = _.filter(paths, (path) ->
+    visible = _.filter(paths, (path) ->
       $element = $('#' + path.elementID)
       np = self._getNormalizedThroughput(path)
       if (np < min) || (np > max)
         $element.attr('display', 'none')
-        p = path
+        path.visible = false
       else
         $element.attr('display', '')
+        path.visible = true
+        p = path
       if p
         return p
     )
-    return filtered
+    return visible
+
+  # tracks min,max set by the UI slider
+  trackMinMaxThroughput: () ->
+    self = this
+    Tracker.autorun ->
+      min = self.min.get()
+      max = self.max.get()
+      self.visiblePaths.set(self.filterMinMaxThroughput(min, max))
+    return
 
   # binds to the Tracker.gritsMap.getInstance() map event listener .on
   # 'overlyadd' and 'overlayremove' methods
@@ -321,13 +396,13 @@ class GritsPathLayer extends GritsLayer
       return
     self._map.on(
       overlayadd: (e) ->
-        if e.name == self._name
+        if e.name == self._displayName
           if Meteor.gritsUtil.debug
-            console.log self._name + ' added'
+            console.log("#{self._displayName} layer was added")
       overlayremove: (e) ->
-        if e.name == self._name
+        if e.name == self._displayName
           if Meteor.gritsUtil.debug
-            console.log self._name + ' removed'
+            console.log("#{self._displayName} layer was removed")
     )
 
 # Static reference to the colorScale

@@ -214,11 +214,18 @@ class GritsFilterCriteria
         # do not notifiy on an empty query or the base state
         if current == "{}" || current == self._baseState
           self.stateChanged.set(false)
+          # clear the node/paths
+          if !(_.isUndefined(Template.gritsMap) || _.isNull(Template.gritsMap))
+            map = Template.gritsMap.getInstance()
+            nodeLayer = map.getGritsLayer('Nodes')
+            pathLayer = map.getGritsLayer('Paths')
+            nodeLayer.clear()
+            pathLayer.clear()
         else
           self.stateChanged.set(true)
 
           # auto-apply the filter
-          self.apply()
+          self.autoApply()
 
           # disable [More...] button when filter has changed
           $('#loadMore').prop('disabled', true)

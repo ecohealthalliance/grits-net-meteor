@@ -2,6 +2,7 @@ _previousOrigins = [] # array to track state of the heatmap
 # Creates an instance of a GritsHeatmapLayer, extends  GritsLayer
 #
 # @param [Object] map, an instance of GritsMap
+# @param [String] displayName, the displayName for the layer selector
 class GritsHeatmapLayer extends GritsLayer
   constructor: (map, displayName) ->
     GritsLayer.call(this) # invoke super constructor
@@ -16,7 +17,7 @@ class GritsHeatmapLayer extends GritsLayer
       self._displayName = 'Heatmap'
     else
       self._displayName = displayName
-    
+
     self._name = 'Heatmap'
     self._map = map
     self._data = []

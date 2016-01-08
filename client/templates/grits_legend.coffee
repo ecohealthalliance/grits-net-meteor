@@ -5,7 +5,8 @@ Template.gritsLegend.events({
     val = $slider.slider('getValue')
     map = Template.gritsMap.getInstance()
     layer = map.getGritsLayer(name)
-    layer.filterByMinMaxThroughput(val[0], val[1])
+    layer.min.set(val[0])
+    layer.max.set(val[1])
 })
 
 Template.gritsLegend.helpers({
