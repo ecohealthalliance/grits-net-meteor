@@ -1,5 +1,5 @@
 _useAggregation = true # enable/disable using the aggregation framework
-_profile = false # enable/disable inserting profiling times to the database
+_profile = false # enable/disable console.log time taken to perform operation
 
 # collection to record profiling results
 Profiling = new Mongo.Collection('profiling')
@@ -29,7 +29,6 @@ buildOptions = (limit) ->
   options =
     sort:
       _id: 1
-      #effectiveDate: -1
 
   # limit
   if !(_.isUndefined(limit) or _.isNull(limit))
@@ -111,9 +110,7 @@ Meteor.methods
     origin = [origin]
     originsByLevel[1] = origin
     while ctr < levels
-      console.log('getFlightsByLevel:query# %j: %j', ctr, query)
-      flights = Flights.find({'$query':query, '$hint': 'idxFlights_Default', '$orderBy': {'_id': 1}}, {'limit': limit}).fetch()
-      #flights = Flights.find(query, buildOptions(null)).fetch()
+      flights = Flights.find(query, buildOptions(null)).fetch()
       flightsByLevel[ctr] = flights
       originsByLevel[ctr+1] = []
       for flight of flights
@@ -132,9 +129,7 @@ Meteor.methods
       Array::push.apply allOrigins, originsByLevel[origins]
     query['departureAirport._id'] = {'$in':allOrigins}
     nullOpts = buildOptions(null)
-    console.log('allFlights:query: %j', query)
-    #allFlights = Flights.find(query, nullOpts).fetch()
-    allFlights = Flights.find({'$query':query, '$hint': 'idxFlights_Default', '$orderBy': {'_id': 1}}).fetch() #no limit
+    allFlights = Flights.find(query, nullOpts).fetch()
     if limit is null or limit is 0 #no limit specified
       return [allFlights, allFlights.length]
     else
@@ -158,9 +153,7 @@ Meteor.methods
         remainderOPTS = buildOptions(limitRemainder)
         cpol = originsByLevel[retFlightByLevIndex]
         query['departureAirport._id'] = {'$in':cpol}
-        console.log('trailingFlights:query: %j', query)
-        #trailingFlights = Flights.find(query, remainderOPTS).fetch()
-        trailingFlights = Flights.find({'$query':query, '$hint': 'idxFlights_Default', '$orderBy': {'_id': 1}}, {'limit': limitRemainder}).fetch()
+        trailingFlights = Flights.find(query, remainderOPTS).fetch()
         Array::push.apply flightsToReturn, trailingFlights
         lastId = flightsToReturn[flightsToReturn.length-1]._id
       return [flightsToReturn, allFlights.length, lastId]
@@ -179,9 +172,7 @@ Meteor.methods
     originsByLevel[1] = origin
     totalFlights = 0
     while ctr <= levels
-      console.log('getMoreFlightsByLevel:query# %j: %j', ctr, query)
-      flights = Flights.find({'$query':query, '$hint': 'idxFlights_DepartureAirportStopsTotalSeatsWeeklyFrequency', '$orderBy': {'_id': 1}}, {'limit': limit}).fetch()
-      #flights = Flights.find(query, buildOptions(null)).fetch()
+      flights = Flights.find(query, buildOptions(null)).fetch()
       totalFlights += flights.length
       flightsByLevel[ctr] = flights
       originsByLevel[ctr+1] = []
@@ -235,18 +226,7 @@ Meteor.methods
 
     extendQuery(query)
 
-    count = 0
-    if _useAggregation
-      pipeline = []
-      _.each(arrangeQueryKeys(query), (key) ->
-        obj = {$match:{}}
-        value = query[key]
-        obj['$match'][key] = value
-        pipeline.unshift(obj)
-      )
-      count = Flights.aggregate(pipeline).length
-    else
-      count = Flights.find(query, {transform:null}).count()
+    count = Flights.find(query, {transform:null}).count()
 
     if _profile
       recordProfile('countFlightsByQuery', new Date() - start)
@@ -308,14 +288,15 @@ Meteor.methods
     # determine minimum date by sort ascending
     minDate = null
     minResults = []
-    if _useAggregation
-      minPipeline = [
-        {$sort: {"#{key}": 1}},
-        {$limit: 1}
-      ]
-      minResults = Flights.aggregate(minPipeline)
-    else
-      minResults = Flights.find({}, {sort: {"#{key}": 1}, limit:1, transform: null}).fetch()
+    #if _useAggregation
+    #  minPipeline = [
+    #    {$sort: {"#{key}": 1}},
+    #    {$limit: 1}
+    #  ]
+    #  minResults = Flights.aggregate(minPipeline)
+    #else
+    #  minResults = Flights.find({}, {sort: {"#{key}": 1}, limit:1, transform: null}).fetch()
+    minResults = Flights.find({}, {sort: {"#{key}": 1}, limit:1, transform: null}).fetch()
     if !(_.isUndefined(minResults) || _.isEmpty(minResults))
       min = minResults[0]
       if min.hasOwnProperty(key)
@@ -324,14 +305,15 @@ Meteor.methods
     # determine maximum date by sort descending
     maxDate = null
     maxResults = []
-    if _useAggregation
-      maxPipeline = [
-        {$sort: {"#{key}": -1}},
-        {$limit: 1}
-      ]
-      maxResults = Flights.aggregate(maxPipeline)
-    else
-      maxResults = Flights.find({}, {sort: {"#{key}": -1}, limit:1, transform: null}).fetch()
+    #if _useAggregation
+    #  maxPipeline = [
+    #    {$sort: {"#{key}": -1}},
+    #    {$limit: 1}
+    #  ]
+    #  maxResults = Flights.aggregate(maxPipeline)
+    #else
+    #  maxResults = Flights.find({}, {sort: {"#{key}": -1}, limit:1, transform: null}).fetch()
+    maxResults = Flights.find({}, {sort: {"#{key}": -1}, limit:1, transform: null}).fetch()
     if !(_.isUndefined(maxResults) || _.isEmpty(maxResults))
       max = maxResults[0]
       if max.hasOwnProperty(key)
