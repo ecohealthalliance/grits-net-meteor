@@ -1,17 +1,15 @@
 <template name="gritsSearch">
-<style>
-  .bootstrap-datetimepicker-widget table td.day {
-    width: 28px;
-  }
-</style>
   <div>
+    {{#if state }}
+      <i class="fa fa-exclamation-circle filter-status" title="Recent changes have not been applied"></i>
+    {{/if}}
     <div class="spinner">
       <i id="filterLoading" class="fa fa-spinner fa-spin"></i>
     </div>
-    <div class="searchBar">
+    <div class="searchBar" id="departureSearchMainSearchBar">
       <div class="tokenized main">
         <input id="departureSearchMain" class="form-control input-sm advanced-filter-status" name="departureSearchMain" placeholder='{{_ "gritsFilter.tokenfield-placeholder"}}' />
       </div>
     </div>
-  </div>    
+  </div>
 </template>

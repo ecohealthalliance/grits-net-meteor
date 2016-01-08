@@ -284,7 +284,7 @@ Template.gritsFilter.onCreated ->
   Template.gritsFilter.getDiscontinuedDatePicker = getDiscontinuedDatePicker
 
 # triggered when the 'filter' template is rendered
-Template.gritsFilter.onRendered ->
+Template.gritsFilter.onRendered ->  
   _matchSkip = null
   _suggestionGenerator = (query, skip, callback) ->
     _matchSkip = skip
@@ -512,6 +512,15 @@ _changeLimitHandler = (e) ->
 # events
 #
 # Event handlers for the grits_filter.html template
+Template.gritsSearch.events
+  'change #departureSearchMain': _changeDepartureHandler
+  'keyup #departureSearchMain-tokenfield': (event) ->
+    if event.keyCode == 13
+      if GritsFilterCriteria.departures.get() <= 0
+        # do not apply without any departures
+        return
+      GritsFilterCriteria.apply()
+    return
 Template.gritsFilter.events
   'change #weeklyFrequencyInput': _changeWeeklyFrequencyHandler
   'change #weeklyFrequencyOperator': _changeWeeklyFrequencyHandler
@@ -519,7 +528,6 @@ Template.gritsFilter.events
   'change #stopsOperator': _changeStopsHandler
   'change #seatsInput': _changeSeatsHandler
   'change #seatsOperator': _changeSeatsHandler
-  'change #departureSearchMain': _changeDepartureHandler
   'change #departureSearch': _changeDepartureHandler
   'change #arrivalSearch': _changeArrivalHandler
   'change #connectednessLevels': _changeLevelsHandler
@@ -558,13 +566,6 @@ Template.gritsFilter.events
     else
       departureSearch = getDepartureSearch()
       departureSearch.tokenfield('setTokens', _sharedTokens)
-    return
-  'keyup #departureSearchMain-tokenfield': (event) ->
-    if event.keyCode == 13
-      if GritsFilterCriteria.departures.get() <= 0
-        # do not apply without any departures
-        return
-      GritsFilterCriteria.apply()
     return
   'click #toggleFilter': (e) ->
     $self = $(e.currentTarget)

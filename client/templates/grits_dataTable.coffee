@@ -71,7 +71,7 @@ Template.gritsDataTable.events({
     $row = $(event.currentTarget)
     # find the path from template.paths using the DOM's id
     _id = $row.data('id')
-    paths = template.paths.get()    
+    paths = template.paths.get()
     path = _.find(paths, (path) -> path._id == _id)
     if _.isUndefined(path)
       return
@@ -79,7 +79,7 @@ Template.gritsDataTable.events({
     if _.isUndefined(element)
       return
     # simulate a click on the path
-    path.eventHandlers.click(element)   
+    path.eventHandlers.click(element)
     return
   'click .exportData': (event) ->
     fileType = $(event.currentTarget).attr("data-type")
@@ -136,7 +136,7 @@ Template.gritsDataTable.onRendered ->
   self.nodesLayer = self.map.getGritsLayer('Nodes')
   self.heatmapLayer = self.map.getGritsLayer('Heatmap')
 
-  self.autorun ->
+  self.autorun ->    
     # when the paths are finished loading, set the template data to the result
     pathsLoaded = self.pathsLayer.hasLoaded.get()
     if pathsLoaded

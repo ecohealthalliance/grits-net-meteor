@@ -32,16 +32,11 @@ addDefaultControls = (map) ->
   map.addControl(elementDetails)
   Blaze.render(Template.gritsElementDetails, $('#elementDetailsContainer')[0])
 
-  zoomControl = L.control.zoom({position: 'topleft'})
-  map.addControl(zoomControl)
-
   searchControl = new GritsControl('<div id="searchContainer">', 10, 'topleft', 'info filter-control')
   map.addControl(searchControl)
+
   Blaze.render(Template.gritsSearch, $('#searchContainer')[0])
   Blaze.render(Template.gritsFilter, $('#sidebar-advanced-filter')[0])
-
-  #dataTableControl = new GritsControl('<div id="dataTableContainer"></div>', 7, 'bottomleft', 'info')
-  #map.addControl(dataTableControl)
   Blaze.render(Template.gritsDataTable, $('#sidebar-flightData')[0])
 
 Template.gritsMap.onCreated ->
