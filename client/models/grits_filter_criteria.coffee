@@ -146,9 +146,7 @@ class GritsFilterCriteria
   # the collection if it already exists
   #
   # @param [String] id, the name of the filter criteria
-  # @note must be one of 'day1', 'day2', 'day3', 'day4', 'day5', 'day6',
-  #   'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival',
-  #   'levels'
+  # @note must be one of 'day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels'
   # @return [Object] Astronomy model 'FilterCriteria'
   createOrUpdate: (id, fields) ->
     self = this
@@ -171,9 +169,7 @@ class GritsFilterCriteria
   # removes a FilterCriteria from the collection
   #
   # @param [String] id, the name of the filter criteria
-  # @note must be one of 'day1', 'day2', 'day3', 'day4', 'day5', 'day6',
-  #   'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival',
-  #   'levels'
+  # @note must be one of 'day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels'
   # @optional [Function] cb, the callback method if removing async
   remove: (id, cb) ->
     self = this

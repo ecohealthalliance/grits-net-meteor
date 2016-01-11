@@ -173,8 +173,7 @@ class GritsPathLayer extends GritsLayer
   #
   # @see https://github.com/mbostock/d3/wiki/API-Reference
   # @see https://github.com/mbostock/d3/wiki/Selections
-  # @param [Object] selection, teh array of elements pulled from the current
-  #   document, also includes helper methods for filtering similar to jQuery
+  # @param [Object] selection, teh array of elements pulled from the current document, also includes helper methods for filtering similar to jQuery
   # @param [Object] projection, the current scale
   _drawCallback: (selection, projection) ->
     self = this
@@ -316,8 +315,7 @@ class GritsPathLayer extends GritsLayer
 
   # converts domain specific flight data into generic GritsNode nodes
   #
-  # @param [Object] flight, an Astronomy class 'Flight' represending a single
-  #   record from a MongoDB collection
+  # @param [Object] flight, an Astronomy class 'Flight' represending a single record from a MongoDB collection
   convertFlight: (flight, level, origin, destination) ->
     self = this
     if typeof flight == 'undefined' or flight == null
