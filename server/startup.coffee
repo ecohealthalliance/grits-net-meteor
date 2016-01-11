@@ -16,7 +16,7 @@ _warmupMongoAirports = (done) ->
   async.eachSeries([0..9],
     (x, callback) ->
       if x < 5
-        search = letters.slice().splice(0,x).join()
+        search = letters.slice().splice(0,x).join('')
       else
         search = letters.join()
       Meteor.call('typeaheadAirport', search, x*10, (err, res) ->
