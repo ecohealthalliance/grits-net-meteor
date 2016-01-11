@@ -1,5 +1,5 @@
 _useAggregation = true # enable/disable using the aggregation framework
-_profile = false # enable/disable console.log time taken to perform operation
+_profile = false # enable/disable recording method performance to the collection 'profiling'
 
 # collection to record profiling results
 Profiling = new Mongo.Collection('profiling')
