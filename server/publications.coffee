@@ -287,15 +287,6 @@ Meteor.methods
 
     # determine minimum date by sort ascending
     minDate = null
-    minResults = []
-    #if _useAggregation
-    #  minPipeline = [
-    #    {$sort: {"#{key}": 1}},
-    #    {$limit: 1}
-    #  ]
-    #  minResults = Flights.aggregate(minPipeline)
-    #else
-    #  minResults = Flights.find({}, {sort: {"#{key}": 1}, limit:1, transform: null}).fetch()
     minResults = Flights.find({}, {sort: {"#{key}": 1}, limit:1, transform: null}).fetch()
     if !(_.isUndefined(minResults) || _.isEmpty(minResults))
       min = minResults[0]
@@ -304,15 +295,6 @@ Meteor.methods
 
     # determine maximum date by sort descending
     maxDate = null
-    maxResults = []
-    #if _useAggregation
-    #  maxPipeline = [
-    #    {$sort: {"#{key}": -1}},
-    #    {$limit: 1}
-    #  ]
-    #  maxResults = Flights.aggregate(maxPipeline)
-    #else
-    #  maxResults = Flights.find({}, {sort: {"#{key}": -1}, limit:1, transform: null}).fetch()
     maxResults = Flights.find({}, {sort: {"#{key}": -1}, limit:1, transform: null}).fetch()
     if !(_.isUndefined(maxResults) || _.isEmpty(maxResults))
       max = maxResults[0]
