@@ -213,10 +213,11 @@ class GritsFilterCriteria
           # clear the node/paths
           if !(_.isUndefined(Template.gritsMap) || _.isNull(Template.gritsMap))
             map = Template.gritsMap.getInstance()
-            nodeLayer = map.getGritsLayer('Nodes')
-            pathLayer = map.getGritsLayer('Paths')
-            nodeLayer.clear()
-            pathLayer.clear()
+            if !(_.isNull(map))
+              nodeLayer = map.getGritsLayer('Nodes')
+              pathLayer = map.getGritsLayer('Paths')
+              nodeLayer.clear()
+              pathLayer.clear()
         else
           self.stateChanged.set(true)
 
