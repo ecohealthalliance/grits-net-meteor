@@ -11,11 +11,15 @@ _warmupMongoFlights = (done) ->
   )
   return
 _warmupMongoAirports = (done) ->
-  letters = ['b','o','s']
+  letters = ['b','o','s','t','o','n']
   console.log('warmup airports')
   async.eachSeries([0..9],
     (x, callback) ->
-      Meteor.call('typeaheadAirport', letters[x], x*10, (err, res) ->
+      if x < 5
+        search = letters.slice().splice(0,x).join()
+      else
+        search = letters.join()
+      Meteor.call('typeaheadAirport', search, x*10, (err, res) ->
         callback()
       )
     (err) ->
