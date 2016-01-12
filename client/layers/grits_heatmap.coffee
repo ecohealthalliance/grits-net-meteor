@@ -2,28 +2,34 @@ _previousOrigins = [] # array to track state of the heatmap
 # Creates an instance of a GritsHeatmapLayer, extends  GritsLayer
 #
 # @param [Object] map, an instance of GritsMap
+# @param [String] displayName, the displayName for the layer selector
 class GritsHeatmapLayer extends GritsLayer
-  constructor: (map) ->
+  constructor: (map, displayName) ->
     GritsLayer.call(this) # invoke super constructor
+    self = this
     if typeof map == 'undefined'
       throw new Error('A layer requires a map to be defined')
       return
     if !map instanceof GritsMap
       throw new Error('A layer requires a valid map instance')
       return
+    if typeof displayName == 'undefined'
+      self._displayName = 'Heatmap'
+    else
+      self._displayName = displayName
 
-    @_name = 'Heatmap'
-    @_map = map
-    @_data = []
+    self._name = 'Heatmap'
+    self._map = map
+    self._data = []
 
-    @_layer = L.heatLayer([], {radius: 30, blur: 15, maxZoom: 0})
-    @_layerGroup = L.layerGroup([@_layer])
-    @_map.addOverlayControl(@_name, @_layerGroup)
+    self._layer = L.heatLayer([], {radius: 30, blur: 15, maxZoom: 0})
+    self._layerGroup = L.layerGroup([self._layer])
+    self._map.addOverlayControl(@_name, self._layerGroup)
 
-    @hasLoaded = new ReactiveVar(false)
+    self.hasLoaded = new ReactiveVar(false)
 
-    @_bindMapEvents()
-    @_trackDepartures()
+    self._bindMapEvents()
+    self._trackDepartures()
     return
 
   # draws the heatmap
@@ -31,8 +37,9 @@ class GritsHeatmapLayer extends GritsLayer
   # @note method overrides the parent class GritsLayer clear method
   # @override
   draw: () ->
-    @_layer.setLatLngs(@_data)
-    @hasLoaded.set(true)
+    self = this
+    self._layer.setLatLngs(self._data)
+    self.hasLoaded.set(true)
     return
 
   # clears the heatmap
@@ -40,9 +47,41 @@ class GritsHeatmapLayer extends GritsLayer
   # @note method overrides the parent class GritsLayer clear method
   # @override
   clear: () ->
-    @_data = []
-    @_layer.setLatLngs(@_data)
-    @hasLoaded.set(false)
+    self = this
+    self._data = []
+    self._layer.setLatLngs(self._data)
+    self.hasLoaded.set(false)
+    return
+
+  # removes the layer
+  #
+  remove: () ->
+    self = this
+    self._removeLayerGroup()
+
+  # adds the layer
+  #
+  add: () ->
+    self = this
+    self._addLayerGroup()
+
+  # removes the layerGroup from the map
+  #
+  # @override
+  _removeLayerGroup: () ->
+    self = this
+    if !(typeof self._layerGroup == 'undefined' or self._layerGroup == null)
+      self._map.removeLayer(self._layerGroup)
+    return
+
+  # adds the layer group to the map
+  #
+  # @override
+  _addLayerGroup: () ->
+    self = this
+    self._layerGroup = L.layerGroup([self._layer])
+    self._map.addOverlayControl(self._displayName, self._layerGroup)
+    self._map.addLayer(self._layerGroup)
     return
 
   # setup a Meteor Tracker.autorun function to watch the global Session object
@@ -56,7 +95,7 @@ class GritsHeatmapLayer extends GritsLayer
       if _.isEqual(_previousOrigins, departures)
         # do nothing
         return
-      
+
       if _.isEmpty(departures)
         # if a departure airport is not specified, clear the heatmap
         _previousOrigins = null
@@ -71,9 +110,13 @@ class GritsHeatmapLayer extends GritsLayer
           return
 
         self.clear()
+        len = heatmaps.length
         for heatmap in heatmaps
           _.each(heatmap.data, (a) ->
-            self._data.push([a[0], a[1], a[2], a[3]])
+            value = a[2]
+            if len > 0
+              value = value / len
+            self._data.push([a[0], a[1], value, a[3]])
           )
         self.draw()
       )
@@ -84,9 +127,9 @@ class GritsHeatmapLayer extends GritsLayer
   #
   # @param [Object] heatmap, Astro.class representation of 'Heatmap' model
   add: (heatmap) ->
+    self = this
     if _.isUndefined(heatmap)
       return
-    self = this
     _.each(heatmap.data, (a) ->
       intensity = a[2] * self._getCellSize()
       self._data.push([a[0], a[1], intensity])
@@ -99,9 +142,10 @@ class GritsHeatmapLayer extends GritsLayer
   #
   # @return [Array] array of the heatmap data
   getData: () ->
-    if _.isEmpty(@_data)
+    self = this
+    if _.isEmpty(self._data)
       return []
-    return @_data
+    return self._data
 
   # binds to the Tracker.gritsMap.getInstance() map event listener .on
   # 'overlyadd' and 'overlayremove' methods
@@ -111,11 +155,11 @@ class GritsHeatmapLayer extends GritsLayer
       return
     self._map.on(
       overlayadd: (e) ->
-        if e.name == self._name
+        if e.name == self._displayName
           if Meteor.gritsUtil.debug
-            console.log self._name + ' added'
+            console.log("#{self._displayName} layer was added")
       overlayremove: (e) ->
-        if e.name == self._name
+        if e.name == self._displayName
           if Meteor.gritsUtil.debug
-            console.log self._name + ' removed'
+            console.log("#{self._displayName} layer was removed")
     )
