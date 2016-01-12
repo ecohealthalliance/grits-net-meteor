@@ -69,6 +69,9 @@ if Meteor.isClient
         # Add the default controls to the map.
         Template.gritsMap.addDefaultControls(map)
 
+        # initialize the sidebar-v2
+        sidebar = L.control.sidebar('sidebar')
+        map.addControl(sidebar)
 
         # Add test control
         Meteor.call('isTestEnvironment', (err, result) ->
