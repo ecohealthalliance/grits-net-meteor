@@ -442,10 +442,7 @@ Template.gritsFilter.onRendered ->
       $('#filterLoading').show()
     else
       $('#applyFilter').prop('disabled', false)
-      $('#filterLoading').hide()
-    $("#pathsTable").trigger('update');
-    $("#nodesTable").trigger('update');
-    $("#heatmapTable").trigger('update');
+      $('#filterLoading').hide()    
 
 _changeWeeklyFrequencyHandler = (e) ->
     val = parseInt($("#weeklyFrequencyInput").val(), 10)
