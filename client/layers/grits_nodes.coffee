@@ -162,6 +162,20 @@ class GritsNodeLayer extends GritsLayer
     )
     return
 
+  # adds a node to the layer
+  #
+  # @param [Object] node, instance of GritsNode or GritsClusterNode
+  # @note The layer will need draw() called to update the UI
+  addNode: (node) ->
+    self = this
+    if typeof node == 'undefined'
+      throw new Error('A node must be defined')
+      return
+    if !(node instanceof GritsNode || node instanceof GritsClusterNode)
+      throw new Error('A node must be an instance of GritsNode or GritsClusterNode')
+      return
+    return self._data[node._id] = node
+
   # gets the nodes from the layer
   #
   # @return [Array] array of nodes
@@ -481,27 +495,27 @@ class GritsNodeLayer extends GritsLayer
     self = this
     np = self._getNormalizedThroughput(node)
     if np < 10
-      node.color = _colorScale[10]
+      node.color = node.marker.colorScale[10]
     else if np < 20
-      node.color = _colorScale[20]
+      node.color = node.marker.colorScale[20]
     else if np < 30
-      node.color = _colorScale[30]
+      node.color = node.marker.colorScale[30]
     else if np < 40
-      node.color = _colorScale[40]
+      node.color = node.marker.colorScale[40]
     else if np < 50
-      node.color = _colorScale[50]
+      node.color = node.marker.colorScale[50]
     else if np < 60
-      node.color = _colorScale[60]
+      node.color = node.marker.colorScale[60]
     else if np < 70
-      node.color = _colorScale[70]
+      node.color = node.marker.colorScale[70]
     else if np < 80
-      node.color = _colorScale[80]
+      node.color = node.marker.colorScale[80]
     else if np < 90
-      node.color = _colorScale[90]
+      node.color = node.marker.colorScale[90]
     else if np <= 100
-      node.color = _colorScale[100]
+      node.color = node.marker.colorScale[100]
     else
-      node.color = _colorScale[10]
+      node.color = node.marker.colorScale[10]
     return node.color
 
   # returns the visible paths based on min,max values
