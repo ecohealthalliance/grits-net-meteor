@@ -70,15 +70,15 @@ if Meteor.isClient
         Template.gritsMap.addDefaultControls(map)
 
         # initialize the sidebar-v2
-        sidebar = L.control.sidebar('sidebar')
-        map.addControl(sidebar)
+        sidebar = L.control.sidebar('sidebar').addTo(map)
+        sidebar = L.control.sidebar('tableSidebar').addTo(map)
 
         # Add test control
         Meteor.call('isTestEnvironment', (err, result) ->
           if err
             return
           if result
-            map.addControl(new GritsControl('<b> Select a Module </b><div id="moduleSelectorDiv"></div>', 7, 'topleft', 'info'))
+            map.addControl(new GritsControl('<b> Select a Module </b><div id="moduleSelectorDiv"></div>', 7, 'topright', 'info'))
             Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
           else
             map.addGritsLayer(new GritsAllNodesLayer(map))
