@@ -46,13 +46,13 @@ class GritsClusterNode
       if !node instanceof GritsNode
         throw new Error('A GritsClusterNode requires an array of GritsNodes')
       lat = node.latLng[0]
-      if typeof lat != 'undefined' || (lat > -90.0 && lat < 90.0)
+      if !(typeof lat == 'undefined' || lat == null || isNaN(parseFloat(lat)) || (lat < -90.0 || lat > 90.0))
         if lat < latMinMax[0]
           latMinMax[0] = lat
         if lat > latMinMax[1]
           latMinMax[1] = lat
       lng = node.latLng[1]
-      if typeof lng != 'undefined' || (lng < -180.0 && lng > 180.0)
+      if !(typeof lng == 'undefined' || lng == null || isNaN(parseFloat(lng)) || (lng < -180.0 || lng > 180.0))
         if lng < lngMinMax[0]
           lngMinMax[0] = lng
         if lng > lngMinMax[1]
