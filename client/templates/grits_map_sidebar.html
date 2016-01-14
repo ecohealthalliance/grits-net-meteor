@@ -1,0 +1,35 @@
+<template name="gritsMapSidebar">
+  <style>
+  .sidebar {
+    width: 590px;
+  }
+  .sidebar-tabs > li:hover {
+      color: #333;
+      background-color: #333;
+  }
+
+  </style>
+  <div id="sidebar" class="sidebar sidebar-left collapsed gritsSidebar" style="top:175px;">
+        <!-- Nav tabs -->
+        <ul class="sidebar-tabs" style="background: #496c8a;">
+            <li id="sidebar-search-tab"><a href="#sidebar-search" role="tab"><i class="fa fa-search fa-white"></i></a></li>
+            <li id="sidebar-advanced-filter-tab"><a href="#sidebar-advanced-filter" role="tab"><i class="fa fa-filter fa-white"></i></a></li>
+            <li id="sidebar-flightData-tab"><a href="#sidebar-flightData" role="tab"><i class="fa fa-th fa-white"></i></a></li>
+            <li id="sidebar-slider-tab"><a href="#sidebar-slider" role="tab"><i class="fa fa-sliders fa-white"></i></a></li>
+            <li id="sidebar-layer-tab"><a href="#sidebar-layer" role="tab"><i class="fa fa-map-o fa-white"></i></a></li>
+            <li id="sidebar-plus-tab" class="sidebar-zoom-in"><i class="fa fa-plus fa-white"></i></li>
+            <li id="sidebar-minus-tab" class="sidebar-zoom-out"><i class="fa fa-minus fa-white"></i></li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="sidebar-content">
+            <div class="sidebar-pane" id="sidebar-search"></div>
+            <div class="sidebar-pane" id="sidebar-advanced-filter"></div>
+            <div class="sidebar-pane" id="sidebar-flightData"></div>
+            <div class="sidebar-pane" id="sidebar-slider">Sub-filter Settings</div>
+            <div class="sidebar-pane leaflet-control-layers leaflet-control leaflet-control-layers-expanded" id="sidebar-layer">
+
+            </div>
+        </div>
+    </div>
+</template>

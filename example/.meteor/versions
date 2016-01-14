@@ -96,6 +96,7 @@ velocity:html-reporter@0.9.1
 velocity:meteor-internals@1.1.0_7
 velocity:shim@0.1.0
 velocity:source-map-support@0.3.2_1
+waeltken:sidebar-v2@0.0.1
 webapp@1.2.3
 webapp-hashing@1.0.5
 xolvio:cucumber@0.19.4_1
