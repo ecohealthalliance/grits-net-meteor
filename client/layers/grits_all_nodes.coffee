@@ -252,15 +252,8 @@ class GritsAllNodesLayer extends GritsLayer
             self._data[airport._id] = node
           catch err
             console.error(err)
-
-          count++
-          if !(count % 100)
-            if Meteor.gritsUtil.debug
-              console.log("all nodes: #{count} of #{total}")
-          if count == total
-            console.log("all nodes: #{count} of #{total}")
           callback()
-      ), 1)
+      ), 4)
 
       processQueue.drain = () ->
         self.hasLoaded.set(true)
