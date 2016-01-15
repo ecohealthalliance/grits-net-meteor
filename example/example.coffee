@@ -71,7 +71,7 @@ if Meteor.isClient
 
         # initialize the sidebar-v2
         sidebar = L.control.sidebar('sidebar').addTo(map)
-        sidebar = L.control.sidebar('tableSidebar').addTo(map)
+        #sidebar = L.control.sidebar('tableSidebar').addTo(map)
 
         # Add test control
         Meteor.call('isTestEnvironment', (err, result) ->

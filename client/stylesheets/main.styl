@@ -45,17 +45,30 @@ body
   border-bottom: 1px solid #ddd
   filter-tab-content-background-color()
 
+.nav-tabs > li
+  width 178px
+  font-size 18px
+  font-weight bold
+  color #496c8a
+
 .nav-tabs > li > a
   padding 5px 10px
 
 .nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus
-  filter-tab-content-background-color()
-
-.date > span.input-group-addon
-  background-color #ddd
+  background-color #496c8a
+  color white
 
 .nav-tabs > li > a
   padding 5px 10px
+
+.tableDivider
+  height 3px
+  background-color #496c8a
+  border-left solid #ddd 1px
+
+
+.date > span.input-group-addon
+  background-color #ddd
 
 #filterContainer
   font-size small
@@ -260,9 +273,10 @@ p.intro
 
 .my-legend .legend-title
   text-align left
+  margin-left 10px
   margin-bottom 8px
   font-weight bold
-  font-size 90%
+  font-size 22px
 
 .my-legend .legend-scale ul
   margin 0
@@ -273,7 +287,7 @@ p.intro
 .my-legend .legend-scale ul li
   display block
   float left
-  width 74px
+  width 70px
   margin-bottom 6px
   text-align center
   font-size 80%
@@ -283,7 +297,7 @@ p.intro
   display block
   float left
   height 15px
-  width 74px
+  width 70px
 
 .my-legend .legend-source
   font-size 70%
@@ -294,14 +308,19 @@ p.intro
 .my-legend a
   color #777
 
+.my-legend
+  padding 40px 20px
+
 #dataTableContainer
   font-size small
 
 .dataTableContent
   height 100%
-  width 518px
   overflow-x inherit
   overflow-y inherit
+
+.pathsTableContainer
+  bottom 0px
 
 .pathTableRow
   width 350px
@@ -431,3 +450,20 @@ p.intro
 .zoomBtns
   left: 60px;
   float: right;
+
+#sidebar-flightData-tab
+  margin: 550% 0 0 0;
+
+#flirtTitleImage
+  content:url("/packages/grits_grits-net-meteor/client/images/flirt.png")
+  width 75px
+  height 75px
+  margin-left 40px
+  margin-top 10px
+
+#flirtTitleText
+  float right
+  text-align left
+  margin-right 95px
+  font-size 70px
+  font-weight bold

@@ -1,59 +1,50 @@
 <template name="gritsDataTable">
-  <div class="export btn-group pull-right">
-    <button class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown" type="button">
-      <i class="fa fa-cloud-download icon-share"></i>
-      <span class="caret"></span>
-    </button>
-    <ul class="dropdown-menu" role="menu">
-      <li class="exportData" data-type="json"><a href="javascript:void(0)">JSON</a></li>
-      <li class="exportData" data-type="xml"><a href="javascript:void(0)">XML</a></li>
-      <li class="exportData" data-type="csv"><a href="javascript:void(0)">CSV</a></li>
-      <li class="exportData" data-type="excel"><a href="javascript:void(0)">MS-Excel</a></li>
-    </ul>
-  </div>
   <ul class="nav nav-tabs">
     <li class="active"><a href="#paths" data-toggle="tab" id="pathTab">{{_ "gritsDataTable.tab-1.title"}}</a></li>
     <li><a href="#nodes" data-toggle="tab" id="nodeTab">{{_ "gritsDataTable.tab-2.title"}}</a></li>
     <li><a href="#heatmap" data-toggle="tab" id="heatmapTab">{{_ "gritsDataTable.tab-3.title"}}</a></li>
   </ul>
+  <div class="tableDivider"></div>
   <div class="tab-content dataTableContent">
     <div class="tab-pane active" id="paths">
-      <table id="pathsTable" class="table dataTable">
-        <thead>
-          <tr>
-            <th>{{_ "gritsDataTable.tab-1.origin-heading"}}</th>
-            <th>{{_ "gritsDataTable.tab-1.destination-heading"}}</th>
-            <th>{{_ "gritsDataTable.tab-1.occurrances-heading"}}</th>
-            <th>{{_ "gritsDataTable.tab-1.throughput-heading"}}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#with paths}}
-            {{#each paths}}
-              <tr class="pathTableRow" data-id="{{this._id}}" style="background-color: {{getPathThroughputColor this}}">
-                <td>
-                  {{this.origin._id}}
-                </td>
-                <td>
-                  {{this.destination._id}}
-                </td>
-                <td>
-                  {{this.occurrances}}
-                </td>
-                <td>
-                  {{this.throughput}}
+      <div class="pathsTableContainer">
+        <table id="pathsTable" class="table dataTable">
+          <thead>
+            <tr>
+              <th>{{_ "gritsDataTable.tab-1.origin-heading"}}</th>
+              <th>{{_ "gritsDataTable.tab-1.destination-heading"}}</th>
+              <th>{{_ "gritsDataTable.tab-1.occurrances-heading"}}</th>
+              <th>{{_ "gritsDataTable.tab-1.throughput-heading"}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#with paths}}
+              {{#each paths}}
+                <tr class="pathTableRow" data-id="{{this._id}}" style="background-color: {{getPathThroughputColor this}}">
+                  <td>
+                    {{this.origin._id}}
+                  </td>
+                  <td>
+                    {{this.destination._id}}
+                  </td>
+                  <td>
+                    {{this.occurrances}}
+                  </td>
+                  <td>
+                    {{this.throughput}}
+                  </td>
+                </tr>
+              {{/each}}
+            {{else}}
+              <tr>
+                <td colspan="4">
+                  <span style="font-style: italic;">No data</span>
                 </td>
               </tr>
-            {{/each}}
-          {{else}}
-            <tr>
-              <td colspan="4">
-                <span style="font-style: italic;">No data</span>
-              </td>
-            </tr>
-          {{/with}}
-        </tbody>
-      </table>
+            {{/with}}
+          </tbody>
+        </table>
+      </div>
     </div>
     <div class="tab-pane" id="nodes">
       <table id="nodesTable" class="table dataTable">
