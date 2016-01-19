@@ -1,7 +1,7 @@
-# Template.gritsFilter
+# Template.gritsSearchAndAdvancedFiltration
 #
 # When another meteor app adds grits:grits-net-meteor as a package
-# Template.gritsFilter will be available globally.
+# Template.gritsSearchAndAdvancedFiltration will be available globally.
 _init = true # flag, set to false when initialization is done
 _initStartDate = null # onCreated will initialize the date through GritsFilterCriteria
 _initEndDate = null # onCreated will initialize the date through GritsFilterCriteria
@@ -211,7 +211,7 @@ _determineFieldMatchesByWeight = (input, res) ->
   return matches
 
 # sets an object to be used by Meteors' Blaze templating engine (views)
-Template.gritsFilter.helpers({
+Template.gritsSearchAndAdvancedFiltration.helpers({
   loadedRecords: () ->
     return Session.get 'grits-net-meteor:loadedRecords'
   totalRecords: () ->
@@ -266,7 +266,7 @@ Template.gritsFilter.helpers({
       return obj.value
 })
 
-Template.gritsFilter.onCreated ->
+Template.gritsSearchAndAdvancedFiltration.onCreated ->
   _initStartDate = GritsFilterCriteria.initStart()
   _initEndDate = GritsFilterCriteria.initEnd()
   _initLimit = GritsFilterCriteria.initLimit()
@@ -276,15 +276,15 @@ Template.gritsFilter.onCreated ->
   # Public API
   # Currently we declare methods above for documentation purposes then assign
   # to the Template.gritsFilter as a global export
-  Template.gritsFilter.getOrigin = getOrigin
-  Template.gritsFilter.getDepartureSearchMain = getDepartureSearchMain
-  Template.gritsFilter.getDepartureSearch = getDepartureSearch
-  Template.gritsFilter.getArrivalSearch = getArrivalSearch
-  Template.gritsFilter.getEffectiveDatePicker = getEffectiveDatePicker
-  Template.gritsFilter.getDiscontinuedDatePicker = getDiscontinuedDatePicker
+  Template.gritsSearchAndAdvancedFiltration.getOrigin = getOrigin
+  Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain = getDepartureSearchMain
+  Template.gritsSearchAndAdvancedFiltration.getDepartureSearch = getDepartureSearch
+  Template.gritsSearchAndAdvancedFiltration.getArrivalSearch = getArrivalSearch
+  Template.gritsSearchAndAdvancedFiltration.getEffectiveDatePicker = getEffectiveDatePicker
+  Template.gritsSearchAndAdvancedFiltration.getDiscontinuedDatePicker = getDiscontinuedDatePicker
 
 # triggered when the 'filter' template is rendered
-Template.gritsFilter.onRendered ->  
+Template.gritsSearchAndAdvancedFiltration.onRendered ->
   _matchSkip = null
   _suggestionGenerator = (query, skip, callback) ->
     _matchSkip = skip
@@ -512,16 +512,7 @@ _changeLimitHandler = (e) ->
 # events
 #
 # Event handlers for the grits_filter.html template
-Template.gritsSearch.events
-  'change #departureSearchMain': _changeDepartureHandler
-  'keyup #departureSearchMain-tokenfield': (event) ->
-    if event.keyCode == 13
-      if GritsFilterCriteria.departures.get() <= 0
-        # do not apply without any departures
-        return
-      GritsFilterCriteria.apply()
-    return
-Template.gritsFilter.events
+Template.gritsSearchAndAdvancedFiltration.events
   'change #weeklyFrequencyInput': _changeWeeklyFrequencyHandler
   'change #weeklyFrequencyOperator': _changeWeeklyFrequencyHandler
   'change #stopsInput': _changeStopsHandler
@@ -532,6 +523,14 @@ Template.gritsFilter.events
   'change #arrivalSearch': _changeArrivalHandler
   'change #connectednessLevels': _changeLevelsHandler
   'change #limit': _changeLimitHandler
+  'change #departureSearchMain': _changeDepartureHandler
+  'keyup #departureSearchMain-tokenfield': (event) ->
+    if event.keyCode == 13
+      if GritsFilterCriteria.departures.get() <= 0
+        # do not apply without any departures
+        return
+      GritsFilterCriteria.apply()
+    return
   'dp.change': _changeDateHandler
   'dp.show': (event) ->
     # in order to not be contained within the scrolling div, the style of the

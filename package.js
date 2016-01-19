@@ -60,9 +60,8 @@ Package.on_use(function(api){
     'client/templates/grits_map_sidebar.coffee',
     'client/templates/grits_map_table_sidebar.html',
     'client/templates/grits_map.coffee',
-    'client/templates/grits_search.html',
-    'client/templates/grits_filter.html',
-    'client/templates/grits_filter.coffee',
+    'client/templates/grits_search_and_advanced_filtration.html',
+    'client/templates/grits_search_and_advanced_filtration.coffee',
     'client/templates/grits_legend.html',
     'client/templates/grits_legend.coffee',
     'client/templates/grits_elementDetails.html',
@@ -71,6 +70,7 @@ Package.on_use(function(api){
 
   api.addAssets([
     'client/images/flirt.png',
+    'client/images/flirt-logo-inline.png',
     'client/images/origin-marker-icon.svg'
   ], 'client');
 

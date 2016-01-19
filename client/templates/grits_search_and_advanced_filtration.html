@@ -1,9 +1,22 @@
-<template name="gritsFilter">
-<style>
-  .bootstrap-datetimepicker-widget table td.day {
-    width: 28px;
-  }
-</style>  
+<template name="gritsSearchAndAdvancedFiltration">
+  <style>
+    .bootstrap-datetimepicker-widget table td.day {
+      width: 28px;
+    }
+  </style>
+  <div>
+    {{#if state }}
+      <i class="fa fa-exclamation-circle filter-status" title="Recent changes have not been applied"></i>
+    {{/if}}
+    <div class="spinner">
+      <i id="filterLoading" class="fa fa-spinner fa-spin"></i>
+    </div>
+    <div class="searchBar" id="departureSearchMainSearchBar">
+      <div class="tokenized main">
+        <input id="departureSearchMain" class="form-control input-sm advanced-filter-status" name="departureSearchMain" placeholder='{{_ "gritsFilter.tokenfield-placeholder"}}' />
+      </div>
+    </div>
+  </div>
   <div id="filter" class="clearfix">
     <div class="row filter-row">
       <div class="col-xs-12">
@@ -11,9 +24,10 @@
       </div>
     </div>
     <ul class="nav nav-tabs">
-      <li class="active"><a href="#flight" data-toggle="tab" id="flightTab">{{_ "gritsFilter.tab-1.title"}}</a></li>
-      <li><a href="#date" data-toggle="tab" id="dateTab">{{_ "gritsFilter.tab-2.title"}}</a></li>
+      <li class="active"><a href="#flight" data-toggle="tab" id="flightTab"><i class="fa fa-plane"></i> {{_ "gritsFilter.tab-1.title"}}</a></li>
+      <li><a href="#date" data-toggle="tab" id="dateTab"><i class="fa fa-calendar"></i> {{_ "gritsFilter.tab-2.title"}}</a></li>
     </ul>
+    <div class="tableDivider"></div>
     <div class="tab-content">
       <div class="tab-pane active" id="flight">
         <!-- start flight tab content -->

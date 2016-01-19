@@ -324,7 +324,7 @@ class GritsFilterCriteria
     )
 
     if levels > 1
-      origin = Template.gritsFilter.getOrigin()
+      origin = Template.gritsSearchAndAdvancedFiltration.getOrigin()
       if !_.isNull(origin)
         # show the loading indicator and call the server-side method
         Session.set 'grits-net-meteor:isUpdating', true
@@ -445,7 +445,7 @@ class GritsFilterCriteria
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
-    discontinuedDatePicker = Template.gritsFilter.getDiscontinuedDatePicker()
+    discontinuedDatePicker = Template.gritsSearchAndAdvancedFiltration.getDiscontinuedDatePicker()
     if _.isNull(discontinuedDatePicker)
       return
 
@@ -484,7 +484,7 @@ class GritsFilterCriteria
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
-    effectiveDatePicker = Template.gritsFilter.getEffectiveDatePicker()
+    effectiveDatePicker = Template.gritsSearchAndAdvancedFiltration.getEffectiveDatePicker()
     if _.isNull(effectiveDatePicker)
       return
 
@@ -653,18 +653,18 @@ class GritsFilterCriteria
         self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: [code]})
     else
       if _.isNull(code)
-        Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [])
+        Template.gritsSearchAndAdvancedFiltration.getDepartureSearch().tokenfield('setTokens', [])
         self.departures.set([])
         return
       if _.isEmpty(code)
-        Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [])
+        Template.gritsSearchAndAdvancedFiltration.getDepartureSearch().tokenfield('setTokens', [])
         self.departures.set([])
         return
       if _.isArray(code)
-        Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', code)
+        Template.gritsSearchAndAdvancedFiltration.getDepartureSearch().tokenfield('setTokens', code)
         self.departures.set(code)
       else
-        Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [code])
+        Template.gritsSearchAndAdvancedFiltration.getDepartureSearch().tokenfield('setTokens', [code])
         self.departures.set([code])
     return
   trackDepartures: () ->
@@ -704,18 +704,18 @@ class GritsFilterCriteria
          self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: [code]})
     else
       if _.isNull(code)
-        Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [])
+        Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', [])
         self.arrivals.set([])
         return
       if _.isEmpty(code)
-        Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [])
+        Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', [])
         self.arrivals.set([])
         return
       if _.isArray(code)
-        Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', code)
+        Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', code)
         self.arrivals.set(code)
       else
-        Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [code])
+        Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', [code])
         self.arrivals.set([code])
     return
   trackArrivals: () ->
