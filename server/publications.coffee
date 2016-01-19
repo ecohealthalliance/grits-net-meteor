@@ -7,6 +7,12 @@ recordProfile = (methodName, elapsedTime) ->
   Profiling.insert({methodName: methodName, elapsedTime: elapsedTime, created: new Date()})
   return
 
+# extends the query object to ensure that all flights are filtered by current
+# dates
+#
+# @param [Object] query, the incoming query object
+# @param [String] lastId, the lastId for performing limit/offset by sorted _id
+# @return [Object] query, the outgoing query object
 extendQuery = (query, lastId) ->
   # all flights are filtered by current date being past the discontinuedDate
   # or before the effectiveDate
@@ -25,6 +31,10 @@ extendQuery = (query, lastId) ->
     offsetFilter = _id: $gt: lastId
     _.extend query, offsetFilter
 
+# builds the mongo options object that contains sort and limit clauses
+#
+# @param [Integer] limit, the amout to limit the results
+# @return [Object] options, mongodb query options
 buildOptions = (limit) ->
   options =
     sort:
@@ -40,6 +50,7 @@ buildOptions = (limit) ->
 # the query keys should have the most selective filters first, this method
 # places the date keys prior to any other keys used in the filter.
 #
+# @param [Object] query, the incoming query object
 # @return [Array] keys, arranged by selectiveness
 arrangeQueryKeys = (query) ->
   keys = Object.keys(query)
@@ -54,7 +65,7 @@ arrangeQueryKeys = (query) ->
   return keys
 
 Meteor.methods
-  # method to query flights with an optional limit and offset
+  # find flights with an optional limit and offset
   #
   # @param [Object] query, a mongodb query object
   # @param [Integer] limit, the amount of records to limit
@@ -213,7 +224,7 @@ Meteor.methods
     return [flightsToReturn, totalFlights, newLastId]
 
 Meteor.methods
-  # method to count the total flights for the specified query
+  # count the total flights for the specified query
   #
   # @param [Object] query, a mongodb query object
   # @return [Integer] totalRecorts, the count of the query
@@ -231,16 +242,27 @@ Meteor.methods
     if _profile
       recordProfile('countFlightsByQuery', new Date() - start)
     return count
+  # finds a heatmap document
+  #
+  # @param [String] code, an airport codes (_id)
+  # @return [Object] heatmap, a heatmap document
   findHeatmapByCode: (code) ->
     if _.isUndefined(code) or _.isEmpty(code)
       return {}
     heatmap = Heatmaps.findOne({'_id': code})
     return heatmap
+  # finds one or many heatmap documents
+  #
+  # @param [Array] codes, an array of airport codes (_id)
+  # @return [Array] heatmaps, heatmap documents
   findHeatmapsByCodes: (codes) ->
     if _.isUndefined(codes) or _.isEmpty(codes)
       return []
     heatmaps = Heatmaps.find({'_id': {'$in': codes}}, {transform: null}).fetch()
     return heatmaps
+  # finds all airport documents
+  #
+  # @return [Array] airports, an array of airport document
   findAirports: () ->
     if _profile
       start = new Date()
@@ -248,10 +270,18 @@ Meteor.methods
     if _profile
       recordProfile('findAirports', new Date() - start)
     return airports
+  # finds a single airport document
+  #
+  # @param [String] id, the airport code to retrieve
+  # @return [Object] airport, an airport document
   findAirportById: (id) ->
     if _.isUndefined(id) or _.isEmpty(id)
       return []
     return Airports.findOne({'_id': id})
+  # finds nearby airports through geo $near
+  #
+  # @param [String] id, the airport code to use as the center/base of search
+  # @return [Array] airports, an array of airports
   findNearbyAirports: (id, miles) ->
     if _profile
       start = new Date()
@@ -304,12 +334,19 @@ Meteor.methods
     if _profile
       recordProfile('findMinMaxDateRange', new Date() - start)
     return [minDate, maxDate]
+  # determines if the runtime environment is for testing
+  #
+  # @return [Boolean] isTest, true or false
   isTestEnvironment: () ->
     return process.env.hasOwnProperty('VELOCITY_MAIN_APP_PATH')
 
 Meteor.methods
-  # find airports that match the search
-  typeaheadAirport: (search, skip, options) ->
+  # finds airports that match the search
+  #
+  # @param [String] search, the string to search for matches
+  # @param [Integer] skip, the amount of documents to skip in limit/offset
+  # @return [Array] airports, an array of airport documents
+  typeaheadAirport: (search, skip) ->
     if _profile
       start = new Date()
     if typeof skip == 'undefined'
@@ -335,7 +372,11 @@ Meteor.methods
     if _profile
       recordProfile('typeaheadAirport', new Date() - start)
     return matches
-  countTypeaheadAirports: (search, options) ->
+  # counts the number of airports that match the search
+  #
+  # @param [String] search, the string to search for matches
+  # @return [Integer] count, the number of documents matching the search
+  countTypeaheadAirports: (search) ->
     if _profile
       start = new Date()
 
