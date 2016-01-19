@@ -284,7 +284,7 @@ Template.gritsFilter.onCreated ->
   Template.gritsFilter.getDiscontinuedDatePicker = getDiscontinuedDatePicker
 
 # triggered when the 'filter' template is rendered
-Template.gritsFilter.onRendered ->  
+Template.gritsFilter.onRendered ->
   _matchSkip = null
   _suggestionGenerator = (query, skip, callback) ->
     _matchSkip = skip
@@ -442,7 +442,7 @@ Template.gritsFilter.onRendered ->
       $('#filterLoading').show()
     else
       $('#applyFilter').prop('disabled', false)
-      $('#filterLoading').hide()
+      $('#filterLoading').hide()    
 
 _changeWeeklyFrequencyHandler = (e) ->
     val = parseInt($("#weeklyFrequencyInput").val(), 10)
