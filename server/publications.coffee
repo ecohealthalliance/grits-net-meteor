@@ -3,10 +3,20 @@ _profile = false # enable/disable recording method performance to the collection
 
 # collection to record profiling results
 Profiling = new Mongo.Collection('profiling')
+# records a profile document to mongo when profiling is enabled
+#
+# @param [String] methodName, the name of the method that is being profiled
+# @param [Integer] elsapsedTime, the elapsed time in milliseconds
 recordProfile = (methodName, elapsedTime) ->
   Profiling.insert({methodName: methodName, elapsedTime: elapsedTime, created: new Date()})
   return
 
+# extends the query object to ensure that all flights are filtered by current
+# dates
+#
+# @param [Object] query, the incoming query object
+# @param [String] lastId, the lastId for performing limit/offset by sorted _id
+# @return [Object] query, the outgoing query object
 extendQuery = (query, lastId) ->
   # all flights are filtered by current date being past the discontinuedDate
   # or before the effectiveDate
@@ -25,6 +35,10 @@ extendQuery = (query, lastId) ->
     offsetFilter = _id: $gt: lastId
     _.extend query, offsetFilter
 
+# builds the mongo options object that contains sort and limit clauses
+#
+# @param [Integer] limit, the amout to limit the results
+# @return [Object] options, mongodb query options
 buildOptions = (limit) ->
   options =
     sort:
@@ -40,6 +54,7 @@ buildOptions = (limit) ->
 # the query keys should have the most selective filters first, this method
 # places the date keys prior to any other keys used in the filter.
 #
+# @param [Object] query, the incoming query object
 # @return [Array] keys, arranged by selectiveness
 arrangeQueryKeys = (query) ->
   keys = Object.keys(query)
@@ -53,48 +68,48 @@ arrangeQueryKeys = (query) ->
     keys.unshift('discontinuedDate')
   return keys
 
-Meteor.methods
-  # method to query flights with an optional limit and offset
-  #
-  # @param [Object] query, a mongodb query object
-  # @param [Integer] limit, the amount of records to limit
-  # @param [Integer] skip, the amount of records to skip
-  # @return [Array] an array of flights
-  flightsByQuery: (query, limit, skip) ->
-    if _profile
-      start = new Date()
 
-    if _.isUndefined(query) or _.isEmpty(query)
-      return []
+# find flights with an optional limit and offset
+#
+# @param [Object] query, a mongodb query object
+# @param [Integer] limit, the amount of records to limit
+# @param [Integer] skip, the amount of records to skip
+# @return [Array] an array of flights
+flightsByQuery = (query, limit, skip) ->
+  if _profile
+    start = new Date()
 
-    if _.isUndefined(limit)
-      limit = 0
-    if _.isUndefined(skip)
-      skip = 0
+  if _.isUndefined(query) or _.isEmpty(query)
+    return []
 
-    # make sure dates are set
-    extendQuery(query, null)
+  if _.isUndefined(limit)
+    limit = 0
+  if _.isUndefined(skip)
+    skip = 0
 
-    matches = []
-    if _useAggregation
-      # prepare the aggregate pipeline
-      pipeline = [
-        {$skip: skip},
-        {$limit: limit}
-      ]
-      _.each(arrangeQueryKeys(query), (key) ->
-        obj = {$match:{}}
-        value = query[key]
-        obj['$match'][key] = value
-        pipeline.unshift(obj)
-      )
-      matches = Flights.aggregate(pipeline)
-    else
-      matches = Flights.find(query, {limit: limit, skip: skip, transform: null}).fetch()
+  # make sure dates are set
+  extendQuery(query, null)
 
-    if _profile
-      recordProfile('flightsByQuery', new Date() - start)
-    return matches
+  matches = []
+  if _useAggregation
+    # prepare the aggregate pipeline
+    pipeline = [
+      {$skip: skip},
+      {$limit: limit}
+    ]
+    _.each(arrangeQueryKeys(query), (key) ->
+      obj = {$match:{}}
+      value = query[key]
+      obj['$match'][key] = value
+      pipeline.unshift(obj)
+    )
+    matches = Flights.aggregate(pipeline)
+  else
+    matches = Flights.find(query, {limit: limit, skip: skip, transform: null}).fetch()
+
+  if _profile
+    recordProfile('flightsByQuery', new Date() - start)
+  return matches
 
 Meteor.methods
   getFlightsByLevel: (query, levels, origin, limit) ->
@@ -212,142 +227,184 @@ Meteor.methods
         newLastId = flightsToReturn[flightsToReturn.length-1]._id
     return [flightsToReturn, totalFlights, newLastId]
 
-Meteor.methods
-  # method to count the total flights for the specified query
-  #
-  # @param [Object] query, a mongodb query object
-  # @return [Integer] totalRecorts, the count of the query
-  countFlightsByQuery: (query) ->
-    if _profile
-      start = new Date()
+# count the total flights for the specified query
+#
+# @param [Object] query, a mongodb query object
+# @return [Integer] totalRecorts, the count of the query
+countFlightsByQuery = (query) ->
+  if _profile
+    start = new Date()
 
-    if _.isUndefined(query) or _.isEmpty(query)
-      return 0
+  if _.isUndefined(query) or _.isEmpty(query)
+    return 0
 
-    extendQuery(query)
+  extendQuery(query)
 
-    count = Flights.find(query, {transform:null}).count()
+  count = Flights.find(query, {transform:null}).count()
 
-    if _profile
-      recordProfile('countFlightsByQuery', new Date() - start)
-    return count
-  findHeatmapByCode: (code) ->
-    if _.isUndefined(code) or _.isEmpty(code)
-      return {}
-    heatmap = Heatmaps.findOne({'_id': code})
-    return heatmap
-  findHeatmapsByCodes: (codes) ->
-    if _.isUndefined(codes) or _.isEmpty(codes)
-      return []
-    heatmaps = Heatmaps.find({'_id': {'$in': codes}}, {transform: null}).fetch()
-    return heatmaps
-  findAirports: () ->
-    if _profile
-      start = new Date()
-    airports = Airports.find({}, {transform: null}).fetch()
-    if _profile
-      recordProfile('findAirports', new Date() - start)
-    return airports
-  findAirportById: (id) ->
-    if _.isUndefined(id) or _.isEmpty(id)
-      return []
-    return Airports.findOne({'_id': id})
-  findNearbyAirports: (id, miles) ->
-    if _profile
-      start = new Date()
-    if _.isUndefined(id) or _.isEmpty(id)
-      return []
-    miles = parseInt(miles, 10)
-    if _.isUndefined(miles) or _.isNaN(miles)
-      return []
-    metersToMiles = 1609.344
-    airport = Airports.findOne({'_id': id})
-    if _.isUndefined(airport) or _.isEmpty(airport)
-      return []
-    coordinates = airport.loc.coordinates
-    value =
-      $geometry:
-        type: 'Point'
-        coordinates: coordinates
-      $minDistance: 0
-      $maxDistance: metersToMiles * miles
-    query =
-      loc: {$near: value}
-    airports = Airports.find(query, {transform:null}).fetch()
-    if _profile
-      recordProfile('findNearbyAirports', new Date() - start)
-    return airports
-  # finds the min and max date range of a 'Date' key to the flights collection
-  #
-  # @param [String] the key of the flight documents the contains a date value
-  # @return [Array] array of two dates, defaults to 'null' if not found [min, max]
-  findMinMaxDateRange: (key) ->
-    if _profile
-      start = new Date()
+  if _profile
+    recordProfile('countFlightsByQuery', new Date() - start)
+  return count
+# finds a heatmap document
+#
+# @param [String] code, an airport codes (_id)
+# @return [Object] heatmap, a heatmap document
+findHeatmapByCode = (code) ->
+  if _.isUndefined(code) or _.isEmpty(code)
+    return {}
+  heatmap = Heatmaps.findOne({'_id': code})
+  return heatmap
+# finds one or many heatmap documents
+#
+# @param [Array] codes, an array of airport codes (_id)
+# @return [Array] heatmaps, heatmap documents
+findHeatmapsByCodes = (codes) ->
+  if _.isUndefined(codes) or _.isEmpty(codes)
+    return []
+  heatmaps = Heatmaps.find({'_id': {'$in': codes}}, {transform: null}).fetch()
+  return heatmaps
+# finds all airport documents
+#
+# @return [Array] airports, an array of airport document
+findAirports = () ->
+  if _profile
+    start = new Date()
+  airports = Airports.find({}, {transform: null}).fetch()
+  if _profile
+    recordProfile('findAirports', new Date() - start)
+  return airports
+# finds a single airport document
+#
+# @param [String] id, the airport code to retrieve
+# @return [Object] airport, an airport document
+findAirportById = (id) ->
+  if _.isUndefined(id) or _.isEmpty(id)
+    return []
+  return Airports.findOne({'_id': id})
+# finds nearby airports through geo $near
+#
+# @param [String] id, the airport code to use as the center/base of search
+# @return [Array] airports, an array of airports
+findNearbyAirports = (id, miles) ->
+  if _profile
+    start = new Date()
+  if _.isUndefined(id) or _.isEmpty(id)
+    return []
+  miles = parseInt(miles, 10)
+  if _.isUndefined(miles) or _.isNaN(miles)
+    return []
+  metersToMiles = 1609.344
+  airport = Airports.findOne({'_id': id})
+  if _.isUndefined(airport) or _.isEmpty(airport)
+    return []
+  coordinates = airport.loc.coordinates
+  value =
+    $geometry:
+      type: 'Point'
+      coordinates: coordinates
+    $minDistance: 0
+    $maxDistance: metersToMiles * miles
+  query =
+    loc: {$near: value}
+  airports = Airports.find(query, {transform:null}).fetch()
+  if _profile
+    recordProfile('findNearbyAirports', new Date() - start)
+  return airports
+# finds the min and max date range of a 'Date' key to the flights collection
+#
+# @param [String] the key of the flight documents the contains a date value
+# @return [Array] array of two dates, defaults to 'null' if not found [min, max]
+findMinMaxDateRange = (key) ->
+  if _profile
+    start = new Date()
 
-    # determine minimum date by sort ascending
-    minDate = null
-    minResults = Flights.find({}, {sort: {"#{key}": 1}, limit:1, transform: null}).fetch()
-    if !(_.isUndefined(minResults) || _.isEmpty(minResults))
-      min = minResults[0]
-      if min.hasOwnProperty(key)
-        minDate = min[key]
+  # determine minimum date by sort ascending
+  minDate = null
+  minResults = Flights.find({}, {sort: {"#{key}": 1}, limit:1, transform: null}).fetch()
+  if !(_.isUndefined(minResults) || _.isEmpty(minResults))
+    min = minResults[0]
+    if min.hasOwnProperty(key)
+      minDate = min[key]
 
-    # determine maximum date by sort descending
-    maxDate = null
-    maxResults = Flights.find({}, {sort: {"#{key}": -1}, limit:1, transform: null}).fetch()
-    if !(_.isUndefined(maxResults) || _.isEmpty(maxResults))
-      max = maxResults[0]
-      if max.hasOwnProperty(key)
-        maxDate = max[key]
+  # determine maximum date by sort descending
+  maxDate = null
+  maxResults = Flights.find({}, {sort: {"#{key}": -1}, limit:1, transform: null}).fetch()
+  if !(_.isUndefined(maxResults) || _.isEmpty(maxResults))
+    max = maxResults[0]
+    if max.hasOwnProperty(key)
+      maxDate = max[key]
 
-    if _profile
-      recordProfile('findMinMaxDateRange', new Date() - start)
-    return [minDate, maxDate]
-  isTestEnvironment: () ->
-    return process.env.hasOwnProperty('VELOCITY_MAIN_APP_PATH')
+  if _profile
+    recordProfile('findMinMaxDateRange', new Date() - start)
+  return [minDate, maxDate]
+# determines if the runtime environment is for testing
+#
+# @return [Boolean] isTest, true or false
+isTestEnvironment = () ->
+  return process.env.hasOwnProperty('VELOCITY_MAIN_APP_PATH')
 
-Meteor.methods
-  # find airports that match the search
-  typeaheadAirport: (search, skip, options) ->
-    if _profile
-      start = new Date()
-    if typeof skip == 'undefined'
-      skip = 0
-    fields = []
-    for fieldName, matcher of Airport.typeaheadMatcher()
-      field = {}
-      field[fieldName] = {$regex: new RegExp(matcher.regexSearch({search: search}), matcher.regexOptions)}
-      fields.push(field)
+# finds airports that match the search
+#
+# @param [String] search, the string to search for matches
+# @param [Integer] skip, the amount of documents to skip in limit/offset
+# @return [Array] airports, an array of airport documents
+typeaheadAirport = (search, skip) ->
+  if _profile
+    start = new Date()
+  if typeof skip == 'undefined'
+    skip = 0
+  fields = []
+  for fieldName, matcher of Airport.typeaheadMatcher()
+    field = {}
+    field[fieldName] = {$regex: new RegExp(matcher.regexSearch({search: search}), matcher.regexOptions)}
+    fields.push(field)
 
-    matches = []
-    if _useAggregation
-      pipeline = [
-        {$match: {$or: fields}},
-        {$sort: {_id: 1}},
-        {$skip: skip},
-        {$limit: 10}
-      ]
-      matches = Airports.aggregate(pipeline)
-    else
-      query = { $or: fields }
-      matches = Airports.find(query, {limit: 10, sort: {_id: 1}, skip: skip, transform: null}).fetch()
-    if _profile
-      recordProfile('typeaheadAirport', new Date() - start)
-    return matches
-  countTypeaheadAirports: (search, options) ->
-    if _profile
-      start = new Date()
-
-    fields = []
-    for fieldName, matcher of Airport.typeaheadMatcher()
-      field = {}
-      field[fieldName] = {$regex: new RegExp(matcher.regexSearch({search: search}), matcher.regexOptions)}
-      fields.push(field)
-
+  matches = []
+  if _useAggregation
+    pipeline = [
+      {$match: {$or: fields}},
+      {$sort: {_id: 1}},
+      {$skip: skip},
+      {$limit: 10}
+    ]
+    matches = Airports.aggregate(pipeline)
+  else
     query = { $or: fields }
-    count = Airports.find(query, {sort: {_id: 1}, transform: null}).count()
+    matches = Airports.find(query, {limit: 10, sort: {_id: 1}, skip: skip, transform: null}).fetch()
+  if _profile
+    recordProfile('typeaheadAirport', new Date() - start)
+  return matches
+# counts the number of airports that match the search
+#
+# @param [String] search, the string to search for matches
+# @return [Integer] count, the number of documents matching the search
+countTypeaheadAirports = (search) ->
+  if _profile
+    start = new Date()
 
-    if _profile
-      recordProfile('countTypeaheadAirports', new Date() - start)
-    return count
+  fields = []
+  for fieldName, matcher of Airport.typeaheadMatcher()
+    field = {}
+    field[fieldName] = {$regex: new RegExp(matcher.regexSearch({search: search}), matcher.regexOptions)}
+    fields.push(field)
+
+  query = { $or: fields }
+  count = Airports.find(query, {sort: {_id: 1}, transform: null}).count()
+
+  if _profile
+    recordProfile('countTypeaheadAirports', new Date() - start)
+  return count
+
+# Public API
+Meteor.methods
+  flightsByQuery: flightsByQuery
+  countFlightsByQuery: countFlightsByQuery
+  findHeatmapByCode: findHeatmapByCode
+  findHeatmapsByCodes: findHeatmapsByCodes
+  findAirports: findAirports
+  findAirportById: findAirportById
+  findNearbyAirports: findNearbyAirports
+  findMinMaxDateRange: findMinMaxDateRange
+  isTestEnvironment: isTestEnvironment
+  typeaheadAirport: typeaheadAirport
+  countTypeaheadAirports: countTypeaheadAirports
