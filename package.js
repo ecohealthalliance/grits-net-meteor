@@ -71,7 +71,9 @@ Package.on_use(function(api){
 
   api.addAssets([
     'client/images/flirt.png',
-    'client/images/origin-marker-icon.svg'
+    'client/images/origin-marker-icon.svg',
+    'client/images/asc.png',
+    'client/images/desc.png'
   ], 'client');
 
   // both client and server files

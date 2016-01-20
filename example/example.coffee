@@ -73,6 +73,10 @@ if Meteor.isClient
         sidebar = L.control.sidebar('sidebar')
         map.addControl(sidebar)
 
+        $("#pathsTable").tablesorter()
+        $("#nodesTable").tablesorter()
+        $("#heatmapTable").tablesorter()
+
         # Add test control
         Meteor.call('isTestEnvironment', (err, result) ->
           if err

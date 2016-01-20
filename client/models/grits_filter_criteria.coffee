@@ -207,30 +207,37 @@ class GritsFilterCriteria
   # compares the current state vs. the original/previous state
   compareStates: () ->
     self = this
-    current = self.getCurrentState()
-    if current != _state
-      # do not notifiy on an empty query or the base state
-      if current == "{}" || current == self._baseState
-        self.stateChanged.set(false)
-        # clear the node/paths
-        if !(_.isUndefined(Template.gritsMap) || _.isNull(Template.gritsMap))
-          if !_.isUndefined(Template.gritsMap.getInstance)
-            map = Template.gritsMap.getInstance()
-            if !_.isNull(map)
-              nodeLayer = map.getGritsLayer('Nodes')
-              pathLayer = map.getGritsLayer('Paths')
-              nodeLayer.clear()
-              pathLayer.clear()
+    # postone execution to avoid 'flash' for the fast draw case.  this happens
+    # when the user clicks a node or presses enter on the search and the
+    # draw completes faster than the debounce timeout
+    async.nextTick(() ->
+      current = self.getCurrentState()
+      if current != _state
+        # do not notifiy on an empty query or the base state
+        if current == "{}" || current == self._baseState
+          self.stateChanged.set(false)
+          # checks are necessary as Tracker autorun will fire before the DOM
+          # is ready and the Template.gritsMap.onRenered is called
+          if !(_.isUndefined(Template.gritsMap) || _.isNull(Template.gritsMap))
+            if !_.isUndefined(Template.gritsMap.getInstance)
+              map = Template.gritsMap.getInstance()
+              if !_.isNull(map)
+                # clear the node/paths
+                nodeLayer = map.getGritsLayer('Nodes')
+                pathLayer = map.getGritsLayer('Paths')
+                nodeLayer.clear()
+                pathLayer.clear()
+        else
+          self.stateChanged.set(true)
+
+          # auto-apply the filter
+          self.autoApply()
+
+          # disable [More...] button when filter has changed
+          $('#loadMore').prop('disabled', true)
       else
-        self.stateChanged.set(true)
-
-        # auto-apply the filter
-        self.autoApply()
-
-        # disable [More...] button when filter has changed
-        $('#loadMore').prop('disabled', true)
-    else
-      self.stateChanged.set(false)
+        self.stateChanged.set(false)
+    )
     return
   # gets the current state of the filter
   #
