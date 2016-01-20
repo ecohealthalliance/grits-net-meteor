@@ -42,6 +42,7 @@ insecure@1.0.4
 jagi:astronomy@1.2.2
 jagi:astronomy-validators@1.1.1
 jagi:reactive-map@2.0.0
+jaywon:meteor-node-uuid@1.0.1
 jparker:crypto-core@0.1.0
 jparker:crypto-md5@0.1.1
 jquery@1.11.4
