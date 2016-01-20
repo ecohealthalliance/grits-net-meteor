@@ -8,6 +8,41 @@
       background-color: #333;
   }
 
+  .sidebar-highlight {
+    background-color: #333;
+  }
+
+  #sidebar-draw-rectangle-tool {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    bottom: 80px;
+    padding: 12px 10px 10px 12px;
+  }
+  .action-menu {
+    display: none;
+    list-style: none;
+    position: fixed;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+  }
+  .action-menu li {
+    display: inline-block;
+  }
+  .action-menu div {
+    background-color: #000;
+    color: #FFF;
+    height: 40px;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+  .action-menu span {
+    font-size: small;
+    line-height: 40px;
+    padding: 10px;
+  }
+
   </style>
   <div id="sidebar" class="sidebar sidebar-left collapsed gritsSidebar" style="top:175px;">
         <!-- Nav tabs -->
@@ -17,6 +52,9 @@
             <li id="sidebar-flightData-tab"><a href="#sidebar-flightData" role="tab"><i class="fa fa-th fa-white"></i></a></li>
             <li id="sidebar-slider-tab"><a href="#sidebar-slider" role="tab"><i class="fa fa-sliders fa-white"></i></a></li>
             <li id="sidebar-layer-tab"><a href="#sidebar-layer" role="tab"><i class="fa fa-map-o fa-white"></i></a></li>
+
+            <div id="sidebar-draw-rectangle-tool" class="fa fa-object-group fa-white"></div>
+
             <button id="sidebar-plus-button" class="sidebar-zoom-in fa fa-plus btn btn-sm btn-default"></button>
             <button id="sidebar-minus-button" class="sidebar-zoom-out fa fa-minus btn btn-sm btn-default"></button>
         </ul>
@@ -27,9 +65,7 @@
             <div class="sidebar-pane" id="sidebar-advanced-filter"></div>
             <div class="sidebar-pane" id="sidebar-flightData"></div>
             <div class="sidebar-pane" id="sidebar-slider">Sub-filter Settings</div>
-            <div class="sidebar-pane leaflet-control-layers leaflet-control leaflet-control-layers-expanded" id="sidebar-layer">
-
-            </div>
+            <div class="sidebar-pane leaflet-control-layers leaflet-control leaflet-control-layers-expanded" id="sidebar-layer"></div>
         </div>
-    </div>
+  </div>
 </template>

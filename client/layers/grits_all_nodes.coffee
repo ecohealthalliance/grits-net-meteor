@@ -96,8 +96,11 @@ class GritsAllNodesLayer extends GritsLayer
   # adds the layer
   #
   add: () ->
+    Template.gritsOverlay.show()
     self = this
-    self._addLayerGroup()
+    setTimeout(() ->
+      self._addLayerGroup()
+    , 125)
 
   # removes the layerGroup from the map
   #
@@ -272,9 +275,9 @@ class GritsAllNodesLayer extends GritsLayer
     self._map.on(
       overlayadd: (e) ->
         if e.name == self._displayName
+          Template.gritsOverlay.hide()
           if !self.hasLoaded.get()
             toastr.warning('The layer has not finished loading')
-            return
           if Meteor.gritsUtil.debug
             console.log("#{self._displayName} layer was added")
       overlayremove: (e) ->
