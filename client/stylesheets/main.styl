@@ -306,7 +306,7 @@ p.intro
   color #777
 
 .my-legend
-  padding 40px 20px
+  padding 40px 30px
 
 #dataTableContainer
   font-size small
@@ -448,12 +448,28 @@ p.intro
   font-size 2em
   color white
 
+.fa-white-table
+  font-size 1.5em
+  color white
+
+.fa-white-arrow
+  font-size 1.5em
+  color white
+
 .zoomBtns
   left: 60px;
   float: right;
 
 #sidebar-flightData-tab
-  margin: 550% 0 0 0;
+  position absolute
+  bottom 50%
+  background #496c8a
+  border-radius 4px
+  height 32px
+  line-height 40px
+
+#sidebar-flightData-tab > a
+  line-height 35px
 
 #flirtTitleImage
   content:url("/packages/grits_grits-net-meteor/client/images/flirt-logo-inline.png")
@@ -480,3 +496,19 @@ p.intro
 #dateTab
   width 235px
   font-weight normal
+
+#sidebar-question-tab
+  position absolute
+  bottom 0px
+
+#sidebar-search-tab
+  position absolute
+  top 140px
+
+#sidebar-slider-tab
+  position absolute
+  top 200px
+
+#sidebar-layer-tab
+  position absolute
+  top 260px
