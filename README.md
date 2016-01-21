@@ -62,62 +62,62 @@ The following instructions provide an example of how to use the grits-net-meteor
 7. Create grits-net-example/example.coffee
 
   ```
-if Meteor.isClient
-  Template.gritsMap.onRendered ->
-    self = Template.instance()
-    self.autorun ->
-      # wait for grits-net-meteor to be ready
-      isReady = Session.get('grits-net-meteor:isReady')
-      if isReady
+  if Meteor.isClient
+    Template.gritsMap.onRendered ->
+      self = Template.instance()
+      self.autorun ->
+        # wait for grits-net-meteor to be ready
+        isReady = Session.get('grits-net-meteor:isReady')
+        if isReady
 
-        # Define the base layers for the map
-        OpenStreetMap = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-          layerName: 'CartoDB_Positron'
-          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
-          subdomains: 'abcd'
-          maxZoom: 19)
-        MapQuestOpen_OSM = L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/{type}/{z}/{x}/{y}.{ext}',
-          type: 'map'
-          layerName: 'MapQuestOpen_OSM'
-          ext: 'jpg'
-          subdomains: '1234')
-        Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-          layerName: 'Esri_WorldImagery')
-        baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
+          # Define the base layers for the map
+          OpenStreetMap = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+            layerName: 'CartoDB_Positron'
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+            subdomains: 'abcd'
+            maxZoom: 19)
+          MapQuestOpen_OSM = L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/{type}/{z}/{x}/{y}.{ext}',
+            type: 'map'
+            layerName: 'MapQuestOpen_OSM'
+            ext: 'jpg'
+            subdomains: '1234')
+          Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            layerName: 'Esri_WorldImagery')
+          baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
 
-        # The DOM id of the map element (defined in grits-net-meteor/template/grits_map.html)
-        element = 'grits-map'
+          # The DOM id of the map element (defined in grits-net-meteor/template/grits_map.html)
+          element = 'grits-map'
 
-        # The current window height
-        height = window.innerHeight
+          # The current window height
+          height = window.innerHeight
 
-        # Options to pass to GritsMap instance
-        options = {
-          height: height
-          zoomControl: false
-          noWrap: true
-          maxZoom: 18
-          minZoom: 0
-          zoom: 2
-          center: L.latLng(30,-20)
-          layers: baseLayers
-        }
+          # Options to pass to GritsMap instance
+          options = {
+            height: height
+            zoomControl: false
+            noWrap: true
+            maxZoom: 18
+            minZoom: 0
+            zoom: 2
+            center: L.latLng(30,-20)
+            layers: baseLayers
+          }
 
-        # Create the map instance
-        map = new GritsMap(element, options, baseLayers)
+          # Create the map instance
+          map = new GritsMap(element, options, baseLayers)
 
-        # (Required) Add layers to the map
-        map.addGritsLayer(new GritsHeatmapLayer(map))
-        map.addGritsLayer(new GritsPathLayer(map))
-        map.addGritsLayer(new GritsNodeLayer(map))
+          # (Required) Add layers to the map
+          map.addGritsLayer(new GritsHeatmapLayer(map))
+          map.addGritsLayer(new GritsPathLayer(map))
+          map.addGritsLayer(new GritsNodeLayer(map))
 
-        # Add the default controls to the map.
-        Template.gritsMap.addDefaultControls(map)
+          # Add the default controls to the map.
+          Template.gritsMap.addDefaultControls(map)
 
-        # (Required) Sets reference to the map instance
-        Template.gritsMap.setInstance(map)
-        return
-    return
+          # (Required) Sets reference to the map instance
+          Template.gritsMap.setInstance(map)
+          return
+      return
   ```
 
 ## Run Meteor
@@ -145,7 +145,22 @@ if Meteor.isClient
 
  2. Open grits-net-meteor/doc/index.html
 
-
 ## NOTE:
 
 *MongoDB will need to be populated by the grits-net-consume script.  Please view the [README.md](https://github.com/ecohealthalliance/grits-net-consume/blob/master/README.md)*
+
+
+## License
+Copyright 2016 EcoHealth Alliance
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.

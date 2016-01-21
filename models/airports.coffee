@@ -8,7 +8,7 @@ Airport = Astro.Class(
     'city': 'string'
     'state': 'string'
     'stateName': 'string'
-    'loc': 'object' 
+    'loc': 'object'
     'loc.type': 'string'
     'loc.coordinates': 'array'
     'country': 'number'
@@ -25,8 +25,7 @@ _airportRegexSearchTmpl = _.template("<%=search%>")
 # return a shared object between client/server that can be used to determine
 # typeahead matches
 # @note static method
-# @return [Object] typeaheadMatcher, object containing helper values for
-# sharing regex and display options between client and server
+# @return [Object] typeaheadMatcher, object containing helper values for sharing regex and display options between client and server
 Airport.typeaheadMatcher = () ->
   WAC: {weight: 0, regexSearch: _airportRegexSearchTmpl, regexOptions: 'ig', display: 'WAC'}
   notes: {weight: 1, regexSearch: _airportRegexSearchTmpl, regexOptions: 'ig', display: 'Notes'}
@@ -37,4 +36,4 @@ Airport.typeaheadMatcher = () ->
   state: {weight: 6, regexSearch: _airportRegexSearchTmpl, regexOptions: 'ig', display: 'State'}
   city: {weight: 7, regexSearch: _airportRegexSearchTmpl, regexOptions: 'ig', display: 'City'}
   name: {weight: 8, regexSearch: _airportRegexSearchTmpl, regexOptions: 'i', display: null}
-  _id: {weight: 9, regexSearch: _airportRegexSearchTmpl, regexOptions: 'i', display: null} 
+  _id: {weight: 9, regexSearch: _airportRegexSearchTmpl, regexOptions: 'i', display: null}
