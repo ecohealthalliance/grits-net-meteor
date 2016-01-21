@@ -98,8 +98,19 @@ class GritsRectangle
     if self._shape != null
       Template.gritsOverlay.show()
       nodes = self._filterNodes()
-      GritsFilterCriteria.setDepartures(_.pluck(nodes, '_id'))
-      self.reset()
+      # erase any previous departures
+      GritsFilterCriteria.setDepartures(null)
+      # set the filtered nodes as the new origin
+      departureSearch = Template.gritsFilter.getDepartureSearch()
+      departureSearch.tokenfield('setTokens', _.pluck(nodes, '_id'))
+      async.nextTick(() ->
+        # apply the filter
+        GritsFilterCriteria.apply((err, res) ->
+          if res
+            Template.gritsOverlay.hide()
+            self.reset()
+        )
+      )
   reset: () ->
     self = this
     if self._shape != null
