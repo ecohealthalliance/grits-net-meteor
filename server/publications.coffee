@@ -261,7 +261,7 @@ findHeatmapByCode = (code) ->
 findHeatmapsByCodes = (codes) ->
   if _.isUndefined(codes) or _.isEmpty(codes)
     return []
-  heatmaps = Heatmaps.find({'_id': {'$in': codes}}, {transform: null}).fetch()
+  heatmaps = Heatmaps.find({'_id': {'$in': codes}}).fetch()
   return heatmaps
 # finds all airport documents
 #
