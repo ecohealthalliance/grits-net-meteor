@@ -1,4 +1,4 @@
-Meteor.gritsUtil =  
+Meteor.gritsUtil =
   debug: true
   errorHandler: (err) ->
     if typeof err != 'undefined'

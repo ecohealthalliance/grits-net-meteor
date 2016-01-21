@@ -24,7 +24,7 @@ class GritsHeatmapLayer extends GritsLayer
 
     self._layer = L.heatLayer([], {radius: 30, blur: 15, maxZoom: 0})
     self._layerGroup = L.layerGroup([self._layer])
-    self._map.addOverlayControl(@_name, self._layerGroup)
+    self._map.addOverlayControl(@_displayName, self._layerGroup)
 
     self.hasLoaded = new ReactiveVar(false)
 

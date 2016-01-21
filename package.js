@@ -56,7 +56,10 @@ Package.on_use(function(api){
     'client/templates/grits_dataTable.html',
     'client/templates/grits_dataTable.coffee',
     'client/templates/grits_map.html',
+    'client/templates/grits_map_sidebar.html',
+    'client/templates/grits_map_sidebar.coffee',
     'client/templates/grits_map.coffee',
+    'client/templates/grits_search.html',
     'client/templates/grits_filter.html',
     'client/templates/grits_filter.coffee',
     'client/templates/grits_legend.html',
@@ -67,7 +70,9 @@ Package.on_use(function(api){
 
   api.addAssets([
     'client/images/flirt.png',
-    'client/images/origin-marker-icon.svg'
+    'client/images/origin-marker-icon.svg',
+    'client/images/asc.png',
+    'client/images/desc.png'
   ], 'client');
 
   // both client and server files

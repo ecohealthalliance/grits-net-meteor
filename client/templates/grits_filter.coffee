@@ -272,7 +272,7 @@ Template.gritsFilter.onCreated ->
   _initLimit = GritsFilterCriteria.initLimit()
   _initLevels = GritsFilterCriteria.initLevels()
   _init = false # done initializing initial input values
-  
+
   # Public API
   # Currently we declare methods above for documentation purposes then assign
   # to the Template.gritsFilter as a global export
@@ -351,7 +351,7 @@ Template.gritsFilter.onRendered ->
     return
 
   departureSearchMain = $('#departureSearchMain').tokenfield({
-    typeahead: [{hint:false, highlight:true}, {
+    typeahead: [{hint:false, highlight: true}, {
       display: (match) ->
         if _.isUndefined(match)
           return
@@ -442,7 +442,7 @@ Template.gritsFilter.onRendered ->
       $('#filterLoading').show()
     else
       $('#applyFilter').prop('disabled', false)
-      $('#filterLoading').hide()
+      $('#filterLoading').hide()    
 
 _changeWeeklyFrequencyHandler = (e) ->
     val = parseInt($("#weeklyFrequencyInput").val(), 10)
@@ -450,7 +450,7 @@ _changeWeeklyFrequencyHandler = (e) ->
       val = null
     op = $('#weeklyFrequencyOperator').val()
     GritsFilterCriteria.weeklyFrequency.set({'value': val, 'operator': op})
-    return 
+    return
 _changeStopsHandler = (e) ->
   val = parseInt($("#stopsInput").val(), 10)
   if _.isNaN(val)
@@ -469,10 +469,10 @@ _changeDepartureHandler = (e) ->
   combined = []
   tokens =  _departureSearchMain.tokenfield('getTokens')
   codes = _.pluck(tokens, 'label')
-  combined = _.union(codes, combined)    
+  combined = _.union(codes, combined)
   tokens =  _departureSearch.tokenfield('getTokens')
   codes = _.pluck(tokens, 'label')
-  combined = _.union(codes, combined)    
+  combined = _.union(codes, combined)
   if _.isEqual(combined, GritsFilterCriteria.departures.get())
     # do nothing
     return
@@ -512,6 +512,15 @@ _changeLimitHandler = (e) ->
 # events
 #
 # Event handlers for the grits_filter.html template
+Template.gritsSearch.events
+  'change #departureSearchMain': _changeDepartureHandler
+  'keyup #departureSearchMain-tokenfield': (event) ->
+    if event.keyCode == 13
+      if GritsFilterCriteria.departures.get() <= 0
+        # do not apply without any departures
+        return
+      GritsFilterCriteria.apply()
+    return
 Template.gritsFilter.events
   'change #weeklyFrequencyInput': _changeWeeklyFrequencyHandler
   'change #weeklyFrequencyOperator': _changeWeeklyFrequencyHandler
@@ -519,7 +528,6 @@ Template.gritsFilter.events
   'change #stopsOperator': _changeStopsHandler
   'change #seatsInput': _changeSeatsHandler
   'change #seatsOperator': _changeSeatsHandler
-  'change #departureSearchMain': _changeDepartureHandler
   'change #departureSearch': _changeDepartureHandler
   'change #arrivalSearch': _changeArrivalHandler
   'change #connectednessLevels': _changeLevelsHandler
@@ -533,7 +541,7 @@ Template.gritsFilter.events
     height = $datetimepicker.height()
     top = $datetimepicker.offset().top
     left = $datetimepicker.offset().left
-    $('.bootstrap-datetimepicker-widget.dropdown-menu').css({top: top+height, left:left})
+    $('.bootstrap-datetimepicker-widget.dropdown-menu').css({top: top + height, left: left})
     return
   'click #includeNearbyAirports': (event) ->
     miles = parseInt($("#includeNearbyAirportsRadius").val(), 10)
@@ -559,13 +567,6 @@ Template.gritsFilter.events
       departureSearch = getDepartureSearch()
       departureSearch.tokenfield('setTokens', _sharedTokens)
     return
-  'keyup #departureSearchMain-tokenfield': (event) ->
-    if event.keyCode == 13
-      if GritsFilterCriteria.departures.get() <= 0
-        # do not apply without any departures
-        return
-      GritsFilterCriteria.apply()
-    return
   'click #toggleFilter': (e) ->
     $self = $(e.currentTarget)
     $("#filter").toggle("fast")
@@ -573,7 +574,7 @@ Template.gritsFilter.events
   'click #applyFilter': (event, template) ->
     GritsFilterCriteria.apply()
     return
-  'click #loadMore': () ->    
+  'click #loadMore': () ->
     GritsFilterCriteria.setOffset()
     return
   'tokenfield:initialize': (e) ->

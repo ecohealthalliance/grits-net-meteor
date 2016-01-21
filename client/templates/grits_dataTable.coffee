@@ -2,7 +2,9 @@
 #
 # When another meteor app adds grits:grits-net-meteor as a package
 # Template.gritsDataTable will be available globally.
-_previousPath = null # placeholde for the last clicked path
+_previousPath = null # placeholder for the last clicked path
+
+_tablesChanged = false
 
 # highlights the path table row
 #
@@ -64,6 +66,13 @@ _formatNodeData = (data) ->
     nodes.push(node)
   )
   return nodes
+
+_refreshTables = () ->
+  if _tablesChanged
+    _tablesChanged = false
+    $("#pathsTable").trigger('update')
+    $("#nodesTable").trigger('update')
+    $("#heatmapTable").trigger('update')
 
 Template.gritsDataTable.events({
   'click .pathTableRow': (event, template) ->
@@ -130,6 +139,7 @@ Template.gritsDataTable.onCreated ->
 Template.gritsDataTable.onRendered ->
   self = this
 
+  _dataTableUpdateInterval = setInterval _refreshTables, 1000
   # get the map instance and layers
   self.map = Template.gritsMap.getInstance()
   self.pathsLayer = self.map.getGritsLayer('Paths')
@@ -172,3 +182,4 @@ Template.gritsDataTable.onRendered ->
         )
         heatmaps = _formatHeatmapData(sorted)
         self.heatmaps.set(heatmaps)
+    _tablesChanged = true

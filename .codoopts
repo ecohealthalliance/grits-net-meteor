@@ -1,6 +1,6 @@
 --name "grits:grits-net-meteor"
 --title "grits-net-meteor Documentation"
---readme ./README.md  
+--readme ./README.md
 --private
 --quiet
 --extension coffee
@@ -8,3 +8,4 @@
 ./client/models
 ./client/layers
 ./client/templates
+./server/publications.coffee
