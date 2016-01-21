@@ -43,6 +43,7 @@ Package.on_use(function(api){
   // client-side only files
   api.add_files([
     'client/stylesheets/main.styl',
+    'client/stylesheets/overlay.styl',
     'client/lib/L.D3SvgOverlay.min.js',
     'client/lib/tableExport.min.js',
     'client/startup.coffee',
@@ -65,7 +66,9 @@ Package.on_use(function(api){
     'client/templates/grits_legend.html',
     'client/templates/grits_legend.coffee',
     'client/templates/grits_elementDetails.html',
-    'client/templates/grits_elementDetails.coffee'
+    'client/templates/grits_elementDetails.coffee',
+    'client/templates/grits_overlay.html',
+    'client/templates/grits_overlay.coffee'
   ], 'client');
 
   api.addAssets([
