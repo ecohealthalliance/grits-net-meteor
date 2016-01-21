@@ -68,7 +68,7 @@
     },
     "gritsFilter": {
         "tokenfield-placeholder": {
-            "en": "Type to search"
+            "en": "Type to search originations"
         },
         "title": {
             "en": "Advanced Filtration"
@@ -102,19 +102,19 @@
                 "en": "Destination"
             },
             "include-nearby-label": {
-                "en": "Include Nearby"
+                "en": "Include nearby airports within "
             },
             "miles-label": {
-                "en": "Miles"
+                "en": "miles"
             },
             "stops-label": {
-                "en": "Stops"
+                "en": "Number of Stops"
             },
             "seats-label": {
-                "en": "Seats"
+                "en": "Number of Seats"
             },
             "levels-label": {
-                "en": "Levels"
+                "en": "Number of Levels"
             }
         },
         "tab-2": {

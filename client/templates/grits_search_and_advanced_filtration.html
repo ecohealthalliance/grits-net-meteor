@@ -8,13 +8,30 @@
     {{#if state }}
       <i class="fa fa-exclamation-circle filter-status" title="Recent changes have not been applied"></i>
     {{/if}}
-    <div class="spinner">
-      <i id="filterLoading" class="fa fa-spinner fa-spin"></i>
-    </div>
     <div class="searchBar" id="departureSearchMainSearchBar">
       <div class="tokenized main">
+        <i id="searchIcon" class="fa fa-search" style="
+            position: absolute;
+            top: 4px;
+            left: 5px;
+            font-size: xx-large;
+            color: #496c8a;
+        "></i>
         <input id="departureSearchMain" class="form-control input-sm advanced-filter-status" name="departureSearchMain" placeholder='{{_ "gritsFilter.tokenfield-placeholder"}}' />
       </div>
+    </div>
+    <div class="row fliter-row" id="includeNearbyAirportsContainer">
+      <div class="col-xs-7" id="includeNearbyAirportsDiv">
+        <input type="checkbox" name="includeNearbyAirports" id="includeNearbyAirports">
+        <span>{{_ "gritsFilter.tab-1.include-nearby-label"}}</span>
+      </div>
+      <div class="col-xs-2" id="milesInput">
+        <input type="number" id="includeNearbyAirportsRadius" class="form-control input-sm" min="1" max="500" value="50">
+      </div>
+      <div class="col-xs-2" id="milesText">
+        <span>{{_ "gritsFilter.tab-1.miles-label"}}</span>
+      </div>
+      <div class="col-xs-1"></div>
     </div>
   </div>
   <div id="filter" class="clearfix">
@@ -33,47 +50,68 @@
         <!-- start flight tab content -->
         <div class="row filter-first-row">
           <div class="col-xs-12">
-            <span class="filter-label">{{_ "gritsFilter.tab-1.origin-label"}}:</span>
+            <span class="filter-label">{{_ "gritsFilter.tab-1.stops-label"}}:</span>
           </div>
         </div>
-        <div class="row filter-row">
-          <div class="col-xs-11">
-            <div class="tokenized departure">
-              <input id="departureSearch" class="input-sm advanced-filter-status" name="departureSearch" />
-            </div>
+        <div class='legend-scale'>
+          <div class='slider-container'>
+            <input type="text"
+                   class="slider"
+                   id="stopsInputSlider"
+                   value=""
+                   data-slider-min="0"
+                   data-slider-max="5"
+                   data-slider-step="1"
+                   data-slider-value="[0,5]"
+                   data-slider-orientation="horizontal"
+                   data-slider-selection="after"
+                   data-slider-tooltip="show"
+                   style="position:relative; top:0; left:0; width:100%;">
           </div>
-          <div class="col-xs-1"></div>
         </div>
-        <div class="row fliter-row">
-          <div class="col-xs-8" style="text-align: right;">
-            <span>{{_ "gritsFilter.tab-1.include-nearby-label"}}:</span>
-          </div>
-          <div class="col-xs-3" style="padding: 2px 15px 2px 15px;">
-            <input type="checkbox" name="includeNearbyAirports" id="includeNearbyAirports">
-          </div>
-          <div class="col-xs-1"></div>
-        </div>
-        <div class="row filter-row">
-          <div class="col-xs-8" style="text-align: right;">
-            <span>{{_ "gritsFilter.tab-1.miles-label"}}:</span>
-          </div>
-          <div class="col-xs-3">
-            <input type="number" id="includeNearbyAirportsRadius" class="form-control input-sm" min="1" max="500" value="50">
-          </div>
-          <div class="col-xs-1"></div>
-        </div>
-        <div class="row filter-row">
+
+        <div class="row filter-first-row">
           <div class="col-xs-12">
-            <span class="filter-label">{{_ "gritsFilter.tab-1.destination-label"}}:</span>
+            <span class="filter-label">{{_ "gritsFilter.tab-1.seats-label"}}:</span>
           </div>
         </div>
-        <div class="row filter-row">
-          <div class="col-xs-11">
-            <div class="tokenized arrival">
-              <input type="text" id="arrivalSearch" class="input-sm advanced-filter-status" name="arrivalSearch" />
-            </div>
+        <div class='legend-scale'>
+          <div class='slider-container'>
+            <input type="text"
+                   class="slider"
+                   value=""
+                   data-slider-min="0"
+                   data-slider-max="900"
+                   data-slider-step="1"
+                   data-slider-value="[0,900]"
+                   data-slider-orientation="horizontal"
+                   data-slider-selection="after"
+                   data-slider-tooltip="show"
+                   style="position:relative; top:0; left:0; width:100%;">
           </div>
         </div>
+
+        <div class="row filter-first-row">
+          <div class="col-xs-12">
+            <span class="filter-label">{{_ "gritsFilter.tab-1.stops-label"}}:</span>
+          </div>
+        </div>
+        <div class='legend-scale'>
+          <div class='slider-container'>
+            <input type="text"
+                   class="slider"
+                   value=""
+                   data-slider-min="0"
+                   data-slider-max="5"
+                   data-slider-step="1"
+                   data-slider-value="[0,5]"
+                   data-slider-orientation="horizontal"
+                   data-slider-selection="after"
+                   data-slider-tooltip="show"
+                   style="position:relative; top:0; left:0; width:100%;">
+          </div>
+        </div>
+
         <div class="row filter-first-row">
           <div class="col-xs-12">
             <span class="filter-label">{{_ "gritsFilter.tab-1.stops-label"}}:</span>

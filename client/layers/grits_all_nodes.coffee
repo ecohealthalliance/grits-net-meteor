@@ -236,6 +236,7 @@ class GritsAllNodesLayer extends GritsLayer
   # populates all nodes from the database
   _populateAllNodes: () ->
     self = this
+    $('#filterLoading').show()
     Meteor.call('findAirports', (err, airports) ->
       if err
         console.error(err)
@@ -259,6 +260,7 @@ class GritsAllNodesLayer extends GritsLayer
               console.log("all nodes: #{count} of #{total}")
           if count == total
             console.log("all nodes: #{count} of #{total}")
+            $('#filterLoading').hide()
           callback()
       ), 1)
 

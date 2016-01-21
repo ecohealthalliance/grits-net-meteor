@@ -284,18 +284,17 @@ Template.gritsSearchAndAdvancedFiltration.onCreated ->
   Template.gritsSearchAndAdvancedFiltration.getDiscontinuedDatePicker = getDiscontinuedDatePicker
 
 # triggered when the 'filter' template is rendered
-Template.gritsSearchAndAdvancedFiltration.onRendered ->
+Template.gritsSearchAndAdvancedFiltration.onRendered ->  
   _matchSkip = null
   _suggestionGenerator = (query, skip, callback) ->
     _matchSkip = skip
     Meteor.call('typeaheadAirport', query, skip, (err, res) ->
-      if err or _.isUndefined(res) or _.isEmpty(res)
-        callback([])
-        return
       Meteor.call('countTypeaheadAirports', query, (err, count) ->
-        matches = _determineFieldMatchesByWeight(query, res)
-        # expects an array of objects with keys [label, value]
-        callback(matches)
+
+        if res.length > 0
+          matches = _determineFieldMatchesByWeight(query, res)
+          # expects an array of objects with keys [label, value]
+          callback(matches)
 
         # keep going to update the _typeaheadFooter via jQuery
         # update the record count
@@ -308,6 +307,7 @@ Template.gritsSearchAndAdvancedFiltration.onRendered ->
         else if count == 1
           $('#suggestionCount').html("<span>#{count} match found</span>")
         else
+          $('.tt-suggestions').empty()
           $('#suggestionCount').html("<span>No matches found</span>")
 
         # enable/disable the pager elements
@@ -583,6 +583,9 @@ Template.gritsSearchAndAdvancedFiltration.events
     $menu = $container.find('.tt-dropdown-menu')
     $menu.css('min-width', $('#filter').width())
     id = $target.attr('id')
+    $container.find('.token-input.tt-input').css('height', '30px')
+    $container.find('.token-input.tt-input').css('font-size', '20px')
+    $container.find('.tokenized.main').prepend($("#searchIcon"))
     $('#'+id+'-tokenfield').on('blur', (e) ->
       # only allow tokens
       $container.find('.token-input.tt-input').val("")
@@ -601,10 +604,6 @@ Template.gritsSearchAndAdvancedFiltration.events
   'tokenfield:createdtoken': (e) ->
     $target = $(e.target)
     tokens = $target.tokenfield('getTokens')
-    # remove the placeholder text
-    if tokens.length > 0
-      $target.closest('.tokenized').find('.token-input.tt-input').attr('placeholder', '')
-
     token = e.attrs.label
     _syncCreatedSharedToken(token, $target.attr('id'))
     return false
@@ -613,7 +612,6 @@ Template.gritsSearchAndAdvancedFiltration.events
     tokens = $target.tokenfield('getTokens')
     # determine if the remaining tokens is empty, then show the placeholder text
     if tokens.length == 0
-      $target.closest('.tokenized').find('.token-input.tt-input').attr('placeholder', 'Type to search')
       if $target.attr('id') in ['departureSearch', 'departureSearchMain']
         $('#includeNearbyAirports').prop('checked', false)
 

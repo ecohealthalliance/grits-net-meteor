@@ -65,7 +65,8 @@ Package.on_use(function(api){
     'client/templates/grits_legend.html',
     'client/templates/grits_legend.coffee',
     'client/templates/grits_elementDetails.html',
-    'client/templates/grits_elementDetails.coffee'
+    'client/templates/grits_elementDetails.coffee',
+    'client/templates/loading.html'
   ], 'client');
 
   api.addAssets([

@@ -17,7 +17,7 @@
 { "_id" : "jenPFsTCDCXbkw2gp" , "key" : "gritsDataTable.tab-3.latitude-heading" , "en" : [ "Incoming"]}
 { "_id" : "Hd4SgNjQFdMnSWv8x" , "key" : "gritsDataTable.tab-3.longitude-heading" , "en" : [ "Outgoing"]}
 { "_id" : "Tc28WbRLY5nMitGnr" , "key" : "gritsDataTable.tab-3.intensity-heading" , "en" : [ "Intensity"]}
-{ "_id" : "ef65KPycnE4MGGAaA" , "key" : "gritsFilter.tokenfield-placeholder" , "en" : [ "Type to search"]}
+{ "_id" : "ef65KPycnE4MGGAaA" , "key" : "gritsFilter.tokenfield-placeholder" , "en" : [ "Type to search originations"]}
 { "_id" : "CJgriPLX8iH8sornG" , "key" : "gritsFilter.title" , "en" : [ "Advanced Filter"]}
 { "_id" : "t7MbZ6haLgBag7Qmi" , "key" : "gritsFilter.limit-label" , "en" : [ "Limit"]}
 { "_id" : "KF75JrLRJwDh4BMdB" , "key" : "gritsFilter.more-button" , "en" : [ "More..."]}
