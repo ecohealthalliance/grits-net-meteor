@@ -12,7 +12,7 @@ class GritsRectangle
     self._allNodes = allNodes
 
     self._actionMenuTmpl = _.template('<ul id="<%= obj.id %>" class="action-menu"></ul>')
-    self._actionTmpl = _.template('<li><div class="action-menu-<%= obj.name %>"><span><%= obj.name %></span></div></li>')
+    self._actionTmpl = _.template('<li><div class="btn btn-sm btn-primary action-menu-<%= obj.name %>"><span><%= obj.name %></span></div></li>')
     self._actions = {}
 
     self._shape = null
@@ -21,7 +21,7 @@ class GritsRectangle
     self._drawing = false
     self._options =
       stroke: true
-      color: '#f06eaa'
+      color: 'blue',
       weight: 2
       opacity: 0.5
       fill: true
@@ -55,6 +55,7 @@ class GritsRectangle
     self._actionMenuId = uuid.v4()
     self._actionMenu = $(self._actionMenuTmpl({id: self._actionMenuId})).appendTo('body')
     width = self._container.innerWidth()
+    height = self._container.innerWidth()
     top = self._container.offset().top
     left = self._container.offset().left
     self._actionMenu.css({top: top, left: (left + width)}).show()
