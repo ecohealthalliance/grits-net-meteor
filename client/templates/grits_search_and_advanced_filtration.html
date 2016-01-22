@@ -45,7 +45,7 @@
       <li><a href="#date" data-toggle="tab" id="dateTab"><i class="fa fa-calendar"></i> {{_ "gritsFilter.tab-2.title"}}</a></li>
     </ul>
     <div class="tableDivider"></div>
-    <div class="tab-content">
+    <div class="tab-content" style="height: 200px;">
       <div class="tab-pane active" id="flight">
         <!-- start flight tab content -->
         <div class="row filter-first-row">
@@ -79,6 +79,7 @@
           <div class='slider-container'>
             <input type="text"
                    class="slider"
+                   id="seatsInputSlider"
                    value=""
                    data-slider-min="0"
                    data-slider-max="900"
@@ -93,75 +94,22 @@
 
         <div class="row filter-first-row">
           <div class="col-xs-12">
-            <span class="filter-label">{{_ "gritsFilter.tab-1.stops-label"}}:</span>
+            <span class="filter-label">{{_ "gritsFilter.tab-1.levels-label"}}:</span>
           </div>
         </div>
         <div class='legend-scale'>
           <div class='slider-container'>
             <input type="text"
                    class="slider"
+                   id="levelsInputSlider"
                    value=""
-                   data-slider-min="0"
+                   data-slider-min="1"
                    data-slider-max="5"
                    data-slider-step="1"
-                   data-slider-value="[0,5]"
+                   data-slider-value="1"
                    data-slider-orientation="horizontal"
-                   data-slider-selection="after"
                    data-slider-tooltip="show"
                    style="position:relative; top:0; left:0; width:100%;">
-          </div>
-        </div>
-
-        <div class="row filter-first-row">
-          <div class="col-xs-12">
-            <span class="filter-label">{{_ "gritsFilter.tab-1.stops-label"}}:</span>
-          </div>
-        </div>
-        <div class="row filter-row">
-          <div class="col-xs-3">
-            <select id="stopsOperator" class="form-control input-sm advanced-filter-status">
-              <option value="$gte"><span> &gt;= </span></option>
-              <option value="$gt"><span> &gt; </span></option>
-              <option value="$lte"><span> &lt;= </span></option>
-              <option value="$lt"><span> &lt; </span></option>
-              <option value="$eq"><span> == </span></option>
-              <option value="$ne"><span> != </span></option>
-            </select>
-          </div>
-          <div class="col-xs-3">
-            <input type="number" id="stopsInput" class="form-control input-sm advanced-filter-status" min="0" max="5" value="{{stops}}">
-          </div>
-          <div class="col-xs-6"></div>
-        </div>
-        <div class="row filter-row">
-          <div class="col-xs-12">
-            <span class="filter-label">{{_ "gritsFilter.tab-1.seats-label"}}:</span>
-          </div>
-        </div>
-        <div class="row filter-row">
-          <div class="col-xs-3">
-            <select id="seatsOperator" class="form-control input-sm advanced-filter-status">
-              <option value="$gte"><span> &gt;= </span></option>
-              <option value="$gt"><span> &gt; </span></option>
-              <option value="$lte"><span> &lt;= </span></option>
-              <option value="$lt"><span> &lt; </span></option>
-              <option value="$eq"><span> == </span></option>
-              <option value="$ne"><span> != </span></option>
-            </select>
-          </div>
-          <div class="col-xs-3">
-            <input type="number" id="seatsInput" class="form-control input-sm advanced-filter-status" min="0" max="525" value="{{seats}}">
-          </div>
-          <div class="col-xs-6"></div>
-        </div>
-        <div class="row filter-row">
-          <div class="col-xs-12">
-            <span class="filter-label">{{_ "gritsFilter.tab-1.levels-label"}}:</span>
-          </div>
-        </div>
-        <div class="row filter-last-row">
-          <div class="col-xs-3">
-            <input type="number" id="connectednessLevels" min="1" value="{{levels}}" class="form-control input-sm advanced-filter-status">
           </div>
         </div>
         <!-- end flight tab content -->

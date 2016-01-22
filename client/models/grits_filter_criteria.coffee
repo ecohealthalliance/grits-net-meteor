@@ -10,7 +10,7 @@ _Filter = Astro.Class(
   name: 'FilterCriteria'
   collection: _Collection
   transform: true
-  fields: ['key', 'operator', 'value']
+  fields: ['key', 'operator', 'value', 'operator2', 'value2']
   validators: {
     key: [
         Validators.required(),
@@ -197,10 +197,14 @@ class GritsFilterCriteria
       k = filter.get('key')
       o = filter.get('operator')
       v = filter.get('value')
+      o2 = filter.get('operator2')
+      v2 = filter.get('value2')
       if _.indexOf(['$eq'], o) >= 0
         value = v
       else
         value[o] = v
+        if o2 isnt null
+          value[o2] = v2
       result[k] = value
     )
     return result
@@ -556,7 +560,7 @@ class GritsFilterCriteria
   #
   # @param [String] operator
   # @param [Integer] value
-  setStops: (operator, value) ->
+  setStops: (operator, value, operator2, value2) ->
     self = this
 
     # do not allow this to run prior to jQuery/DOM
@@ -572,7 +576,7 @@ class GritsFilterCriteria
       if _.isNull(value)
         self.remove('stops')
       else
-        self.createOrUpdate('stops', {key: 'stops', operator: operator, value: value})
+        self.createOrUpdate('stops', {key: 'stops', operator: operator, value: value, operator2: operator2, value2: value2})
     else
       self.stops.set({'value': value, 'operator': operator})
       $('#stopsOperator').val(operator)
@@ -583,7 +587,7 @@ class GritsFilterCriteria
       obj = self.stops.get()
       if _.isNull(obj)
         return
-      self.setStops(obj.operator, obj.value)
+      self.setStops(obj.operator, obj.value, obj.operator2, obj.value2)
       async.nextTick(()->
         self.compareStates()
       )
@@ -593,7 +597,7 @@ class GritsFilterCriteria
   #
   # @param [String] operator
   # @param [Integer] value
-  setSeats: (operator, value) ->
+  setSeats: (operator, value, operator2, value2) ->
     self = this
 
     # do not allow this to run prior to jQuery/DOM
@@ -604,15 +608,7 @@ class GritsFilterCriteria
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
 
-    if _.isEqual(self.seats.get(), {value: value, operator: operator})
-      # the reactive var is already set, change is from the UI
-      if _.isNull(value)
-        self.remove('seats')
-      else
-        self.createOrUpdate('seats', {key: 'totalSeats', operator: operator, value: value})
-    else
-      self.seats.set({value: value, operator: operator})
-      $('#seatsOperator').val(operator)
+    self.createOrUpdate('seats', {key: 'totalSeats', operator: operator, value: value, operator2: operator2, value2: value2})
     return
   trackSeats: () ->
     self = this
@@ -620,7 +616,7 @@ class GritsFilterCriteria
       obj = self.seats.get()
       if _.isNull(obj)
         return
-      self.setSeats(obj.operator, obj.value)
+      self.setSeats(obj.operator, obj.value, obj.operator2, obj.value2)
       async.nextTick(()->
         self.compareStates()
       )

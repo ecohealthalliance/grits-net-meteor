@@ -284,7 +284,7 @@ Template.gritsSearchAndAdvancedFiltration.onCreated ->
   Template.gritsSearchAndAdvancedFiltration.getDiscontinuedDatePicker = getDiscontinuedDatePicker
 
 # triggered when the 'filter' template is rendered
-Template.gritsSearchAndAdvancedFiltration.onRendered ->  
+Template.gritsSearchAndAdvancedFiltration.onRendered ->
   _matchSkip = null
   _suggestionGenerator = (query, skip, callback) ->
     _matchSkip = skip
@@ -451,19 +451,23 @@ _changeWeeklyFrequencyHandler = (e) ->
     op = $('#weeklyFrequencyOperator').val()
     GritsFilterCriteria.weeklyFrequency.set({'value': val, 'operator': op})
     return
-_changeStopsHandler = (e) ->
-  val = parseInt($("#stopsInput").val(), 10)
-  if _.isNaN(val)
+_changeStopsSliderHandler = (e) ->
+  $('#filterLoading').show()
+  val = $("#stopsInputSlider").val().split(',')
+  val[0] = parseInt(val[0], 10)
+  val[1] = parseInt(val[1], 10)
+  if _.isNaN(val[0]) || _.isNaN(val[1])
     val = null
-  op = $('#stopsOperator').val()
-  GritsFilterCriteria.stops.set({'value': val, 'operator': op})
+  GritsFilterCriteria.stops.set({'value': val[0], 'operator': '$gte', 'value2': val[1], 'operator2': '$lte'})
   return
-_changeSeatsHandler = (e) ->
-  val = parseInt($("#seatsInput").val(), 10)
-  if _.isNaN(val)
+_changeSeatsSliderHandler = (e) ->
+  $('#filterLoading').show()
+  val = $("#seatsInputSlider").val().split(',')
+  val[0] = parseInt(val[0], 10)
+  val[1] = parseInt(val[1], 10)
+  if _.isNaN(val[0]) || _.isNaN(val[1])
     val = null
-  op = $('#seatsOperator').val()
-  GritsFilterCriteria.seats.set({'value': val, 'operator': op})
+  GritsFilterCriteria.seats.set({'value': val[0], 'operator': '$gte', 'value2': val[1], 'operator2': '$lte'})
   return
 _changeDepartureHandler = (e) ->
   combined = []
@@ -502,7 +506,8 @@ _changeDateHandler = (e) ->
     GritsFilterCriteria.operatingDateRangeEnd.set(date)
     return
 _changeLevelsHandler = (e) ->
-  val = $("#connectednessLevels").val()
+  $('#filterLoading').show()
+  val = $("#levelsInputSlider").val()
   GritsFilterCriteria.levels.set(val)
   return
 _changeLimitHandler = (e) ->
@@ -515,13 +520,11 @@ _changeLimitHandler = (e) ->
 Template.gritsSearchAndAdvancedFiltration.events
   'change #weeklyFrequencyInput': _changeWeeklyFrequencyHandler
   'change #weeklyFrequencyOperator': _changeWeeklyFrequencyHandler
-  'change #stopsInput': _changeStopsHandler
-  'change #stopsOperator': _changeStopsHandler
-  'change #seatsInput': _changeSeatsHandler
-  'change #seatsOperator': _changeSeatsHandler
+  'slide #stopsInputSlider': _changeStopsSliderHandler
+  'slide #seatsInputSlider': _changeSeatsSliderHandler
+  'slide #levelsInputSlider': _changeLevelsHandler
   'change #departureSearch': _changeDepartureHandler
   'change #arrivalSearch': _changeArrivalHandler
-  'change #connectednessLevels': _changeLevelsHandler
   'change #limit': _changeLimitHandler
   'change #departureSearchMain': _changeDepartureHandler
   'keyup #departureSearchMain-tokenfield': (event) ->
