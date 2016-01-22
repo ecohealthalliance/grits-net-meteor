@@ -22,6 +22,7 @@ ddp-common@1.2.2
 ddp-server@1.2.2
 deps@1.0.9
 diff-sequence@1.0.1
+dit:sidebar-v2@0.0.1
 ecmascript@0.1.6
 ecmascript-runtime@0.2.6
 ejson@1.0.7
@@ -96,7 +97,6 @@ velocity:html-reporter@0.9.1
 velocity:meteor-internals@1.1.0_7
 velocity:shim@0.1.0
 velocity:source-map-support@0.3.2_1
-waeltken:sidebar-v2@0.0.1
 webapp@1.2.3
 webapp-hashing@1.0.5
 xolvio:cucumber@0.19.4_1
