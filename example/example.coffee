@@ -35,16 +35,19 @@ if Meteor.isClient
       if isReady
         OpenStreetMap = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
           layerName: 'CartoDB_Positron'
+          noWrap: true
           attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
           subdomains: 'abcd'
           maxZoom: 19)
         MapQuestOpen_OSM = L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/{type}/{z}/{x}/{y}.{ext}',
           type: 'map'
           layerName: 'MapQuestOpen_OSM'
+          noWrap: true
           ext: 'jpg'
           subdomains: '1234')
         Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-          layerName: 'Esri_WorldImagery')
+          layerName: 'Esri_WorldImagery'
+          noWrap: true)
 
         baseLayers = [OpenStreetMap, Esri_WorldImagery, MapQuestOpen_OSM]
         element = 'grits-map'
@@ -54,14 +57,19 @@ if Meteor.isClient
           zoomControl: false
           noWrap: true
           maxZoom: 18
-          minZoom: 0
+          minZoom: 2
           zoom: 2
-          center: L.latLng(30,-20)
+          center: L.latLng(30,-70)
           layers: baseLayers
         }
 
         # the map instance
         map = new GritsMap(element, options, baseLayers)
+
+        map.setMaxBounds([
+          [360, -360],[-360, 360]
+        ])
+
         map.addGritsLayer(new GritsHeatmapLayer(map))
         map.addGritsLayer(new GritsPathLayer(map))
         map.addGritsLayer(new GritsNodeLayer(map))
@@ -71,7 +79,7 @@ if Meteor.isClient
 
         # initialize the sidebar-v2
         sidebar = L.control.sidebar('sidebar').addTo(map)
-        #sidebar = L.control.sidebar('tableSidebar').addTo(map)
+        tableSidebar = L.control.sidebar('tableSidebar').addTo(map)
 
         # Add test control
         Meteor.call('isTestEnvironment', (err, result) ->
