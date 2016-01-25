@@ -164,15 +164,15 @@ class GritsNodeLayer extends GritsLayer
 
   # adds a node to the layer
   #
-  # @param [Object] node, instance of GritsNode or GritsClusterNode
+  # @param [Object] node, instance of GritsNode or GritsMetaNode
   # @note The layer will need draw() called to update the UI
   addNode: (node) ->
     self = this
     if typeof node == 'undefined'
       throw new Error('A node must be defined')
       return
-    if !(node instanceof GritsNode || node instanceof GritsClusterNode)
-      throw new Error('A node must be an instance of GritsNode or GritsClusterNode')
+    if !(node instanceof GritsNode || node instanceof GritsMetaNode)
+      throw new Error('A node must be an instance of GritsNode or GritsMetaNode')
       return
     return self._data[node._id] = node
 

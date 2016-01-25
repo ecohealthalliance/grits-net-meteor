@@ -1,15 +1,15 @@
-# Creates an instance of a GritsClusterNode
+# Creates an instance of a GritsMetaNode
 #
 # @param [Array] nodes, a list of GritsNodes to create the GritsMetaNode
-class GritsClusterNode
+class GritsMetaNode
   constructor: (nodes, marker) ->
     self = this
     if typeof nodes == 'undefined'
-      throw new Error('A GritsClusterNode requires an array of GritsNodes to be defined')
+      throw new Error('A GritsMetaNode requires an array of GritsNodes to be defined')
     if !nodes instanceof Array
-      throw new Error('A GritsClusterNode requires a valid array of GritsNodes')
+      throw new Error('A GritsMetaNode requires a valid array of GritsNodes')
     if nodes.length <= 0
-      throw new Error('A GritsClusterNode requires an array of GritsNodes')
+      throw new Error('A GritsMetaNode requires an array of GritsNodes')
 
     self._children = nodes
     self._id = CryptoJS.MD5(JSON.stringify(_.pluck(nodes, '_id'))).toString()
@@ -44,7 +44,7 @@ class GritsClusterNode
       self.incomingThroughput += node.incomingThroughput
       self.outgoingThroughput += node.outgoingThroughput
       if !node instanceof GritsNode
-        throw new Error('A GritsClusterNode requires an array of GritsNodes')
+        throw new Error('A GritsMetaNode requires an array of GritsNodes')
       lat = node.latLng[0]
       if !(typeof lat == 'undefined' || lat == null || isNaN(parseFloat(lat)) || (lat < -90.0 || lat > 90.0))
         if lat < latMinMax[0]
