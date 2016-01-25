@@ -445,17 +445,20 @@ Template.gritsSearchAndAdvancedFiltration.onRendered ->
       $('#filterLoading').hide()
 
 _changeWeeklyFrequencyHandler = (e) ->
-    val = parseInt($("#weeklyFrequencyInput").val(), 10)
-    if _.isNaN(val)
-      val = null
-    op = $('#weeklyFrequencyOperator').val()
-    GritsFilterCriteria.weeklyFrequency.set({'value': val, 'operator': op})
-    return
+  $('#filterLoading').show()
+  val = parseInt($("#weeklyFrequencyInputSlider").val(), 10)
+  if _.isNaN(val)
+    val = null
+  $('#weeklyFrequencySliderValIndicator').empty().html(val)
+  op = '$lte'
+  GritsFilterCriteria.weeklyFrequency.set({'value': val, 'operator': op})
+  return
 _changeStopsSliderHandler = (e) ->
   $('#filterLoading').show()
   val = $("#stopsInputSlider").val().split(',')
   val[0] = parseInt(val[0], 10)
   val[1] = parseInt(val[1], 10)
+  $('#stopsSliderValIndicator').empty().html(val[0]+" : "+val[1])
   if _.isNaN(val[0]) || _.isNaN(val[1])
     val = null
   GritsFilterCriteria.stops.set({'value': val[0], 'operator': '$gte', 'value2': val[1], 'operator2': '$lte'})
@@ -465,6 +468,7 @@ _changeSeatsSliderHandler = (e) ->
   val = $("#seatsInputSlider").val().split(',')
   val[0] = parseInt(val[0], 10)
   val[1] = parseInt(val[1], 10)
+  $('#seatsSliderValIndicator').empty().html(val[0]+" : "+val[1])
   if _.isNaN(val[0]) || _.isNaN(val[1])
     val = null
   GritsFilterCriteria.seats.set({'value': val[0], 'operator': '$gte', 'value2': val[1], 'operator2': '$lte'})
@@ -508,6 +512,7 @@ _changeDateHandler = (e) ->
 _changeLevelsHandler = (e) ->
   $('#filterLoading').show()
   val = $("#levelsInputSlider").val()
+  $('#levelsSliderValIndicator').empty().html(val)
   GritsFilterCriteria.levels.set(val)
   return
 _changeLimitHandler = (e) ->
@@ -518,8 +523,7 @@ _changeLimitHandler = (e) ->
 #
 # Event handlers for the grits_filter.html template
 Template.gritsSearchAndAdvancedFiltration.events
-  'change #weeklyFrequencyInput': _changeWeeklyFrequencyHandler
-  'change #weeklyFrequencyOperator': _changeWeeklyFrequencyHandler
+  'slide #weeklyFrequencyInputSlider': _changeWeeklyFrequencyHandler
   'slide #stopsInputSlider': _changeStopsSliderHandler
   'slide #seatsInputSlider': _changeSeatsSliderHandler
   'slide #levelsInputSlider': _changeLevelsHandler
