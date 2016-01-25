@@ -55,8 +55,8 @@ if Meteor.isClient
           noWrap: true
           maxZoom: 18
           minZoom: 0
-          zoom: 2
-          center: L.latLng(30,-20)
+          zoom: 3
+          center: L.latLng(30,-40)
           layers: baseLayers
         }
 
