@@ -1,4 +1,9 @@
-fonts = arial, helvetica, sans-serif
+$fonts = arial, helvetica, sans-serif
+
+$blue = rgba(62, 106, 137, 1)
+$green = rgba(53, 185, 118, 1)
+$whiteBG = alpha(#FFFFFF,80%)
+
 border-radius()
   -webkit-border-radius arguments
   -moz-border-radius arguments
@@ -17,22 +22,49 @@ html, body
 	padding 0
 
 body
-	font-family arial
+	font-family $fonts
 
 .bootstrap-datetimepicker-widget.dropdown-menu
   position fixed
   font-size small
 
-#elementDetailsContainer
-  width 260px
-  font-size small
+.element-details-container
+  position absolute
+  bottom 10px
+  right 20px
+  min-width 300px
+  border-radius 4px
+  border 5px solid alpha($blue, 80%)
+  font-family $fonts
+  .tab-content
+    padding 10px
+  .tab-pane
+    min-height 140px
+    .row
+      margin-bottom 3px
+
+.element-details-nav
+  position relative
+  background $whiteBG
+  border-bottom 1px solid rgba(226, 226, 226, 1)
+  > li
+    width auto
+    float left
+    border-right 1px solid #E2E2E2
+    &:last-of-type
+      border-right 0
+    > a
+      color $blue
+  .active
+    background #EFEFEF
+    font-weight bold
 
 .element-details-close
   line-height inherit
-
-.element-details-path, .element-details-node
-  padding 5px
-  height 140px
+  position absolute
+  right 10px
+  top 50%
+  transform translate(0,-50%)
 
 .marker-icon
   cursor pointer
@@ -40,29 +72,27 @@ body
 .tab-content
   overflow-x hidden
   overflow-y auto
-  border-left: 1px solid #ddd
-  border-right: 1px solid #ddd
-  border-bottom: 1px solid #ddd
-  filter-tab-content-background-color()
+  background $whiteBG
 
-.nav-tabs > li
-  width 178px
-  font-size 18px
-  font-weight bold
-  color #496c8a
+#filter
+  .nav-tabs > li
+    width 178px
+    font-size 18px
+    font-weight bold
+    color #496c8a
 
-.nav-tabs > li.advFilTab
-  font-size 16px
+  .nav-tabs > li.advFilTab
+    font-size 16px
 
-.nav-tabs > li > a
-  padding 5px 10px
+  .nav-tabs > li > a
+    padding 5px 10px
 
-.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus
-  background-color #496c8a
-  color white
+  .nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus
+    background-color #496c8a
+    color white
 
-.nav-tabs > li > a
-  padding 5px 10px
+  .nav-tabs > li > a
+    padding 5px 10px
 
 .tableDivider
   height 3px
@@ -93,16 +123,16 @@ body
 
 #sidebar-layer
   layer-container-width()
-  box-shadow: 0 0px 0px rgba(0,0,0,0);
+  box-shadow 0 0px 0px rgba(0,0,0,0)
 
 .filter-heading
-  font-size: 16px;
-  font-weight: bold;
-  text-align: center;
-  right: 0;
-  margin: 5px 15px 0px 0;
-  bottom: -25px;
-  color: #333;
+  font-size 16px
+  font-weight bold
+  text-align center
+  right 0
+  margin 5px 15px 0px 0
+  bottom -25px
+  color #333
 
 .filter-row
   margin 5px -15px 2px -10px
@@ -355,7 +385,7 @@ p.intro
   border-top-left-radius 0
   border-top-right-radius 0
   border 0
-  height 645px;
+  height 645px
   overflow-y auto
   overflow-x hidden
 
@@ -460,8 +490,8 @@ p.intro
   color white
 
 .zoomBtns
-  left: 60px;
-  float: right;
+  left: 60px
+  float: right
 
 #sidebar-flightData-tab
   position absolute
@@ -545,7 +575,7 @@ p.intro
   font-weight 20px
 
 .tokenfield.form-control.input-sm
-  padding-left: 50px;
+  padding-left: 50px
 
 .input-group-sm .token, .tokenfield.input-sm .token
   height 30px
@@ -570,24 +600,23 @@ p.intro
 .advancedFilterRow
   padding 10px 10px 10px 10px
 
-.sidebar-tabs > li:hover {
-    color #333    
-}
+.sidebar-tabs > li:hover
+    color #333
 
 table.tablesorter
-  cursor: pointer; cursor: hand;
+  cursor: pointer
 
 table.tablesorter th
     border solid 1px #ddd
 
 table.tablesorter .tablesorter-headerDesc div
   background-image url('../images/desc.png') !important
-  background-size: 13px 13px;
+  background-size: 13px 13px
   background-repeat: no-repeat
   background-position right center
 
 table.tablesorter .tablesorter-headerAsc div
   background-image url('../images/asc.png') !important
-  background-size: 13px 13px;
+  background-size: 13px 13px
   background-repeat: no-repeat
   background-position right center

@@ -1,17 +1,16 @@
 # shows the path tab
 showPath = () ->
   $('.element-details').show()
-  $('.nav-tabs a[href="#pathDetails"]').tab('show')
+  $('.element-details-nav a[href="#pathDetails"]').tab('show')
 
 # shows the node tab
 showNode = () ->
   $('.element-details').show()
-  $('.nav-tabs a[href="#nodeDetails"]').tab('show')
+  $('.element-details-nav a[href="#nodeDetails"]').tab('show')
 
-Template.gritsElementDetails.events({
+Template.gritsElementDetails.events
   'click .element-details-close': (e) ->
     $('.element-details').hide()
-})
 
 Template.gritsElementDetails.helpers({
   node: () ->
@@ -51,7 +50,7 @@ Template.gritsElementDetails.onCreated ->
 Template.gritsElementDetails.onRendered ->
   self = this
   $('.element-details').hide()
-  # store reference to the map and layer instances
+  #store reference to the map and layer instances
   self.map = Template.gritsMap.getInstance()
   self.pathLayer = self.map.getGritsLayer('Paths')
   self.nodeLayer = self.map.getGritsLayer('Nodes')
