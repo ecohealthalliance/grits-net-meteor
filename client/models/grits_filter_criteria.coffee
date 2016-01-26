@@ -56,6 +56,9 @@ class GritsFilterCriteria
     # methods have run
     self._baseState = {}
 
+    # processing queue
+    self._queue = null
+
     # reactive vars to track form binding
     #   departures
     self.departures = new ReactiveVar([])
@@ -260,6 +263,12 @@ class GritsFilterCriteria
   # @param [Integer] offset, the offset of the query
   process: (flights, offset) ->
     self = this
+    if self._queue != null
+      self._queue.kill()
+      async.nextTick(() ->
+        self._queue = null
+      )
+
     map = Template.gritsMap.getInstance()
     nodeLayer = map.getGritsLayer('Nodes')
     pathLayer = map.getGritsLayer('Paths')
@@ -270,7 +279,7 @@ class GritsFilterCriteria
       pathLayer.clear()
 
     count = Session.get('grits-net-meteor:loadedRecords')
-    processQueue = async.queue(((flight, callback) ->
+    self._queue = async.queue(((flight, callback) ->
       nodes = nodeLayer.convertFlight(flight, 1, self.departures.get())
       pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
       async.nextTick ->
@@ -282,16 +291,14 @@ class GritsFilterCriteria
     ), 4)
 
     # final method for when all items within the queue are processed
-    processQueue.drain = ->
+    self._queue.drain = ->
       nodeLayer.draw()
-      nodeLayer.hasLoaded.set(true)
-      pathLayer.draw()
       pathLayer.hasLoaded.set(true)
       Session.set('grits-net-meteor:loadedRecords', count)
       Session.set('grits-net-meteor:isUpdating', false)
 
     # add the flights to thet queue which will start processing
-    processQueue.push(flights)
+    self._queue.push(flights)
     return
   # applies the filter but does not reset the offset
   #
@@ -324,6 +331,21 @@ class GritsFilterCriteria
       if query.hasOwnProperty(field)
         delete query[field]
     )
+
+    # handle any metaNodes
+    tokens = query['departureAirport._id']['$in']
+    modifiedTokens = []
+    _.each(tokens, (token) ->
+      if (token.indexOf(GritsMetaNode.PREFIX) >= 0)
+        node = GritsMetaNode.find(token)
+        if node == null
+          return
+        if (node.hasOwnProperty('_children'))
+          modifiedTokens = _.union(modifiedTokens, _.pluck(node._children, '_id'))
+      else
+        modifiedTokens = _.union(modifiedTokens, token)
+    )
+    query['departureAirport._id']['$in'] = modifiedTokens
 
     if levels > 1
       origin = Template.gritsFilter.getOrigin()
@@ -420,7 +442,6 @@ class GritsFilterCriteria
       # reset the loadedRecords and totalRecords
       Session.set('grits-net-meteor:loadedRecords', 0)
       Session.set('grits-net-meteor:totalRecords', 0)
-      $('#loadMore').prop('disabled', false)
       # re-enable the loadMore button when a new filter is applied
       $('#loadMore').prop('disabled', false)
       # pass the callback function if its defined
