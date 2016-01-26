@@ -235,8 +235,7 @@ class GritsAllNodesLayer extends GritsLayer
 
   # populates all nodes from the database
   _populateAllNodes: () ->
-    self = this
-    $('#filterLoading').show()
+    self = this    
     count = 0
     total = Meteor.gritsUtil.airports.length
     processQueue = async.queue(((airport, callback) ->
