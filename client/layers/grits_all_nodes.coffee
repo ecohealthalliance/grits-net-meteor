@@ -255,6 +255,8 @@ class GritsAllNodesLayer extends GritsLayer
 
     processQueue.drain = () ->
       self.hasLoaded.set(true)
+      # save some memory and delete the airports collection
+      delete Meteor.gritsUtil.airports
 
     processQueue.push(Meteor.gritsUtil.airports) #collection from startup.coffee
     return
