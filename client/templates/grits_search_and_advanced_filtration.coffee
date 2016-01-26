@@ -379,44 +379,25 @@ Template.gritsSearchAndAdvancedFiltration.onRendered ->
   }
 
   # set the effectiveDatePicker and options
-  Meteor.call('findMinMaxDateRange', 'effectiveDate', (err, minMax) ->
-    if (err)
-      Meteor.gritsUtil.errorHandler(err)
-      return
-    if Meteor.gritsUtil.debug
-      console.log('effectiveDate:minMax: ', minMax)
-    min = minMax[0]
-    max = minMax[1]
-    options = {
-      format: 'MM/DD/YY'
-    }
-    if !_.isNull(min)
-      options.minDate = min
-    if !_.isNull(max)
-      options.maxDate = max
-    effectiveDatePicker = $('#effectiveDate').datetimepicker(options)
-    _setEffectiveDatePicker(effectiveDatePicker)
-  )
+  # Note: Meteor.gritsUtil.effectiveDateMinMax is set in startup.coffee
+  options = {
+    format: 'MM/DD/YY'
+    minDate: Meteor.gritsUtil.effectiveDateMinMax[0],
+    maxDate: Meteor.gritsUtil.effectiveDateMinMax[1]
+  }
+  effectiveDatePicker = $('#effectiveDate').datetimepicker(options)
+  _setEffectiveDatePicker(effectiveDatePicker)
+
 
   # set the discontinuedDatePicker and options
-  Meteor.call('findMinMaxDateRange', 'discontinuedDate', (err, minMax) ->
-    if (err)
-      Meteor.gritsUtil.errorHandler(err)
-      return
-    if Meteor.gritsUtil.debug
-      console.log('discontinuedDate:minMax: ', minMax)
-    min = minMax[0]
-    max = minMax[1]
-    options = {
-      format: 'MM/DD/YY'
-    }
-    if !_.isNull(min)
-      options.minDate = min
-    if !_.isNull(max)
-      options.maxDate = max
-    discontinuedDatePicker = $('#discontinuedDate').datetimepicker(options)
-    _setDiscontinuedDatePicker(discontinuedDatePicker)
-  )
+  # Note: Meteor.gritsUtil.discontinuedDateMinMax is set in startup.coffee
+  options = {
+    format: 'MM/DD/YY'
+    minDate: Meteor.gritsUtil.discontinuedDateMinMax[0],
+    maxDate: Meteor.gritsUtil.discontinuedDateMinMax[1]
+  }
+  discontinuedDatePicker = $('#discontinuedDate').datetimepicker(options)
+  _setDiscontinuedDatePicker(discontinuedDatePicker)
 
   # set the original state of the filter on document ready
   GritsFilterCriteria.setState()

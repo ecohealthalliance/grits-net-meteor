@@ -237,39 +237,24 @@ class GritsAllNodesLayer extends GritsLayer
   _populateAllNodes: () ->
     self = this
     $('#filterLoading').show()
-    Meteor.call('findAirports', (err, airports) ->
-      if err
-        console.error(err)
-        return
+    count = 0
+    total = Meteor.gritsUtil.airports.length
+    processQueue = async.queue(((airport, callback) ->
+      async.nextTick ->
+        try
+          marker = new GritsMarker(_size[0], _size[1], null)
+          node = new GritsNode(airport, marker)
+          node.setEventHandlers(_eventHandlers)
+          self._data[airport._id] = node
+        catch err
+          console.error(err)
+        callback()
+    ), 4)
 
-      count = 0
-      total = airports.length
-      processQueue = async.queue(((airport, callback) ->
-        async.nextTick ->
-          try
-            marker = new GritsMarker(_size[0], _size[1], null)
-            node = new GritsNode(airport, marker)
-            node.setEventHandlers(_eventHandlers)
-            self._data[airport._id] = node
-          catch err
-            console.error(err)
+    processQueue.drain = () ->
+      self.hasLoaded.set(true)
 
-          count++
-          if !(count % 100)
-            if Meteor.gritsUtil.debug
-              console.log("all nodes: #{count} of #{total}")
-          if count == total
-            console.log("all nodes: #{count} of #{total}")
-            $('#filterLoading').hide()
-          callback()
-      ), 1)
-
-      processQueue.drain = () ->
-        self.hasLoaded.set(true)
-
-      processQueue.push(airports)
-      return
-    )
+    processQueue.push(Meteor.gritsUtil.airports) #collection from startup.coffee
     return
 
   # binds to the Tracker.gritsMap.getInstance() map event listener .on

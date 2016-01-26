@@ -43,6 +43,7 @@ Package.on_use(function(api){
   // client-side only files
   api.add_files([
     'client/stylesheets/main.styl',
+    'client/stylesheets/overlay.styl',
     'client/lib/L.D3SvgOverlay.min.js',
     'client/lib/tableExport.min.js',
     'client/startup.coffee',
@@ -66,13 +67,17 @@ Package.on_use(function(api){
     'client/templates/grits_legend.coffee',
     'client/templates/grits_elementDetails.html',
     'client/templates/grits_elementDetails.coffee',
-    'client/templates/loading.html'
+    'client/templates/loading.html',
+    'client/templates/grits_overlay.html',
+    'client/templates/grits_overlay.coffee'
   ], 'client');
 
   api.addAssets([
     'client/images/flirt.png',
     'client/images/flirt-logo-inline.png',
-    'client/images/origin-marker-icon.svg'
+    'client/images/origin-marker-icon.svg',
+    'client/images/asc.png',
+    'client/images/desc.png'
   ], 'client');
 
   // both client and server files

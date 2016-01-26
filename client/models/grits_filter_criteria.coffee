@@ -146,9 +146,7 @@ class GritsFilterCriteria
   # the collection if it already exists
   #
   # @param [String] id, the name of the filter criteria
-  # @note must be one of 'day1', 'day2', 'day3', 'day4', 'day5', 'day6',
-  #   'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival',
-  #   'levels'
+  # @note must be one of 'day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels'
   # @return [Object] Astronomy model 'FilterCriteria'
   createOrUpdate: (id, fields) ->
     self = this
@@ -171,9 +169,7 @@ class GritsFilterCriteria
   # removes a FilterCriteria from the collection
   #
   # @param [String] id, the name of the filter criteria
-  # @note must be one of 'day1', 'day2', 'day3', 'day4', 'day5', 'day6',
-  #   'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival',
-  #   'levels'
+  # @note must be one of 'day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels'
   # @optional [Function] cb, the callback method if removing async
   remove: (id, cb) ->
     self = this
@@ -211,20 +207,26 @@ class GritsFilterCriteria
   # compares the current state vs. the original/previous state
   compareStates: () ->
     self = this
-    # timeout to avoid 'flash' affect for those who quickly change the UI
-    setTimeout(() ->
+    # postone execution to avoid 'flash' for the fast draw case.  this happens
+    # when the user clicks a node or presses enter on the search and the
+    # draw completes faster than the debounce timeout
+    async.nextTick(() ->
       current = self.getCurrentState()
       if current != _state
         # do not notifiy on an empty query or the base state
         if current == "{}" || current == self._baseState
           self.stateChanged.set(false)
-          # clear the node/paths
+          # checks are necessary as Tracker autorun will fire before the DOM
+          # is ready and the Template.gritsMap.onRenered is called
           if !(_.isUndefined(Template.gritsMap) || _.isNull(Template.gritsMap))
-            map = Template.gritsMap.getInstance()
-            nodeLayer = map.getGritsLayer('Nodes')
-            pathLayer = map.getGritsLayer('Paths')
-            nodeLayer.clear()
-            pathLayer.clear()
+            if !_.isUndefined(Template.gritsMap.getInstance)
+              map = Template.gritsMap.getInstance()
+              if !_.isNull(map)
+                # clear the node/paths
+                nodeLayer = map.getGritsLayer('Nodes')
+                pathLayer = map.getGritsLayer('Paths')
+                nodeLayer.clear()
+                pathLayer.clear()
         else
           self.stateChanged.set(true)
 
@@ -235,7 +237,7 @@ class GritsFilterCriteria
           $('#loadMore').prop('disabled', true)
       else
         self.stateChanged.set(false)
-    , 500)
+    )
     return
   # gets the current state of the filter
   #
@@ -281,7 +283,7 @@ class GritsFilterCriteria
           pathLayer.draw()
         Session.set('grits-net-meteor:loadedRecords', ++count)
         callback()
-    ), 1)
+    ), 4)
 
     # final method for when all items within the queue are processed
     processQueue.drain = ->
