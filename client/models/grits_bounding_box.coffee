@@ -1,12 +1,26 @@
+# the maximum amount of nodes for a bounding box selection
+_maxSelection = 1000
 # draw a rectangle on the map
 #
 # @note inspiration from https://github.com/Leaflet/Leaflet.draw
 class GritsBoundingBox
-  constructor: (sidebarElement, map, allNodes) ->
+  constructor: (sidebarElement, map) ->
     self = this
     self._container = sidebarElement
     self._map = map
-    self._allNodes = allNodes
+    #self._initialZoom = map.getZoom()
+    #self._initialCenter = map.getCenter()
+    self._initialZoom = self._map.options.zoom
+    self._initialCenter = self._map.options.center
+
+    self._nodesLayer = self._map.getGritsLayer('Nodes')
+    self._nodesLayer.remove()
+
+    self._pathsLayer = self._map.getGritsLayer('Paths')
+    self._pathsLayer.remove()
+
+    self._allNodesLayer = self._map.getGritsLayer('AllNodes')
+    self._allNodesLayer.add()
 
     self._actionMenuTmpl = _.template('<ul id="<%= obj.id %>" class="action-menu"></ul>')
     self._actionTmpl = _.template('<li><div class="btn btn-sm btn-primary action-menu-<%= obj.name %>"><span><%= obj.name %></span></div></li>')
@@ -26,14 +40,14 @@ class GritsBoundingBox
       fillOpacity: 0.2
       clickable: true
 
-    self._bindMapEvents()
     self._buildActionMenu()
 
+    # enable selecting
+    self._selecting = false
+
     # default action
-    self.addAction('Apply', (e) ->
-      self.apply()
-      return
-    )
+    self.addAction('Apply', (e) -> self.apply())
+    self.addAction('Select', _.bind(self._selectToggle, self))
     return
   _bindMapEvents: () ->
     self = this
@@ -42,9 +56,38 @@ class GritsBoundingBox
     self._map.on('mousedown', self.onMouseDown, self)
     self._map.on('mouseup', self.onMouseUp, self)
     self._map.on('mousemove', self.onMouseMove, self)
+    return self
+  _unbindMapEvents: () ->
+    self = this
+    self._map.off('mouseup', self.onMouseUp, self)
+    self._map.off('mousedown', self.onMouseDown, self)
+    self._map.off('mousemove', self.onMouseMove, self)
+    self._map._container.style.cursor = ''
+    self._map.dragging.enable()
+    return self
+  _selectToggle: () ->
+    self = this
+    self._selecting = !self._selecting
+    if self._selecting
+      self._selectOn()
+    else
+      self._selectOff()
+    return
+  _selectOn: () ->
+    self = this
+    self._selecting = true
+    self._bindMapEvents()
+    $('.action-menu-Select').css({opacity: 0.35})
+  _selectOff: () ->
+    self = this
+    self._selecting = false
+    self._unbindMapEvents()
+    $('.action-menu-Select').css({opacity: 0.75})
+    return
   addAction: (name, handler) ->
     self = this
-    $action = self._actionMenu.append(self._actionTmpl({name: name}))
+    self._actionMenu.append(self._actionTmpl({name: name}))
+    $action = $('.action-menu-'+name)
     $action.on('click', handler)
     self._actions[name] = $action
   _buildActionMenu: () ->
@@ -89,24 +132,36 @@ class GritsBoundingBox
     nodes = []
     if self._shape != null
       bounds = self._shape.getBounds()
-      nodes = _.filter(self._allNodes, (node) -> bounds.contains(new L.LatLng(node.latLng[0], node.latLng[1])))
-    return nodes
+      nodes = _.filter(self._allNodesLayer.getNodes(), (node) -> bounds.contains(new L.LatLng(node.latLng[0], node.latLng[1])))
+    if nodes.length > _maxSelection
+      return {error: true, message: 'Please narrow your selection. ' + nodes.length + ' is greater than ' + _maxSelection}
+    return new GritsMetaNode(nodes, self._map)
   apply: () ->
     self = this
     if self._shape != null
       Template.gritsOverlay.show()
-      nodes = self._filterNodes()
+      # reset any previous metaNodes
+      GritsMetaNode.reset(self._map)
+      # apply the boundingbox filter
+      metaNode = self._filterNodes()
+      if metaNode.hasOwnProperty('error')
+        toastr.warning(metaNode.message)
+        Template.gritsOverlay.hide()
+        self.reset()
+        return
       # erase any previous departures
       GritsFilterCriteria.setDepartures(null)
-      # set the filtered nodes as the new origin
+      # set the meta node as the new origin
       departureSearch = Template.gritsFilter.getDepartureSearch()
-      departureSearch.tokenfield('setTokens', _.pluck(nodes, '_id'))
+      departureSearch.tokenfield('setTokens', metaNode._id)
       async.nextTick(() ->
         # apply the filter
         GritsFilterCriteria.apply((err, res) ->
+          Template.gritsOverlay.hide()
+          self.reset()
           if res
-            Template.gritsOverlay.hide()
-            self.reset()
+            GritsMetaNode.addLayerGroupToMap(self._map)
+            self._map.fitBounds(metaNode.bounds)
         )
       )
   reset: () ->
@@ -116,15 +171,16 @@ class GritsBoundingBox
       self._shape = null
     self._start = null
     self._stop = null
+    self._selectOff()
     return
   remove: () ->
     self = this
-    self._map.off('mouseup', self.onMouseUp, self)
-    self._map.off('mousedown', self.onMouseDown, self)
-    self._map.off('mousemove', self.onMouseMove, self)
     if self._shape != null
       self._map.removeLayer(self._shape)
-    self._map._container.style.cursor = ''
-    self._map.dragging.enable()
+    self._selectOff()
     self._actionMenu.remove()
+    self._allNodesLayer.remove()
+    #GritsFilterCriteria.setDepartures(null)
+    self._map.setView(self._initialCenter, self._initialZoom)
+    GritsMetaNode.reset(self._map)
     return
