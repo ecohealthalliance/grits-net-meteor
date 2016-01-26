@@ -418,7 +418,8 @@ Template.gritsFilter.onRendered ->
 
     # update the ajax-loader
     isUpdating = Session.get 'grits-net-meteor:isUpdating'
-    if isUpdating
+    # do not show the filter spinner if the overlay isLoading
+    if isUpdating && !Template.gritsOverlay.isLoading()
       $('#applyFilter').prop('disabled', true)
       $('#filterLoading').show()
     else
