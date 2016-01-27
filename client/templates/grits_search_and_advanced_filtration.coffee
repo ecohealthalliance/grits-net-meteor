@@ -2,6 +2,10 @@
 #
 # When another meteor app adds grits:grits-net-meteor as a package
 # Template.gritsSearchAndAdvancedFiltration will be available globally.
+_levelsStartVal = "1"
+_seatsStartVal = [0,900]
+_stopsStartVal = [0,5]
+_wfStartVal = 1
 _init = true # flag, set to false when initialization is done
 _initStartDate = null # onCreated will initialize the date through GritsFilterCriteria
 _initEndDate = null # onCreated will initialize the date through GritsFilterCriteria
@@ -426,33 +430,39 @@ Template.gritsSearchAndAdvancedFiltration.onRendered ->
       $('#filterLoading').hide()
 
 _changeWeeklyFrequencyHandler = (e) ->
-  $('#filterLoading').show()
   val = parseInt($("#weeklyFrequencyInputSlider").val(), 10)
-  if _.isNaN(val)
-    val = null
-  $('#weeklyFrequencySliderValIndicator').empty().html(val)
-  op = '$lte'
-  GritsFilterCriteria.weeklyFrequency.set({'value': val, 'operator': op})
+  if val isnt _wfStartVal
+    _wfStartVal = val
+    $('#filterLoading').show()
+    if _.isNaN(val)
+      val = null
+    $('#weeklyFrequencySliderValIndicator').empty().html(val)
+    op = '$lte'
+    GritsFilterCriteria.weeklyFrequency.set({'value': val, 'operator': op})
   return
 _changeStopsSliderHandler = (e) ->
-  $('#filterLoading').show()
   val = $("#stopsInputSlider").val().split(',')
   val[0] = parseInt(val[0], 10)
   val[1] = parseInt(val[1], 10)
-  $('#stopsSliderValIndicator').empty().html(val[0]+" : "+val[1])
-  if _.isNaN(val[0]) || _.isNaN(val[1])
-    val = null
-  GritsFilterCriteria.stops.set({'value': val[0], 'operator': '$gte', 'value2': val[1], 'operator2': '$lte'})
+  if val[0] isnt _stopsStartVal[0] or val[1] isnt _stopsStartVal[1]
+    _stopsStartVal = val
+    $('#filterLoading').show()
+    $('#stopsSliderValIndicator').empty().html(val[0]+" : "+val[1])
+    if _.isNaN(val[0]) || _.isNaN(val[1])
+      val = null
+    GritsFilterCriteria.stops.set({'value': val[0], 'operator': '$gte', 'value2': val[1], 'operator2': '$lte'})
   return
 _changeSeatsSliderHandler = (e) ->
-  $('#filterLoading').show()
   val = $("#seatsInputSlider").val().split(',')
   val[0] = parseInt(val[0], 10)
   val[1] = parseInt(val[1], 10)
-  $('#seatsSliderValIndicator').empty().html(val[0]+" : "+val[1])
-  if _.isNaN(val[0]) || _.isNaN(val[1])
-    val = null
-  GritsFilterCriteria.seats.set({'value': val[0], 'operator': '$gte', 'value2': val[1], 'operator2': '$lte'})
+  if val[0] isnt _seatsStartVal[0] or val[1] isnt _seatsStartVal[1]
+    _seatsStartVal = val
+    $('#filterLoading').show()
+    $('#seatsSliderValIndicator').empty().html(val[0]+" : "+val[1])
+    if _.isNaN(val[0]) || _.isNaN(val[1])
+      val = null
+    GritsFilterCriteria.seats.set({'value': val[0], 'operator': '$gte', 'value2': val[1], 'operator2': '$lte'})
   return
 _changeDepartureHandler = (e) ->
   combined = []
@@ -491,23 +501,38 @@ _changeDateHandler = (e) ->
     GritsFilterCriteria.operatingDateRangeEnd.set(date)
     return
 _changeLevelsHandler = (e) ->
-  $('#filterLoading').show()
   val = $("#levelsInputSlider").val()
-  $('#levelsSliderValIndicator').empty().html(val)
-  GritsFilterCriteria.levels.set(val)
+  if val isnt _levelsStartVal
+    _levelsStartVal = val
+    $('#filterLoading').show()
+    $('#levelsSliderValIndicator').empty().html(val)
+    GritsFilterCriteria.levels.set(val)
   return
 _changeLimitHandler = (e) ->
   val = $("#limit").val()
   GritsFilterCriteria.limit.set(val)
   return
+_setWFStartVal = (e) ->
+  _startVal = $("#weeklyFrequencyInputSlider").val().split(',')
+_setStopsStartVal = (e) ->
+  _startVal = $("#stopsInputSlider").val().split(',')
+_setSeatsStartVal = (e) ->
+  _startVal = $("#seatsInputSlider").val().split(',')
+_setLevelsStartVal = (e) ->
+  _startVal = $("#levelsInputSlider").val()
+
 # events
 #
 # Event handlers for the grits_filter.html template
 Template.gritsSearchAndAdvancedFiltration.events
-  'slide #weeklyFrequencyInputSlider': _changeWeeklyFrequencyHandler
-  'slide #stopsInputSlider': _changeStopsSliderHandler
-  'slide #seatsInputSlider': _changeSeatsSliderHandler
-  'slide #levelsInputSlider': _changeLevelsHandler
+  'slideStop #weeklyFrequencyInputSlider': _changeWeeklyFrequencyHandler
+  'slideStop #stopsInputSlider': _changeStopsSliderHandler
+  'slideStop #seatsInputSlider': _changeSeatsSliderHandler
+  'slideStop #levelsInputSlider': _changeLevelsHandler
+  'slideStart #weeklyFrequencyInputSlider' : _setWFStartVal
+  'slideStart #stopsInputSlider' : _setStopsStartVal
+  'slideStart #seatsInputSlider' : _setSeatsStartVal
+  'slideStart #levelsInputSlider' : _setLevelsStartVal
   'change #departureSearch': _changeDepartureHandler
   'change #arrivalSearch': _changeArrivalHandler
   'change #limit': _changeLimitHandler

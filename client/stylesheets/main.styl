@@ -87,12 +87,12 @@ body
   .nav-tabs > li > a
     padding 5px 10px
 
-  .nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus
-    background-color #496c8a
-    color white
-
   .nav-tabs > li > a
     padding 5px 10px
+
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus
+  background-color #496c8a
+  color white
 
 .tableDivider
   height 3px
@@ -119,6 +119,7 @@ body
   filter-container-width()
 
 #sidebar-flightData
+  height 100%
   dataTable-container-width()
 
 #sidebar-layer
@@ -349,9 +350,10 @@ p.intro
   font-size small
 
 .dataTableContent
-  height 100%
-  overflow-x inherit
-  overflow-y inherit
+  width 530px
+  height 85%
+  overflow-y scroll
+  overflow-x hidden
 
 .pathsTableContainer
   bottom 0px
@@ -641,3 +643,10 @@ table.tablesorter .tablesorter-headerAsc div
   width 20%
   padding-left 0
   padding-right 10px
+
+.circle {
+  float right
+  width 20px
+  height 20px
+  border-radius 50%
+}

@@ -20,7 +20,7 @@
           <tbody>
             {{#with paths}}
               {{#each paths}}
-                <tr class="pathTableRow" data-id="{{this._id}}" style="background-color: {{getPathThroughputColor this}}">
+                <tr class="pathTableRow" data-id="{{this._id}}" >
                   <td>
                     {{this.origin._id}}
                   </td>
@@ -32,6 +32,7 @@
                   </td>
                   <td>
                     {{this.throughput}}
+                    <div class="circle" style="background-color: {{getPathThroughputColor this}}"></div>
                   </td>
                 </tr>
               {{/each}}
@@ -59,7 +60,7 @@
         <tbody class="dataTableBody">
           {{#with nodes}}
             {{#each nodes}}
-              <tr class="nodeTableRow" data-id="{{this._id}}" style="background-color: {{getNodeThroughputColor this}}">
+              <tr class="nodeTableRow" data-id="{{this._id}}">
                 <td>
                   {{this._id}}
                 </td>
@@ -71,6 +72,7 @@
                 </td>
                 <td>
                   {{this.total}}
+                  <div class="circle" style="background-color: {{getNodeThroughputColor this}}"></div>
                 </td>
               </tr>
             {{/each}}
@@ -121,6 +123,15 @@
           {{/with}}
         </tbody>
       </table>
+    </div>
+  </div>
+  <div class="sidebarRightFooter">
+    <div class="export">
+      <i class="fa fa-cloud-download downloadIcon"></i>
+      <button type="button" class="btn btn-sm btn-default exportData" data-type="json">JSON</button>
+      <button type="button" class="btn btn-sm btn-default exportData" data-type="csv">CSV</button>
+      <button type="button" class="btn btn-sm btn-default exportData" data-type="xml">XML</button>
+      <button type="button" class="btn btn-sm btn-default exportData" data-type="excel">XLSX</button>
     </div>
   </div>
 </template>

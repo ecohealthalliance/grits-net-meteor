@@ -5,9 +5,6 @@
     }
   </style>
   <div>
-    {{#if state }}
-      <i class="fa fa-exclamation-circle filter-status" title="Recent changes have not been applied"></i>
-    {{/if}}
     <div class="searchBar" id="departureSearchMainSearchBar">
       <div class="tokenized main">
         <i id="searchIcon" class="fa fa-search" style="
@@ -123,6 +120,7 @@
                      class="slider"
                      id="levelsInputSlider"
                      value=""
+                     onChange="alert('change');"
                      data-slider-min="1"
                      data-slider-max="5"
                      data-slider-step="1"
@@ -169,7 +167,7 @@
               <span class="filter-label">{{_ "gritsFilter.tab-2.weekly-frequency-label"}}:</span>
             </div>
             <div class="col-xs-6 pull-right sliderValIndicator">
-              <span id='weeklyFrequencySliderValIndicator' class="filter-label">1</span>
+              <span id='weeklyFrequencySliderValIndicator' class="filter-label">0</span>
             </div>
           </div>
           <div class='legend-scale'>
