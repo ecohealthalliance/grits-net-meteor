@@ -45,7 +45,7 @@
       <li class="advFilTab"><a href="#date" data-toggle="tab" id="dateTab"><i class="fa fa-calendar"></i> {{_ "gritsFilter.tab-2.title"}}</a></li>
     </ul>
     <div class="tableDivider"></div>
-    <div class="tab-content" style="height: 250px;">
+    <div class="tab-content" style="height: 275px;">
       <div class="tab-pane active" id="flight">
         <!-- start flight tab content -->
         <div class="advancedFilterRow">
@@ -198,40 +198,23 @@
     </div>
     <div class="filter-footer">
       <div class="row filter-row">
-        <div class="col-xs-3">
+        <div class="col-xs-3 limitSearchTitle">
           <span class="filter-label">{{_ "gritsFilter.limit-label"}}:</span>
         </div>
-        <div class="col-xs-4">
+        <div class="col-xs-3 limitInput">
           <input type="number" id="limit" class="form-control input-sm advanced-filter-status" value={{limit}}>
         </div>
-        <div class="col-xs-5">
+        <div class="col-xs-2">
           <button id="loadMore" class="btn btn-sm btn-default pull-right" disabled="true">
             <span class="filter-label">{{_ "gritsFilter.more-button"}}</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="moreLoading" style="display: none;"/>
           </button>
         </div>
-      </div>
-      <!--
-      <div class="row filter-row">
-        <div class="col-xs-12">
-          <button id="applyFilter" class="btn btn-sm btn-default">
-            <span class="filter-label">
-              {{_ "gritsFilter.apply-button"}}
-            </span>
-          </button>
-          {{#if state }}
-            <span class="filter-status-message">{{_ "gritsFilter.recent-changes"}}</span><i class="fa fa-exclamation-circle filter-status"></i>
-          {{/if}}
-        </div>
-      </div>
-      -->
-      <div class="row row-status-bar">
-        <div class="col-xs-6 col-status-bar">
-          <span class="status-bar-text">{{_ "gritsFilter.loaded-records"}}:</span>
-          <span class="status-bar-text status-bar-counter">{{ loadedRecords }}</span>
-        </div>
-        <div class="col-xs-6 col-status-bar">
-          <span class="status-bar-text">{{_ "gritsFilter.total-records"}}:</span>
-          <span class="status-bar-text status-bar-counter">{{ totalRecords }}</span>
+        <div class="col-xs-4 col-status-bar">
+          <div class="col-xs-9 status-bar-text">{{_ "gritsFilter.loaded-records"}}:</div>
+          <div class="col-xs-3 status-bar-val">{{ loadedRecords }}</div>
+
+          <div class="col-xs-9 status-bar-text">{{_ "gritsFilter.total-records"}}:</div>
+          <div class="col-xs-3 status-bar-val">{{ totalRecords }}</div>
         </div>
       </div>
     </div>

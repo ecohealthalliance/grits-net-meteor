@@ -198,11 +198,15 @@ body
   padding 0
 
 .status-bar-text
+  padding-right: 0;
+  padding-left: 0;
   color #333
+  width: 70%
   font-style italic
+  text-align right
 
-.status-bar-counter
-  margin 0px 5px 0 5px
+.status-bar-val
+  padding-left 2px
 
 .filter-status
   position relative
@@ -465,17 +469,26 @@ p.intro
   strong
     color #000
 
+#sidebar-plus-button, #sidebar-minus-button
+  color white
+
 .sidebar-zoom-in
+  background #496c8a
   overflow hidden
   position absolute
   bottom 40px
-  margin 0
+  left 60px
 
 .sidebar-zoom-out
+  background #496c8a
   overflow hidden
   position absolute
   bottom 5px
-  margin 0
+  left 60px
+
+.sidebar-zoom-out:hover, .sidebar-zoom-in:hover
+  background #496c8a
+  opacity .75
 
 .fa-white
   font-size 2em
@@ -489,9 +502,8 @@ p.intro
   font-size 1.5em
   color white
 
-.zoomBtns
-  left: 60px
-  float: right
+#sidebar
+  overflow visible
 
 #sidebar-flightData-tab
   position absolute
@@ -520,7 +532,7 @@ p.intro
   font-weight bold
 
 #loadMore
-  margin-right 20px
+  margin-right 0px
 
 #flightTab
   width 178px
@@ -598,7 +610,7 @@ p.intro
   text-align right
 
 .advancedFilterRow
-  padding 10px 10px 10px 10px
+  padding 10px 10px 30px 10px
 
 .sidebar-tabs > li:hover
     color #333
@@ -620,3 +632,12 @@ table.tablesorter .tablesorter-headerAsc div
   background-size: 13px 13px
   background-repeat: no-repeat
   background-position right center
+
+.limitSearchTitle
+  padding-right 0
+  top 7px
+
+.limitInput
+  width 20%
+  padding-left 0
+  padding-right 10px
