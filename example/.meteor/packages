@@ -9,7 +9,7 @@ insecure
 coffeescript
 reactive-var
 reactive-dict
+grits:flirt-sidebar@0.0.1
 grits:grits-net-meteor@0.0.1
 xolvio:cucumber@0.19.4_1
-dit:sidebar-v2
 andrei:tablesorter

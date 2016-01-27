@@ -32,7 +32,7 @@ Package.on_use(function(api){
     'halunka:i18n@1.1.1',
     'momentjs:moment@2.10.6',
     'grits:grits-net-mapper@0.2.2',
-    'grits:flirt-sidebar2@0.0.1'
+    'grits:flirt-sidebar@0.0.1'
   ]);
   // client only packages
   api.use([

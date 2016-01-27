@@ -23,7 +23,6 @@ ddp-common@1.2.2
 ddp-server@1.2.2
 deps@1.0.9
 diff-sequence@1.0.1
-dit:sidebar-v2@0.0.1
 ecmascript@0.1.6
 ecmascript-runtime@0.2.6
 ejson@1.0.7
@@ -32,6 +31,7 @@ flawless:meteor-toastr@1.0.1
 fortawesome:fontawesome@4.4.0
 fourq:typeahead@1.0.0
 geojson-utils@1.0.4
+grits:flirt-sidebar@0.0.1
 grits:grits-net-mapper@0.2.2
 grits:grits-net-meteor@0.0.1
 halunka:i18n@1.1.1
