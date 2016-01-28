@@ -47,6 +47,8 @@ Package.on_use(function(api){
     'client/stylesheets/overlay.styl',
     'client/lib/L.D3SvgOverlay.min.js',
     'client/lib/tableExport.min.js',
+    'client/lib/webgl-heatmap.js',
+    'client/lib/webgl-heatmap-leaflet.js',
     'client/startup.coffee',
     'client/grits_util.coffee',
     'client/models/grits_filter_criteria.coffee',
@@ -78,7 +80,8 @@ Package.on_use(function(api){
     'client/images/flirt-logo-inline.png',
     'client/images/origin-marker-icon.svg',
     'client/images/asc.png',
-    'client/images/desc.png'
+    'client/images/desc.png',
+    'client/images/viridis.png'
   ], 'client');
 
   // both client and server files

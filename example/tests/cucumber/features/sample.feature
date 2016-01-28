@@ -41,6 +41,5 @@ Feature: Map display
   Scenario: Entering an airport code, and a minimum seat count should give us some paths with flight having at least that many seats
     When I navigate to "/"
     And I search for JFK
-    And I enter 350 and 400 into the seat filter
+    And I enter 50 and 850 into the seat filter
     Then I should see some map markers
-    And true
