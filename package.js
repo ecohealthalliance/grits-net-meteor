@@ -31,8 +31,7 @@ Package.on_use(function(api){
     'kidovate:bootstrap-slider@0.0.5',
     'tsega:bootstrap3-datetimepicker@4.17.37_1',
     'halunka:i18n@1.1.1',
-    'momentjs:moment@2.10.6',
-    'grits:grits-net-mapper@0.2.2'
+    'momentjs:moment@2.10.6'
   ]);
   // client only packages
   api.use([
@@ -42,16 +41,23 @@ Package.on_use(function(api){
     'tracker'
   ], 'client');
   // client-side only files
+  // IMPORTANT: these files are loaded in order
   api.add_files([
     'client/stylesheets/main.styl',
     'client/stylesheets/overlay.styl',
     'client/lib/L.D3SvgOverlay.min.js',
     'client/lib/tableExport.min.js',
+    'client/mapper/grits_control.coffee',
+    'client/mapper/grits_layer.coffee',
+    'client/mapper/grits_marker.coffee',
+    'client/mapper/grits_node.coffee',
+    'client/mapper/grits_path.coffee',
+    'client/mapper/grits_meta_node.coffee',
+    'client/mapper/grits_map.coffee',
+    'client/mapper/grits_bounding_box.coffee',
     'client/startup.coffee',
     'client/grits_util.coffee',
-    'client/models/grits_filter_criteria.coffee',
-    'client/models/grits_meta_node.coffee',
-    'client/models/grits_bounding_box.coffee',
+    'client/grits_filter_criteria.coffee',
     'client/layers/grits_nodes.coffee',
     'client/layers/grits_all_nodes.coffee',
     'client/layers/grits_paths.coffee',
@@ -101,11 +107,15 @@ Package.on_use(function(api){
     'Flights',
     'Heatmap',
     'Heatmaps',
-    'GritsFilterCriteria',
-    'GritsMetaNode',
     'GritsBoundingBox',
     'GritsControl',
+    'GritsFilterCriteria',
+    'GritsLayer',
     'GritsMap',
+    'GritsMarker',
+    'GritsMetaNode',
+    'GritsNode',
+    'GritsPath',
     'GritsHeatmapLayer',
     'GritsNodeLayer',
     'GritsAllNodesLayer',
