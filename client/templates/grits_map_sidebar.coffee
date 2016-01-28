@@ -1,5 +1,5 @@
 _isDrawing = false
-window._boundingBox = null # TODO: temporarily assign to window for development purposes
+_boundingBox = null
 
 Template.gritsMapSidebar.events
   'click #sidebar-plus-button': (event) ->
@@ -21,7 +21,7 @@ Template.gritsMapSidebar.events
     map = Template.gritsMap.getInstance()
     _isDrawing = !_isDrawing # toggle
     if _isDrawing
-      window._boundingBox = new GritsBoundingBox($(event.target), map)
+      _boundingBox = new GritsBoundingBox($(event.target), map)
     else
-      if window._boundingBox != null
-        window._boundingBox.remove()
+      if _boundingBox != null
+        _boundingBox.remove()
