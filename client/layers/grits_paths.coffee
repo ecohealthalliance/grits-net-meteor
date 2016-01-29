@@ -195,7 +195,7 @@ class GritsPathLayer extends GritsLayer
       .attr('class', 'arrowHead')
 
     paths = _.sortBy(self.getPaths(), (path) ->
-      return path.destination.latLng[0] * -1
+      return path.throughput
     )
 
     pathCount = paths.length
