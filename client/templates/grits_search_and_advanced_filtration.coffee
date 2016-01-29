@@ -597,9 +597,10 @@ Template.gritsSearchAndAdvancedFiltration.events
     $menu = $container.find('.tt-dropdown-menu')
     $menu.css('min-width', $('#filter').width())
     id = $target.attr('id')
+    $container.find('.tt-dropdown-menu').css('z-index', 999999)
     $container.find('.token-input.tt-input').css('height', '30px')
     $container.find('.token-input.tt-input').css('font-size', '20px')
-    $container.find('.tokenized.main').prepend($("#searchIcon"))
+    $container.find('.tokenized.main').prepend($("#searchIcon"))    
     $('#'+id+'-tokenfield').on('blur', (e) ->
       # only allow tokens
       $container.find('.token-input.tt-input').val("")
