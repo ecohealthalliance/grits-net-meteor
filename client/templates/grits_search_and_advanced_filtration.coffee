@@ -564,6 +564,10 @@ Template.gritsSearchAndAdvancedFiltration.events
       toastr.error('Include Nearby requires a Departure')
       return false
 
+    if (departures[0].indexOf(GritsMetaNode.PREFIX) >= 0)
+      toastr.error('Include Nearby does not work with MetaNodes')
+      return false
+
     if $('#includeNearbyAirports').is(':checked')
       Session.set('grits-net-meteor:isUpdating', true)
       Meteor.call('findNearbyAirports', departures[0], miles, (err, airports) ->
@@ -600,7 +604,7 @@ Template.gritsSearchAndAdvancedFiltration.events
     $container.find('.tt-dropdown-menu').css('z-index', 999999)
     $container.find('.token-input.tt-input').css('height', '30px')
     $container.find('.token-input.tt-input').css('font-size', '20px')
-    $container.find('.tokenized.main').prepend($("#searchIcon"))    
+    $container.find('.tokenized.main').prepend($("#searchIcon"))
     $('#'+id+'-tokenfield').on('blur', (e) ->
       # only allow tokens
       $container.find('.token-input.tt-input').val("")
