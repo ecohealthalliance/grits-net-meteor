@@ -31,7 +31,8 @@ Package.on_use(function(api){
     'tsega:bootstrap3-datetimepicker@4.17.37_1',
     'halunka:i18n@1.1.1',
     'momentjs:moment@2.10.6',
-    'grits:grits-net-mapper@0.2.2'
+    'grits:grits-net-mapper@0.2.2',
+    'grits:flirt-sidebar@0.0.1'
   ]);
   // client only packages
   api.use([
@@ -42,6 +43,9 @@ Package.on_use(function(api){
   ], 'client');
   // client-side only files
   api.add_files([
+    'client/stylesheets/variables.import.styl',
+    'client/stylesheets/mixins.import.styl',
+    'client/stylesheets/sidebar.import.styl',
     'client/stylesheets/main.styl',
     'client/stylesheets/overlay.styl',
     'client/lib/L.D3SvgOverlay.min.js',
@@ -61,20 +65,22 @@ Package.on_use(function(api){
     'client/templates/grits_map.html',
     'client/templates/grits_map_sidebar.html',
     'client/templates/grits_map_sidebar.coffee',
+    'client/templates/grits_map_table_sidebar.html',
     'client/templates/grits_map.coffee',
-    'client/templates/grits_search.html',
-    'client/templates/grits_filter.html',
-    'client/templates/grits_filter.coffee',
+    'client/templates/grits_search_and_advanced_filtration.html',
+    'client/templates/grits_search_and_advanced_filtration.coffee',
     'client/templates/grits_legend.html',
     'client/templates/grits_legend.coffee',
     'client/templates/grits_elementDetails.html',
     'client/templates/grits_elementDetails.coffee',
+    'client/templates/loading.html',
     'client/templates/grits_overlay.html',
     'client/templates/grits_overlay.coffee'
   ], 'client');
 
   api.addAssets([
     'client/images/flirt.png',
+    'client/images/flirt-logo-inline.png',
     'client/images/origin-marker-icon.svg',
     'client/images/asc.png',
     'client/images/desc.png',

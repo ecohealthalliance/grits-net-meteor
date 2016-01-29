@@ -1,157 +1,165 @@
 <template name="gritsElementDetails">
-  <button type="button" class="close element-details-close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-  <ul class="nav nav-tabs">
-    <li class="active"><a href="#pathDetails" data-toggle="tab">{{_ "gritsElementDetails.tab-1.title" }}</a></li>
-    <li><a href="#nodeDetails" data-toggle="tab">{{_ "gritsElementDetails.tab-2.title" }}</a></li>
-  </ul>
-  <div class="tab-content">
-    <div class="active tab-pane element-details-path" id="pathDetails">
-      {{#with path}}
-        <div class="row path-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-1.level-label" }}:</span>
+  <div class="element-details-container">
+    <ul class="nav element-details-nav">
+      <li class="active">
+        <a href="#pathDetails" data-toggle="tab">{{_ "gritsElementDetails.tab-1.title" }}</a>
+      </li>
+      <li>
+        <a href="#nodeDetails" data-toggle="tab">{{_ "gritsElementDetails.tab-2.title" }}</a>
+      </li>
+      <button type="button" class="close element-details-close" aria-label="Close">
+        <i class="fa fa-times-circle"></i>
+      </button>
+    </ul>
+    <div class="tab-content">
+      <div class="active tab-pane element-details-path" id="pathDetails">
+        {{#with path}}
+          <div class="row path-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-1.level-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{level}}
+            </div>
           </div>
-          <div class="col-xs-7">
-            {{level}}
+          <div class="row path-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-1.occurrances-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{occurrances}}
+            </div>
           </div>
-        </div>
-        <div class="row path-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-1.occurrances-label" }}:</span>          
+          <div class="row path-detail-row">
+            <div class="col-xs-5 ">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-1.weight-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{pathWeight path}}
+            </div>
           </div>
-          <div class="col-xs-7">
-            {{occurrances}}
+          <div class="row path-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-1.origin-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{origin.metadata.city}}
+            </div>
           </div>
-        </div>
-        <div class="row path-detail-row">
-          <div class="col-xs-5 ">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-1.weight-label" }}:</span>
+          <div class="row path-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-1.destination-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{destination.metadata.city}}
+            </div>
           </div>
-          <div class="col-xs-7">
-            {{pathWeight path}}
+          <div class="row path-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-1.normalized-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{normalized path}}%
+            </div>
           </div>
-        </div>
-        <div class="row path-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-1.origin-label" }}:</span>
+          <div class="row path-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-1.stops-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{metadata.stops}}
+            </div>
           </div>
-          <div class="col-xs-7">
-            {{origin.metadata.city}}
+          <div class="row path-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-1.throughput-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{throughput}}
+            </div>
           </div>
-        </div>
-        <div class="row path-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-1.destination-label" }}:</span>
+        {{else}}
+          <div class="row path-detail-row">
+            <div class="col-xs-12">
+              No data
+            </div>
           </div>
-          <div class="col-xs-7">
-            {{destination.metadata.city}}
+        {{/with}}
+      </div>
+      <div class="tab-pane element-details-node" id="nodeDetails">
+        {{#with node}}
+          <div class="row node-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-2.level-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{node.level}}
+            </div>
           </div>
-        </div>
-        <div class="row path-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-1.normalized-label" }}:</span>
+          <div class="row node-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-2.code-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{node._id}}
+            </div>
           </div>
-          <div class="col-xs-7">
-            {{normalized path}}%
+          <div class="row node-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-2.name-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{node.metadata.name}}
+            </div>
           </div>
-        </div>
-        <div class="row path-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-1.stops-label" }}:</span>
+          <div class="row node-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-2.city-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{node.metadata.city}}
+            </div>
           </div>
-          <div class="col-xs-7">
-            {{metadata.stops}}
+          <div class="row node-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-2.country-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{node.metadata.countryName}}
+            </div>
           </div>
-        </div>
-        <div class="row path-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-1.throughput-label" }}:</span>
+          <div class="row node-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-2.region-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{node.metadata.globalRegion}}
+            </div>
           </div>
-          <div class="col-xs-7">
-            {{throughput}}
+          <div class="row node-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-2.normalized-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{normalized node}}%
+            </div>
           </div>
-        </div>
-      {{else}}
-        <div class="row path-detail-row">
-          <div class="col-xs-12">
-            No data
+          <div class="row node-detail-row">
+            <div class="col-xs-5">
+              <span class="filter-label">{{_ "gritsElementDetails.tab-2.total-throughput-label" }}:</span>
+            </div>
+            <div class="col-xs-7">
+              {{nodeTotalThroughput node}}
+            </div>
           </div>
-        </div>
-      {{/with}}
-    </div>
-    <div class="tab-pane element-details-node" id="nodeDetails">
-      {{#with node}}
-        <div class="row node-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-2.level-label" }}:</span>
+        {{else}}
+          <div class="row path-detail-row">
+            <div class="col-xs-12">
+              No data
+            </div>
           </div>
-          <div class="col-xs-7">
-            {{node.level}}
-          </div>
-        </div>
-        <div class="row node-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-2.code-label" }}:</span>
-          </div>
-          <div class="col-xs-7">
-            {{node._id}}
-          </div>
-        </div>
-        <div class="row node-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-2.name-label" }}:</span>
-          </div>
-          <div class="col-xs-7">
-            {{node.metadata.name}}
-          </div>
-        </div>
-        <div class="row node-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-2.city-label" }}:</span>
-          </div>
-          <div class="col-xs-7">
-            {{node.metadata.city}}
-          </div>
-        </div>
-        <div class="row node-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-2.country-label" }}:</span>
-          </div>
-          <div class="col-xs-7">
-            {{node.metadata.countryName}}
-          </div>
-        </div>
-        <div class="row node-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-2.region-label" }}:</span>
-          </div>
-          <div class="col-xs-7">
-            {{node.metadata.globalRegion}}
-          </div>
-        </div>
-        <div class="row node-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-2.normalized-label" }}:</span>
-          </div>
-          <div class="col-xs-7">
-            {{normalized node}}%
-          </div>
-        </div>
-        <div class="row node-detail-row">
-          <div class="col-xs-5">
-            <span class="filter-label">{{_ "gritsElementDetails.tab-2.total-throughput-label" }}:</span>
-          </div>
-          <div class="col-xs-7">
-            {{nodeTotalThroughput node}}
-          </div>
-        </div>
-      {{else}}
-        <div class="row path-detail-row">
-          <div class="col-xs-12">
-            No data
-          </div>
-        </div>
-      {{/with}}
-    </div>
+        {{/with}}
+      </div>
+      </div>
   </div>
 </template>

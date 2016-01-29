@@ -1,0 +1,208 @@
+<template name="gritsSearchAndAdvancedFiltration">
+  <style>
+    .bootstrap-datetimepicker-widget table td.day {
+      width: 28px;
+    }
+  </style>
+  <div>
+    <div class="searchBar" id="departureSearchMainSearchBar">
+      <div class="tokenized main">
+        <i id="searchIcon" class="fa fa-search"></i>
+        <input id="departureSearchMain" class="input-sm advanced-filter-status" name="departureSearchMain" placeholder='{{_ "gritsFilter.tokenfield-placeholder"}}' />
+      </div>
+    </div>
+    <div class="fliter-row include-nearby" id="includeNearbyAirportsContainer">
+      <div id="includeNearbyAirportsDiv">
+        <input type="checkbox" name="includeNearbyAirports" id="includeNearbyAirports">
+        <span>{{_ "gritsFilter.tab-1.include-nearby-label"}}</span>
+      </div>
+      <div id="milesInput">
+        <input type="number" id="includeNearbyAirportsRadius" class="form-control input-sm" min="1" max="500" value="50">
+      </div>
+      <div id="milesText">
+        <span>{{_ "gritsFilter.tab-1.miles-label"}}</span>
+      </div>
+    </div>
+  </div>
+  <div id="filter" class="clearfix">
+    <div class="filter-row advFilHdr">
+        <span class="filter-heading">{{_ "gritsFilter.title"}}</span>
+    </div>
+    <ul class="nav nav-tabs filter-tabs">
+      <li class="active advFilTab"><a href="#flight" data-toggle="tab" id="flightTab"><i class="fa fa-plane"></i> {{_ "gritsFilter.tab-1.title"}}</a></li>
+      <li class="advFilTab"><a href="#date" data-toggle="tab" id="dateTab"><i class="fa fa-calendar"></i> {{_ "gritsFilter.tab-2.title"}}</a></li>
+    </ul>
+    <div class="tab-content">
+      <div class="tab-pane filter-tab-pane active" id="flight">
+        <!-- start flight tab content -->
+        <div class="advancedFilterRow stops">
+          <div class="filter-first-row">
+            <div class="pull-left">
+              <span class="filter-label">{{_ "gritsFilter.tab-1.stops-label"}}</span>
+            </div>
+            <div class="pull-right sliderValIndicator">
+              <span id='stopsSliderValIndicator' class="filter-sub-label">0 : 5</span>
+            </div>
+          </div>
+          <div class='legend-scale'>
+            <div class='slider-container'>
+              <input type="text"
+                     class="slider"
+                     id="stopsInputSlider"
+                     value=""
+                     data-slider-min="0"
+                     data-slider-max="5"
+                     data-slider-step="1"
+                     data-slider-value="[0,5]"
+                     data-slider-orientation="horizontal"
+                     data-slider-selection="after"
+                     data-slider-tooltip="show"
+                     style="position:relative; top:0; left:0; width:100%;">
+            </div>
+          </div>
+          <div>
+            <div class="pull-left sliderRangeIndicatorLeft">0</div>
+            <div class="pull-right sliderRangeIndicatorRight">5</div>
+          </div>
+        </div>
+        <div class="advancedFilterRow seats">
+          <div class="filter-first-row">
+            <div class="pull-left">
+              <span class="filter-label">{{_ "gritsFilter.tab-1.seats-label"}}</span>
+            </div>
+            <div class="pull-right sliderValIndicator">
+              <span id='seatsSliderValIndicator' class="filter-sub-label">0 : 900</span>
+            </div>
+          </div>
+          <div class='legend-scale'>
+            <div class='slider-container'>
+              <input type="text"
+                     class="slider"
+                     id="seatsInputSlider"
+                     value=""
+                     data-slider-min="0"
+                     data-slider-max="900"
+                     data-slider-step="1"
+                     data-slider-value="[0,900]"
+                     data-slider-orientation="horizontal"
+                     data-slider-selection="after"
+                     data-slider-tooltip="show"
+                     style="position:relative; top:0; left:0; width:100%;">
+            </div>
+          </div>
+          <div class="slider-range-labels">
+            <div class="pull-left sliderRangeIndicatorLeft">0</div>
+            <div class="pull-right sliderRangeIndicatorRight">900</div>
+          </div>
+        </div>
+        <div class="advancedFilterRow levels">
+          <div class="filter-first-row">
+            <div class="pull-left">
+              <span class="filter-label">{{_ "gritsFilter.tab-1.levels-label"}}</span>
+            </div>
+            <div class="pull-right sliderValIndicator">
+              <span id='levelsSliderValIndicator' class="filter-sub-label">1</span>
+            </div>
+          </div>
+          <div class='legend-scale'>
+            <div class='slider-container'>
+              <input type="text"
+                     class="slider"
+                     id="levelsInputSlider"
+                     value=""
+                     onChange="alert('change');"
+                     data-slider-min="1"
+                     data-slider-max="5"
+                     data-slider-step="1"
+                     data-slider-value="1"
+                     data-slider-orientation="horizontal"
+                     data-slider-tooltip="show"
+                     style="position:relative; top:0; left:0; width:100%;">
+            </div>
+          </div>
+          <div class="slider-range-labels">
+            <div class="pull-left sliderRangeIndicatorLeft">1</div>
+            <div class="pull-right sliderRangeIndicatorRight">5</div>
+          </div>
+        </div>
+        <!-- end flight tab content -->
+      </div>
+      <div class="tab-pane filter-tab-pane" id="date">
+        <!-- start date tab content -->
+        <div class="filter-row">
+          <div class="filter-group">
+            <label class="filter-label">{{_ "gritsFilter.tab-2.start-label"}}</label>
+            <div class='input-group date' id='discontinuedDate'>
+              <input type='text' class="date-button form-control input-sm" value="{{start}}"/>
+              <span class="input-group-addon">
+                <span class="glyphicon glyphicon-calendar"></span>
+              </span>
+            </div>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">{{_ "gritsFilter.tab-2.end-label"}}</label>
+              <div class='input-group date' id='effectiveDate'>
+                  <input type='text' class="date-button form-control input-sm" value="{{end}}"/>
+                  <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                  </span>
+              </div>
+          </div>
+        </div>
+        <div class="advancedFilterRow">
+          <div class="row filter-row">
+            <div class="col-xs-6">
+              <span class="filter-label">{{_ "gritsFilter.tab-2.weekly-frequency-label"}}:</span>
+            </div>
+            <div class="col-xs-6 pull-right sliderValIndicator">
+              <span id='weeklyFrequencySliderValIndicator' class="filter-label">0</span>
+            </div>
+          </div>
+          <div class='legend-scale'>
+            <div class='slider-container'>
+              <input type="text"
+                     class="slider"
+                     id="weeklyFrequencyInputSlider"
+                     value=""
+                     data-slider-min="0"
+                     data-slider-max="7"
+                     data-slider-step="1"
+                     data-slider-value="0"
+                     data-slider-orientation="horizontal"
+                     data-slider-selection="before"
+                     data-slider-tooltip="show"
+                     style="position:relative; top:0; left:0; width:100%;">
+            </div>
+          </div>
+          <div class="slider-range-labels">
+            <div class='col-md-6 sliderRangeIndicatorLeft'>0</div>
+            <div class="col-md-6 sliderRangeIndicatorRight">7</div>
+          </div>
+        </div>
+        <!-- end date tab content -->
+      </div>
+    </div>
+    <div class="filter-footer">
+      <div class="limit col-sm-8">
+        <div class="limitSearchTitle">
+          <span class="filter-label">{{_ "gritsFilter.limit-label"}}:</span>
+        </div>
+        <div class="limitInput">
+          <input type="number" id="limit" class="form-control input-sm advanced-filter-status" value={{limit}}>
+        </div>
+        <div>
+          <button id="loadMore" class="btn btn-sm btn-default pull-right" disabled="true">
+            <span class="filter-label">{{_ "gritsFilter.more-button"}}</span> <img src="/packages/grits_grits-net-meteor/client/images/ajax-loader.gif" id="moreLoading" style="display: none;"/>
+          </button>
+        </div>
+      </div>
+      <div class="col-sm-4 col-status-bar">
+        <div class="col-xs-9 status-bar-text">{{_ "gritsFilter.loaded-records"}}:</div>
+        <div class="col-xs-3 status-bar-val">{{ loadedRecords }}</div>
+
+        <div class="col-xs-9 status-bar-text">{{_ "gritsFilter.total-records"}}:</div>
+        <div class="col-xs-3 status-bar-val">{{ totalRecords }}</div>
+      </div>
+    </div>
+  </div>
+</template>

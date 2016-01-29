@@ -21,8 +21,7 @@ highlightPathTableRow = (path) ->
     $row.addClass('activeRow').css({'background-color':''})
     # reset the previous path background-color
     if !_.isNull(_previousPath)
-      $previousPath = $("tr[data-id=#{_previousPath._id}]")
-      $previousPath.css({'background-color':_previousPath.color})
+      $previousPath = $("tr[data-id=#{_previousPath._id}]")      
     # this path becomes the previousPath
     _previousPath = path
   else

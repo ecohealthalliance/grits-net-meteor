@@ -6,7 +6,7 @@ _eventHandlers = {
   click: (element, selection, projection) ->
     self = this
     if not Session.get('grits-net-meteor:isUpdating')
-      departureSearch = Template.gritsFilter.getDepartureSearch()
+      departureSearch = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
       if typeof departureSearch != 'undefined'
         rawTokens =  departureSearch.tokenfield('getTokens')
         tokens = _.pluck(rawTokens, 'label')
@@ -19,7 +19,7 @@ _eventHandlers = {
           # erase any previous departures
           GritsFilterCriteria.setDepartures(null)
           # set the clicked element as the new origin
-          departureSearchMain = Template.gritsFilter.getDepartureSearchMain()
+          departureSearchMain = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
           departureSearchMain.tokenfield('setTokens', [self._id])
 
           async.nextTick(() ->
