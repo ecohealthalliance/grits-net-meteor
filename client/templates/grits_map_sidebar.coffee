@@ -21,7 +21,7 @@ Template.gritsMapSidebar.events
     map = Template.gritsMap.getInstance()
     _isDrawing = !_isDrawing # toggle
     if _isDrawing
-      _boundingBox = new GritsBoundingBox($(event.target), map)
+      _boundingBox = new GritsBoundingBox($('.sidebar-tabs'), map)
     else
       if _boundingBox != null
         _boundingBox.remove()

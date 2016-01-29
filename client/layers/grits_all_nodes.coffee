@@ -10,7 +10,7 @@ _eventHandlers = {
   click: (element, selection, projection) ->
     self = this
     if not Session.get('grits-net-meteor:isUpdating')
-      departureSearch = Template.gritsFilter.getDepartureSearch()
+      departureSearch = Template.gritsSearchAndAdvancedFiltration.getDepartureSearch()
       if typeof departureSearch != 'undefined'
         rawTokens =  departureSearch.tokenfield('getTokens')
         tokens = _.pluck(rawTokens, 'label')
@@ -22,7 +22,7 @@ _eventHandlers = {
           # erase any previous departures
           GritsFilterCriteria.setDepartures(null)
           # set the clicked element as the new origin
-          departureSearchMain = Template.gritsFilter.getDepartureSearchMain()
+          departureSearchMain = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
           departureSearchMain.tokenfield('setTokens', [self._id])
           map = Template.gritsMap.getInstance()
           pathLayer = map.getGritsLayer('Paths')
@@ -238,7 +238,7 @@ class GritsAllNodesLayer extends GritsLayer
 
   # populates all nodes from the database
   _populateAllNodes: () ->
-    self = this
+    self = this    
     count = 0
     total = Meteor.gritsUtil.airports.length
     processQueue = async.queue(((airport, callback) ->

@@ -44,7 +44,7 @@ _eventHandlers = {
       # update the dataTable
       Template.gritsDataTable.highlightPathTableRow(this)
       # temporarily set the path color to blue
-      d3.select(element).style('stroke', 'blue')
+      d3.select(element).style('stroke', 'rgba(53, 185, 118, 1)')
       # set the _previousPath to this gritsPath
       _previousPath.set(this)
 }

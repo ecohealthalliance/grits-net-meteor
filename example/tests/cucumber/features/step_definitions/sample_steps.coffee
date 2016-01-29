@@ -31,13 +31,17 @@ do ->
       @client.addValue('#departureSearchMain-tokenfield', airportCode)
       @client.keys('Enter')
 
-    @When /^I enter ([^"]*) into the seat filter$/, (seats) ->
-      @client.waitForVisible('#seatsInput')
-      @client.addValue('#seatsInput', seats)
+    @When /^I enter ([^"]*) and ([^"]*) into the seat filter$/, (seatA, seatB) ->
+      @client.waitForVisible('.advancedFilterRow.seats')
+      @client.click('.advancedFilterRow.seats .legend-scale .slider-container .slider .slider-track .min-slider-handle')
+      @client.keys('Right arrow') for i in [0 .. seatA-1]
+      @client.click('.advancedFilterRow.seats .legend-scale .slider-container .slider .slider-track .max-slider-handle')
+      @client.keys('Left arrow') for i in [0 .. (900-seatB-1)]
+
 
     @When /^I enter ([^"]*) into the startDate$/, (startDate) ->
       @client.waitForVisible('#discontinuedDate')
-      @client.addValue('#discontinuedDate .form-control', startDate)
+      @client.setValue('#discontinuedDate .form-control', startDate)
 
     @When /^I click on module ([^"]*)$/, (module) ->
       @client.waitForVisible('#moduleA').click('#moduleA')

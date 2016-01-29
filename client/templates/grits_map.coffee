@@ -1,7 +1,7 @@
-# Template.gritsFilter
+# Template.gritsSearchAndAdvancedFiltration
 #
 # When another meteor app adds grits:grits-net-meteor as a package
-# Template.gritsFilter will be available globally.
+# Template.gritsSearchAndAdvancedFiltration will be available globally.
 _instance = null
 
 # returns the map instance
@@ -31,18 +31,13 @@ addDefaultControls = (map) ->
   elementDetails = new GritsControl('<div id="elementDetailsContainer"></div>', 7, 'bottomright', 'info element-details')
   map.addControl(elementDetails)
   Blaze.render(Template.gritsElementDetails, $('#elementDetailsContainer')[0])
-
-  searchControl = new GritsControl('<div id="searchContainer">', 10, 'topleft', 'info filter-control')
-  map.addControl(searchControl)
-
-  Blaze.render(Template.gritsSearch, $('#searchContainer')[0])
-  Blaze.render(Template.gritsFilter, $('#sidebar-advanced-filter')[0])
+  Blaze.render(Template.gritsSearchAndAdvancedFiltration, $('#sidebar-search-and-advanced-filter')[0])
   Blaze.render(Template.gritsDataTable, $('#sidebar-flightData')[0])
 
 Template.gritsMap.onCreated ->
   # Public API
   # Currently we declare methods above for documentation purposes then assign
-  # to the Template.gritsFilter as a global export
+  # to the Template.gritsSearchAndAdvancedFiltration as a global export
   Template.gritsMap.getInstance = getInstance
   Template.gritsMap.setInstance = setInstance
   Template.gritsMap.addDefaultControls = addDefaultControls

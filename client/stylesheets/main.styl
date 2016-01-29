@@ -1,38 +1,53 @@
-fonts = arial, helvetica, sans-serif
-border-radius()
-  -webkit-border-radius arguments
-  -moz-border-radius arguments
-  border-radius arguments
-filter-tab-content-background-color()
-  background-color #ffffff
-filter-container-width()
-  width: 500px
-dataTable-container-width()
-  width 550px
-layer-container-width()
-  width 550px
+@import 'variables.import'
+@import 'mixins.import'
 
-html, body
-	margin 0
-	padding 0
+@import 'sidebar.import'
 
 body
-	font-family arial
+  primaryFont()
 
 .bootstrap-datetimepicker-widget.dropdown-menu
   position fixed
   font-size small
 
-#elementDetailsContainer
-  width 260px
-  font-size small
+.element-details-container
+  position absolute
+  bottom 10px
+  right 20px
+  min-width 300px
+  border-radius 4px
+  border 5px solid alpha($blue, 80%)
+  font-family $fonts
+  .tab-content
+    padding 10px
+    background $whiteBG
+  .tab-pane
+    min-height 140px
+    .row
+      margin-bottom 3px
+
+.element-details-nav
+  position relative
+  background $whiteBG
+  border-bottom 1px solid rgba(226, 226, 226, 1)
+  > li
+    width auto
+    float left
+    border-right 1px solid #E2E2E2
+    &:last-of-type
+      border-right 0
+    > a
+      color $blue
+  .active
+    background #EFEFEF
+    font-weight bold
 
 .element-details-close
   line-height inherit
-
-.element-details-path, .element-details-node
-  padding 5px
-  height 140px
+  position absolute
+  right 10px
+  top 50%
+  transform translate(0,-50%)
 
 .marker-icon
   cursor pointer
@@ -40,22 +55,73 @@ body
 .tab-content
   overflow-x hidden
   overflow-y auto
-  border-left: 1px solid #ddd
-  border-right: 1px solid #ddd
-  border-bottom: 1px solid #ddd
-  filter-tab-content-background-color()
 
-.nav-tabs > li > a
-  padding 5px 10px
+#filter
+  width 100%
+  .nav-tabs > li
+    font-size 1em
+    color #496c8a
 
-.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus
-  filter-tab-content-background-color()
+  .nav-tabs > li.advFilTab
+    font-size 1em
+
+  .nav-tabs > li > a
+    padding 8px 10px
+
+  .tab-content
+    min-height 300px
+
+.nav-tabs > li.active > a
+.nav-tabs > li.active > a:hover
+.nav-tabs > li.active > a:focus
+  background-color #496c8a
+  color white
+
+.filter-tab-pane
+  padding 20px
+  .filter-group
+    margin-bottom 20px
+
+.filter-tabs
+  display flex
+  border-bottom 1px solid #ddd
+  > li
+    flex 1 0 0
+    align-items center
+    border-bottom 0
+    margin 0
+    float none
+    .fa
+      margin-right 2px
+      color $d-gray
+    > a
+      margin 0
+      display block
+      border-radius 0
+      color $tab-unselected
+      text-align center
+      border 0
+      &:hover
+        background $ll-gray
+    &.active
+      font-weight 700
+      .fa
+        color lighten($body-text,10%)
+      > a
+      > a:hover
+      > a:focus
+        border 0
+        color $body-text
+        background $l-gray
+
+.tableDivider
+  height 3px
+  background-color #496c8a
+  border-left solid #ddd 1px
+
 
 .date > span.input-group-addon
   background-color #ddd
-
-.nav-tabs > li > a
-  padding 5px 10px
 
 #filterContainer
   font-size small
@@ -68,34 +134,30 @@ body
   display none
 
 #filter
-  font-size small
+  // font-size small
   margin-top 0
   filter-container-width()
 
 #sidebar-flightData
+  height 100%
   dataTable-container-width()
 
 #sidebar-layer
   layer-container-width()
-  box-shadow: 0 0px 0px rgba(0,0,0,0);
+  box-shadow 0 0px 0px rgba(0,0,0,0)
+
+.advFilHdr
+  text-align center
+  background-color lighten($m-gray,10%)
+  color #444
+  padding .3em
+  margin-bottom 0
 
 .filter-heading
-  font-size: 16px;
-  font-weight: bold;
-  position: absolute;
-  right: 0;
-  margin: 5px 15px 0px 0;
-  bottom: -25px;
-  color: #333;
-
-.filter-row
-  margin 5px -15px 2px -10px
-
-.filter-first-row
-  margin 9px -15px 2px -10px
-
-.filter-last-row
-  margin 5px -15px 11px -10px
+  font-size 1.2em
+  font-weight bold
+  margin 0
+  color #333
 
 .filter-header
   background-color #eee
@@ -110,6 +172,7 @@ body
   margin 0 0 0 5px
 
 .filter-label
+  font-size 1.1em
   font-weight bold
 
 .filter-group
@@ -117,7 +180,14 @@ body
   padding 2px
 
 .filter-footer
-  margin 2px 0 0 0
+  position absolute
+  bottom 0
+  width $sidebar-width
+  padding-top 20px
+  padding-bottom 20px
+  background $l-gray
+  border-top 3px solid $border-gray
+  font-size .8em
 
 .dow
   padding 0
@@ -129,7 +199,8 @@ body
   word-wrap normal
 
 .tokenized.main
-  max-width 310px
+  max-width 410px
+  background $ll-gray
 
 .tokenized.departure
   max-height 60px
@@ -141,6 +212,9 @@ body
   overflow-x hidden
   overflow-y auto
 
+.token-input
+  font-size 1em
+
 .hamburger
   float left
   margin 2px
@@ -150,26 +224,32 @@ body
 
 .col-status-bar
   padding 0
+  > div
+    padding-right 0
 
 .status-bar-text
+  padding-right 0
+  padding-left 0
   color #333
+  width 70%
   font-style italic
+  text-align right
 
-.status-bar-counter
-  margin 0px 5px 0 5px
+.status-bar-val
+  padding-left 2px
 
 .filter-status
   position relative
   margin-right 5px
   left -2px
-  bottom -8px
+  bottom 8px
   vertical-align middle
   color darkorange
 
 .filter-status-message
   position relative
   left -2px
-  bottom -8px
+  bottom 8px
   font-size smaller
   font-weight bold
   color #333
@@ -182,9 +262,6 @@ body
   font-size 16px
   color #666
   z-index 2000
-
-.searchBar
-  width 300px
 
 .leaflet-container
   background-color #CDD2D4
@@ -260,9 +337,10 @@ p.intro
 
 .my-legend .legend-title
   text-align left
+  margin-left 10px
   margin-bottom 8px
   font-weight bold
-  font-size 90%
+  font-size 22px
 
 .my-legend .legend-scale ul
   margin 0
@@ -273,7 +351,7 @@ p.intro
 .my-legend .legend-scale ul li
   display block
   float left
-  width 74px
+  width 70px
   margin-bottom 6px
   text-align center
   font-size 80%
@@ -283,7 +361,7 @@ p.intro
   display block
   float left
   height 15px
-  width 74px
+  width 70px
 
 .my-legend .legend-source
   font-size 70%
@@ -294,14 +372,20 @@ p.intro
 .my-legend a
   color #777
 
+.my-legend
+  padding 40px 10px
+
 #dataTableContainer
   font-size small
 
 .dataTableContent
-  height 100%
-  width 518px
-  overflow-x inherit
-  overflow-y inherit
+  width 530px
+  height 85%
+  overflow-y scroll
+  overflow-x hidden
+
+.pathsTableContainer
+  bottom 0px
 
 .pathTableRow
   width 350px
@@ -327,6 +411,20 @@ p.intro
 
 .searchBar
   position relative
+  width 100%
+  border-left 0
+  border-right 0
+  background $ll-gray
+  border-top 4px solid $blue
+  border-bottom 1px solid $blue
+  font-size 1em
+
+
+#searchIcon
+  verticallyCenter()
+  left 10px
+  font-size 1.4em
+  color $blue
 
 .twitter-typeahead
   position static !important // Overides typeahead's inline styling
@@ -335,6 +433,9 @@ p.intro
   border-top-left-radius 0
   border-top-right-radius 0
   border 0
+  height 645px
+  overflow-y auto
+  overflow-x hidden
 
 .airport-code
   position absolute
@@ -412,43 +513,187 @@ p.intro
   strong
     color #000
 
-.sidebar-zoom-in
-  overflow hidden
-  position absolute
-  bottom 40px
-  margin 4px
+#flirtTitle
+  background url("/packages/grits_grits-net-meteor/client/images/flirt-logo-inline.png")
+  background-size 325px 73px
+  background-position center center
+  width 325px
+  height 73px
+  margin 30px 0 30px 42px
+  text-indent -9999px
 
-.sidebar-zoom-out
-  overflow hidden
-  position absolute
-  bottom 0
-  margin 4px
+#flirtTitleText
+  float right
+  text-align left
+  margin-right 95px
+  font-size 70px
+  font-weight bold
 
-.fa-white
+#loadMore
+  margin-right 0px
+
+#sidebar-question-tab
+  position absolute
+  bottom 0px
+
+#sidebar-search-tab
+  position absolute
+  top 140px
+
+#sidebar-slider-tab
+  position absolute
+  top 200px
+
+#sidebar-layer-tab
+  position absolute
+  top 260px
+
+.airport-footer
+  position absolute
+  bottom 0px
+
+.include-nearby
+  margin-top 10px
+  margin-bottom 20px
+  text-align center
+  > div
+  input
+    display inline-block
+    vertical-align middle
+  input[type=checkbox]
+    margin 0 3px 0 0
+
+#includeNearbyAirportsRadius
+  text-align center
+
+#milesInput
+  margin 0 2px
+
+.tt-input
+  height 30px
+  font-weight 20px
+
+.tokenfield
+  border-radius 0
+  box-shadow none
+  &.form-control
+    &.input-sm
+      padding-left 40px
+      border 0
+
+.input-group-sm .token
+.tokenfield.input-sm .token
+  min-height 26px
+  font-size 16px
+  margin-top 2px
+  margin-bottom 0
+
+.sliderValIndicator
+  text-align right
+
+ .slider-range-labels
+   margin-top 3px
+
+.sliderValIndicator
+.sliderRangeIndicatorRight
+.sliderRangeIndicatorLeft
+  font-size .9em
+  color $d-gray
+
+.sliderRangeIndicatorRight
+  text-align right
+
+.advancedFilterRow
+  padding 10px 10px 30px 10px
+
+.sidebar-tabs > li:hover
+  color #333
+
+.tablesorter
+  cursor pointer
+  th
+    border solid 1px #ddd
+  .tablesorter-headerDesc
+    div
+      background-image url('../images/desc.png') !important
+      background-size 13px 13px
+      background-repeat no-repeat
+      background-position right center
+
+  .tablesorter-headerAsc
+    div
+      background-image url('../images/asc.png') !important
+      background-size 13px 13px
+      background-repeat no-repeat
+      background-position right center
+
+.limit
+  > div
+    display inline-block
+    vertical-align middle
+
+.limitSearchTitle
+  padding 0
+  margin-right 5px
+
+.limitInput
+  width 75px
+  padding-left 0
+  padding-right 10px
+
+.circle
+  float right
+  width 20px
+  height 20px
+  border-radius 50%
+
+.leaflet-control-layers-base
+.leaflet-control-layers-overlays
+  padding-left 20px
+  padding-right 20px
+
+.sidebar-tabs > li:hover
+  color #333
+  background-color #333
+
+.sidebar-highlight
+  background-color #333
+
+#sidebar-draw-rectangle-tool
+  position absolute
+  width 50px
+  height 60px
+  bottom 60px
+  padding 15px 9px 0px 9px
+
+.sidebar-button
+  opacity .5
+
+.action-menu
+  display none
+  list-style none
+  position absolute
+  bottom 90px
+  right -105px
+  margin-top 5px
+  margin-left 5px
+  padding 0
+  white-space nowrap
+
+.action-menu li
+  display inline-block
+  margin-left 2px
+
+.action-menu div:hover
+  opacity .50
+
+.action-menu-btn
+  background-color #496c8a
   color white
 
-ul > li > a:hover
-  color black
+.action-menu-btn-selected
+  background-color #333
+  opacity .75
 
-.sidebar-tabs > li:hover {
-    color #333
-    background-color #333
-}
-
-table.tablesorter
-  cursor: pointer; cursor: hand;
-
-table.tablesorter th
-    border solid 1px #ddd
-
-table.tablesorter .tablesorter-headerDesc div
-  background-image url('../images/desc.png') !important
-  background-size: 13px 13px;
-  background-repeat: no-repeat
-  background-position right center
-
-table.tablesorter .tablesorter-headerAsc div
-  background-image url('../images/asc.png') !important
-  background-size: 13px 13px;
-  background-repeat: no-repeat
-  background-position right center
+.action-menu span
+  font-size smaller

@@ -1,4 +1,5 @@
 _previousOrigins = [] # array to track state of the heatmap
+HEATMAP_INTENSITY_MULTIPLIER = 30
 # Creates an instance of a GritsHeatmapLayer, extends  GritsLayer
 #
 # @param [Object] map, an instance of GritsMap
@@ -22,7 +23,13 @@ class GritsHeatmapLayer extends GritsLayer
     self._map = map
     self._data = []
 
-    self._layer = L.heatLayer([], {radius: 30, blur: 15, maxZoom: 0})
+    self._layer = new L.TileLayer.WebGLHeatMap(
+      size: 1609.34 * 250 # meters equals 250 miles
+      alphaRange: 0.1
+      gradientTexture: "/packages/grits_grits-net-meteor/client/images/viridis.png"
+      opacity: 0.75
+    )
+
     self._layerGroup = L.layerGroup([self._layer])
     self._map.addOverlayControl(@_displayName, self._layerGroup)
 
@@ -32,13 +39,29 @@ class GritsHeatmapLayer extends GritsLayer
     self._trackDepartures()
     return
 
+  # The heatmap library's gradient doesn't load until the map moves
+  # so this moves the map slightly to make it load.
+  _perturbMap: ()->
+    currentCenter = @_map.getCenter()
+    @_map.setView(
+      lat: currentCenter.lat + 1
+      lng: currentCenter.lng + 1
+    )
+    @_map.setView(currentCenter)
+
   # draws the heatmap
   #
   # @note method overrides the parent class GritsLayer clear method
   # @override
   draw: () ->
     self = this
-    self._layer.setLatLngs(self._data)
+    data = self._data.map((d)->
+      [d[0], d[1], d[2]]
+    )
+    # An extra point with no intensity is added because passing in an empty
+    # array causes a bug where the previous heatmap is frozen in view.
+    self._layer.setData(data.concat([[0.0, 0.0, 0.0]]))
+    self._perturbMap()
     self.hasLoaded.set(true)
     return
 
@@ -49,7 +72,7 @@ class GritsHeatmapLayer extends GritsLayer
   clear: () ->
     self = this
     self._data = []
-    self._layer.setLatLngs(self._data)
+    self._layer.setData(self._data)
     self.hasLoaded.set(false)
     return
 
@@ -127,7 +150,7 @@ class GritsHeatmapLayer extends GritsLayer
         len = heatmaps.length
         for heatmap in heatmaps
           _.each(heatmap.data, (a) ->
-            value = a[2]
+            value = a[2] * HEATMAP_INTENSITY_MULTIPLIER
             if len > 0
               value = value / len
             self._data.push([a[0], a[1], value, a[3]])
@@ -145,7 +168,7 @@ class GritsHeatmapLayer extends GritsLayer
     if _.isUndefined(heatmap)
       return
     _.each(heatmap.data, (a) ->
-      intensity = a[2] * self._getCellSize()
+      intensity = a[2] * HEATMAP_INTENSITY_MULTIPLIER
       self._data.push([a[0], a[1], intensity])
     )
     self.hasLoaded.set(true)
@@ -172,6 +195,7 @@ class GritsHeatmapLayer extends GritsLayer
         if e.name == self._displayName
           if Meteor.gritsUtil.debug
             console.log("#{self._displayName} layer was added")
+        self._perturbMap()
       overlayremove: (e) ->
         if e.name == self._displayName
           if Meteor.gritsUtil.debug

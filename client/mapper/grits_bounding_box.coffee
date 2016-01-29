@@ -22,7 +22,7 @@ class GritsBoundingBox
 
     # underscore templates that represent the action menu and actions
     self._actionMenuTmpl = _.template('<ul id="<%= obj.id %>" class="action-menu"></ul>')
-    self._actionTmpl = _.template('<li><div class="btn btn-sm btn-primary action-menu-<%= obj.name %>"><span><%= obj.name %></span></div></li>')
+    self._actionTmpl = _.template('<li><div class="btn btn-sm btn-primary action-menu-btn" id="action-menu-<%= obj.name %>"><span><%= obj.name %></span></div></li>')
     self._actions = {} # container for the actions of the action menu
 
     # the starting coordinate of the bounding box
@@ -88,13 +88,13 @@ class GritsBoundingBox
     self = this
     self._selecting = true
     self._bindMapEvents()
-    $('.action-menu-Select').css({opacity: 0.35})
+    $('#action-menu-Select').addClass('action-menu-btn-selected')
   # turns off select mode
   _selectOff: () ->
     self = this
     self._selecting = false
     self._unbindMapEvents()
-    $('.action-menu-Select').css({opacity: 0.75})
+    $('#action-menu-Select').removeClass('action-menu-btn-selected')
     return
   # adds an action to the action menu item
   #
@@ -103,19 +103,15 @@ class GritsBoundingBox
   addAction: (name, handler) ->
     self = this
     self._actionMenu.append(self._actionTmpl({name: name}))
-    $action = $('.action-menu-'+name)
+    $action = $('#action-menu-'+name)
     $action.on('click', handler)
     self._actions[name] = $action
   # builds the action menu to show on the DOM
   _buildActionMenu: () ->
     self = this
     self._actionMenuId = uuid.v4()
-    self._actionMenu = $(self._actionMenuTmpl({id: self._actionMenuId})).appendTo('body')
-    width = self._container.innerWidth()
-    height = self._container.innerWidth()
-    top = self._container.offset().top
-    left = self._container.offset().left
-    self._actionMenu.css({top: top, left: (left + width)}).show()
+    self._actionMenu = $(self._actionMenuTmpl({id: self._actionMenuId})).appendTo(self._container)
+    self._actionMenu.show()
     return
   # onmouseup event handler
   onMouseUp: (e) ->
@@ -177,7 +173,7 @@ class GritsBoundingBox
       # erase any previous departures
       GritsFilterCriteria.setDepartures(null)
       # set the meta node as the new origin
-      departureSearchMain = Template.gritsFilter.getDepartureSearchMain()
+      departureSearchMain = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
       departureSearchMain.tokenfield('setTokens', metaNode._id)
       async.nextTick(() ->
         # apply the filter
