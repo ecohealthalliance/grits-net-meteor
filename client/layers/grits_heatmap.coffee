@@ -126,6 +126,20 @@ class GritsHeatmapLayer extends GritsLayer
         self.draw()
         return
 
+      # handle any metaNodes
+      modifiedDepartures = []
+      _.each(departures, (token) ->
+        if (token.indexOf(GritsMetaNode.PREFIX) >= 0)
+          node = GritsMetaNode.find(token)
+          if node == null
+            return
+          if (node.hasOwnProperty('_children'))
+            modifiedDepartures = _.union(modifiedDepartures, _.pluck(node._children, '_id'))
+        else
+          modifiedDepartures = _.union(modifiedDepartures, token)
+      )
+      departures = modifiedDepartures
+
       # update the heatmap data
       Meteor.call('findHeatmapsByCodes', departures, (err, heatmaps) ->
         if err

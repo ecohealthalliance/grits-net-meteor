@@ -279,7 +279,7 @@ Template.gritsSearchAndAdvancedFiltration.onCreated ->
 
   # Public API
   # Currently we declare methods above for documentation purposes then assign
-  # to the Template.gritsFilter as a global export
+  # to the Template.gritsSearchAndAdvancedFiltration as a global export
   Template.gritsSearchAndAdvancedFiltration.getOrigin = getOrigin
   Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain = getDepartureSearchMain
   Template.gritsSearchAndAdvancedFiltration.getDepartureSearch = getDepartureSearch
@@ -422,7 +422,8 @@ Template.gritsSearchAndAdvancedFiltration.onRendered ->
 
     # update the ajax-loader
     isUpdating = Session.get 'grits-net-meteor:isUpdating'
-    if isUpdating
+    # do not show the filter spinner if the overlay isLoading
+    if isUpdating && !Template.gritsOverlay.isLoading()
       $('#applyFilter').prop('disabled', true)
       $('#filterLoading').show()
     else
@@ -563,6 +564,10 @@ Template.gritsSearchAndAdvancedFiltration.events
       toastr.error('Include Nearby requires a Departure')
       return false
 
+    if (departures[0].indexOf(GritsMetaNode.PREFIX) >= 0)
+      toastr.error('Include Nearby does not work with MetaNodes')
+      return false
+
     if $('#includeNearbyAirports').is(':checked')
       Session.set('grits-net-meteor:isUpdating', true)
       Meteor.call('findNearbyAirports', departures[0], miles, (err, airports) ->
@@ -599,7 +604,7 @@ Template.gritsSearchAndAdvancedFiltration.events
     $container.find('.tt-dropdown-menu').css('z-index', 999999)
     $container.find('.token-input.tt-input').css('height', '30px')
     $container.find('.token-input.tt-input').css('font-size', '20px')
-    $container.find('.tokenized.main').prepend($("#searchIcon"))    
+    $container.find('.tokenized.main').prepend($("#searchIcon"))
     $('#'+id+'-tokenfield').on('blur', (e) ->
       # only allow tokens
       $container.find('.token-input.tt-input').val("")

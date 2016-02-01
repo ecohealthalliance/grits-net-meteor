@@ -113,6 +113,7 @@ class GritsNodeLayer extends GritsLayer
     self = this
     self._layer.draw()
     self._moveOriginsToTop()
+    self._moveMetaNodeBoxesToBottom()
     # set visiblePaths to the current paths on every draw so that current slider
     # inputs are applied.
     min = self.min.get()
@@ -154,13 +155,25 @@ class GritsNodeLayer extends GritsLayer
   # moves the origins to the top of the node layer
   _moveOriginsToTop: () ->
     self = this
-    origins = self.getOrigins()
-    _.each(origins, (node) ->
-      $n = $('#'+self.getElementID(node))
-      $g = $n.closest('g')
-      $n.detach().appendTo($g)
+    originMarkers = $('.origin.marker-icon')
+    _.each(originMarkers, (el) ->
+      $g = $(el).closest('g')
+      $(el).detach().appendTo($g)
+    )
+    metaNodeLabels = $('.origin.metanode-label')
+    _.each(metaNodeLabels, (el) ->
+      $g = $(el).closest('g')
+      $(el).detach().appendTo($g)
     )
     return
+
+  _moveMetaNodeBoxesToBottom: () ->
+    self = this
+    metaNodeBoxes = $('.origin.metanode-bounding-box')
+    _.each(metaNodeBoxes, (el) ->
+      $g = $(el).closest('g')
+      $(el).detach().prependTo($g)
+    )
 
   # gets the nodes from the layer
   #
@@ -320,19 +333,23 @@ class GritsNodeLayer extends GritsLayer
     self = this
 
     origins = self.getOrigins()
-    originCount = origins.length
-    if originCount <= 0
-      return
-
-    count = 0
-    lastNode = null
+    metaNodes = _.filter(origins, (origin) ->
+      if origin instanceof GritsMetaNode
+        return origin
+    )
     # select any existing circles and store data onto elements
     originMarkers = selection.selectAll('.origin.marker-icon').data(origins, (node) ->
-      count++
-      if count == originCount
-        lastNode = node
       return node._id
     )
+    # select any existing metanode labels and store data onto elements
+    metaNodeLabels = selection.selectAll('.origin.metanode-label').data(metaNodes, (node) ->
+      return node._id
+    )
+    # select any existing metanode boxes and store data onto elements
+    metaNodeBoxes = selection.selectAll('.origin.metanode-bounding-box').data(metaNodes, (node) ->
+      return node._id
+    )
+
     #work on existing origins (update projection)
     originMarkers
       .attr('x', (node) ->
@@ -351,6 +368,42 @@ class GritsNodeLayer extends GritsLayer
       )
       .sort((a,b) ->
         return d3.descending(a.latLng[0], b.latLng[0])
+      )
+
+    #work on existing origins (update projection)
+    metaNodeLabels
+      .attr('x', (node) ->
+        return self._projectTextX(projection, node)
+      )
+      .attr('y', (node) ->
+        return self._projectTextY(projection, node)
+      )
+      .attr('dy', (node) ->
+        if typeof node.fontSize != 'undefined'
+          return (node.fontSize / projection.scale) + 'pt'
+        else
+          return '0pt'
+      )
+      .attr('font-size', (node) ->
+        if typeof node.fontSize != 'undefined'
+          return (node.fontSize / projection.scale) + 'pt'
+        else
+          return '0pt'
+      )
+
+    #work on existing boxes (update projection)
+    metaNodeBoxes
+      .attr('x', (node) ->
+        return self._projectRectX(projection, node)
+      )
+      .attr('y', (node) ->
+        return self._projectRectY(projection, node)
+      )
+      .attr('width', (node) ->
+        return self._projectRectWidth(projection, node)
+      )
+      .attr('height', (node) ->
+        return self._projectRectHeight(projection, node)
       )
 
     # add new elements workflow (following https://github.com/mbostock/d3/wiki/Selections#enter )
@@ -399,7 +452,104 @@ class GritsNodeLayer extends GritsLayer
         return
       )
     originMarkers.exit()
+
+    metaNodeLabels.enter().append('text')
+      .attr('x', (node) ->
+        return self._projectTextX(projection, node)
+      )
+      .attr('y', (node) ->
+        return self._projectTextY(projection, node)
+      )
+      .attr('dy', (node) ->
+        if typeof node.fontSize != 'undefined'
+          return (node.fontSize / projection.scale) + 'pt'
+        else
+          return '0pt'
+      )
+      .attr('font-size', (node) ->
+        if typeof node.fontSize != 'undefined'
+          return (node.fontSize / projection.scale) + 'pt'
+        else
+          return '0pt'
+      )
+      .attr('font-weight', 'bold')
+      .attr('class', (node) ->
+        return 'origin metanode-label'
+      )
+      .text((node) ->
+        if node instanceof GritsMetaNode
+          return node._children.length
+        else
+          return node._id
+      )
+    metaNodeLabels.exit()
+
+    metaNodeBoxes.enter().append('rect')
+      .attr('x', (node) ->
+        return self._projectRectX(projection, node)
+      )
+      .attr('y', (node) ->
+        return self._projectRectY(projection, node)
+      )
+      .attr('class', (node) ->
+        return 'origin metanode-bounding-box'
+      )
+      .attr('width', (node) ->
+        return self._projectRectWidth(projection, node)
+      )
+      .attr('height', (node) ->
+        return self._projectRectHeight(projection, node)
+      )
+      .attr('style', (node) ->
+        style = node.getBoxStyle()
+        return style
+      )
+    metaNodeBoxes.exit()
     return
+
+  _projectTextX: (projection, node, initialTextWidth) ->
+    x = projection.latLngToLayerPoint(node.latLng).x
+    if typeof node.labelMetrics != 'undefined'
+      return x - ((node.labelMetrics.width/2)/projection.scale)
+    else
+      return x - (1/projection.scale)
+
+  _projectTextY: (projection, node) ->
+    y = projection.latLngToLayerPoint(node.latLng).y
+    if typeof node.labelMetrics != 'undefined'
+      return y - ((node.labelMetrics.height/2)/projection.scale)
+    else
+      return y - (1/projection.scale)
+
+  _projectRectX: (projection, node) ->
+    if typeof node.bounds != 'undefined'
+      x = projection.latLngToLayerPoint(node.bounds.getNorthWest()).x
+      return x
+    else
+      return 0
+
+  _projectRectY: (projection, node) ->
+    if typeof node.bounds != 'undefined'
+      y = projection.latLngToLayerPoint(node.bounds.getNorthWest()).y
+      return y
+    else
+      return 0
+
+  _projectRectWidth: (projection, node) ->
+    if typeof node.bounds != 'undefined'
+      x1 = projection.latLngToLayerPoint(node.bounds.getNorthWest()).x
+      x2 = projection.latLngToLayerPoint(node.bounds.getNorthEast()).x
+      return Math.abs(x2-x1)
+    else
+      return 0
+
+  _projectRectHeight: (projection, node) ->
+    if typeof node.bounds != 'undefined'
+      y1 = projection.latLngToLayerPoint(node.bounds.getNorthWest()).y
+      y2 = projection.latLngToLayerPoint(node.bounds.getSouthWest()).y
+      return Math.abs(y2-y1)
+    else
+      return 0
 
   _projectCX: (projection, node) ->
     x = projection.latLngToLayerPoint(node.latLng).x
@@ -414,31 +564,63 @@ class GritsNodeLayer extends GritsLayer
   # converts domain specific flight data into generic GritsNode nodes
   #
   # @param [Object] flight, an Astronomy class 'Flight' represending a single record from a MongoDB collection
-  # @param [Array] list of queryOrigins (_id) from the query that should be exclude from the throughput
+  # @param [Array] list of originTokens (_id) from the query that should be exclude from the throughput
   # @return [Array] array containing the [originNode, destinationNode]
-  convertFlight: (flight, level, queryOrigins) ->
+  convertFlight: (flight, level, originTokens) ->
     self = this
+
+    # container to be populated with set of metanode's children
+    metaNodeChildren = {}
+    # does a metaToken exist in the originTokens from GritsFilterCriteria?
+    metaToken = _.find(originTokens, (token) -> return token.indexOf(GritsMetaNode.PREFIX) >= 0)
+    if typeof metaToken != 'undefined'
+      # metanodes are previously created by the GritsBoundingBox
+      metaNode = GritsMetaNode.find(metaToken)
+      if metaNode != null
+        # set eventHandlers
+        if metaNode.hasOwnProperty('eventHandlers')
+          if Object.keys(metaNode.eventHandlers) <= 0
+            metaNode.setEventHandlers(_eventHandlers)
+        # add metanode to the layer data
+        self._data[metaToken] = metaNode
+        # metanodes are always origins
+        metaNode.isOrigin = true
+        # place children into a set
+        _.each(metaNode._children, (child) ->
+          tokens = metaNodeChildren[child._id]
+          if typeof tokens == 'undefined'
+            tokens = {}
+          tokens[metaToken] = metaToken
+          metaNodeChildren[child._id] = tokens
+        )
+
     originNode = null
     destinationNode = null
     # the departureAirport of the flight
     origin = flight.departureAirport
-    if (typeof origin != "undefined" and origin != null and origin.hasOwnProperty('_id'))
-      originNode = self._data[origin._id]
-      if (typeof originNode == "undefined" or originNode == null)
-        try
-          marker = new GritsMarker(_size[0], _size[1], _colorScale)
-          originNode = new GritsNode(origin, marker)
-          originNode.level = level
-          originNode.setEventHandlers(_eventHandlers)
-          originNode.outgoingThroughput = flight.totalSeats
-          if originNode._id in queryOrigins
-            originNode.isOrigin = true
-        catch e
-          console.error(e.message)
-          return
-        self._data[origin._id] = originNode
+    if (typeof origin != 'undefined' and origin != null and origin.hasOwnProperty('_id'))
+      if origin._id in Object.keys(metaNodeChildren)
+        node = self._data[metaToken]
+        node.level = level
+        node.outgoingThroughput += flight.totalSeats
+        originNode = node
       else
-        originNode.outgoingThroughput += flight.totalSeats
+        originNode = self._data[origin._id]
+        if (typeof originNode == 'undefined' or originNode == null)
+          try
+            marker = new GritsMarker(_size[0], _size[1], _colorScale)
+            originNode = new GritsNode(origin, marker)
+            originNode.level = level
+            originNode.setEventHandlers(_eventHandlers)
+            originNode.outgoingThroughput = flight.totalSeats
+            if originNode._id in originTokens
+              originNode.isOrigin = true
+          catch e
+            console.error(e.message)
+            return [null, null]
+          self._data[origin._id] = originNode
+        else
+          originNode.outgoingThroughput += flight.totalSeats
 
     # the arrivalAirport of the flight
     destination = flight.arrivalAirport
@@ -448,6 +630,13 @@ class GritsNodeLayer extends GritsLayer
         try
           marker = new GritsMarker(_size[0], _size[1], _colorScale)
           destinationNode = new GritsNode(destination, marker)
+
+          # if the originNode is a metaNode, check the destination to be within
+          # its bounds, if so discard.
+          if originNode instanceof GritsMetaNode
+            if originNode.bounds.contains(new L.LatLng(destinationNode.latLng[0], destinationNode.latLng[1]))
+              return [null, null]
+
           destinationNode.level = level
           destinationNode.setEventHandlers(_eventHandlers)
           destinationNode.incomingThroughput = flight.totalSeats
@@ -481,27 +670,27 @@ class GritsNodeLayer extends GritsLayer
     self = this
     np = self._getNormalizedThroughput(node)
     if np < 10
-      node.color = _colorScale[10]
+      node.color = node.marker.colorScale[10]
     else if np < 20
-      node.color = _colorScale[20]
+      node.color = node.marker.colorScale[20]
     else if np < 30
-      node.color = _colorScale[30]
+      node.color = node.marker.colorScale[30]
     else if np < 40
-      node.color = _colorScale[40]
+      node.color = node.marker.colorScale[40]
     else if np < 50
-      node.color = _colorScale[50]
+      node.color = node.marker.colorScale[50]
     else if np < 60
-      node.color = _colorScale[60]
+      node.color = node.marker.colorScale[60]
     else if np < 70
-      node.color = _colorScale[70]
+      node.color = node.marker.colorScale[70]
     else if np < 80
-      node.color = _colorScale[80]
+      node.color = node.marker.colorScale[80]
     else if np < 90
-      node.color = _colorScale[90]
+      node.color = node.marker.colorScale[90]
     else if np <= 100
-      node.color = _colorScale[100]
+      node.color = node.marker.colorScale[100]
     else
-      node.color = _colorScale[10]
+      node.color = node.marker.colorScale[10]
     return node.color
 
   # returns the visible paths based on min,max values

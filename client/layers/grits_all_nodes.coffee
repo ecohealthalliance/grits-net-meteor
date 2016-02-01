@@ -10,7 +10,7 @@ _eventHandlers = {
   click: (element, selection, projection) ->
     self = this
     if not Session.get('grits-net-meteor:isUpdating')
-      departureSearch = Template.gritsFilter.getDepartureSearch()
+      departureSearch = Template.gritsSearchAndAdvancedFiltration.getDepartureSearch()
       if typeof departureSearch != 'undefined'
         rawTokens =  departureSearch.tokenfield('getTokens')
         tokens = _.pluck(rawTokens, 'label')
@@ -22,7 +22,7 @@ _eventHandlers = {
           # erase any previous departures
           GritsFilterCriteria.setDepartures(null)
           # set the clicked element as the new origin
-          departureSearchMain = Template.gritsFilter.getDepartureSearchMain()
+          departureSearchMain = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
           departureSearchMain.tokenfield('setTokens', [self._id])
           map = Template.gritsMap.getInstance()
           pathLayer = map.getGritsLayer('Paths')
@@ -96,8 +96,11 @@ class GritsAllNodesLayer extends GritsLayer
   # adds the layer
   #
   add: () ->
+    Template.gritsOverlay.show()
     self = this
-    self._addLayerGroup()
+    setTimeout(() ->
+      self._addLayerGroup()
+    , 125)
 
   # removes the layerGroup from the map
   #
@@ -252,6 +255,8 @@ class GritsAllNodesLayer extends GritsLayer
 
     processQueue.drain = () ->
       self.hasLoaded.set(true)
+      # save some memory and delete the airports collection
+      delete Meteor.gritsUtil.airports
 
     processQueue.push(Meteor.gritsUtil.airports) #collection from startup.coffee
     return
@@ -265,9 +270,9 @@ class GritsAllNodesLayer extends GritsLayer
     self._map.on(
       overlayadd: (e) ->
         if e.name == self._displayName
+          Template.gritsOverlay.hide()
           if !self.hasLoaded.get()
             toastr.warning('The layer has not finished loading')
-            return
           if Meteor.gritsUtil.debug
             console.log("#{self._displayName} layer was added")
       overlayremove: (e) ->

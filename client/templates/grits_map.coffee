@@ -1,7 +1,7 @@
-# Template.gritsFilter
+# Template.gritsSearchAndAdvancedFiltration
 #
 # When another meteor app adds grits:grits-net-meteor as a package
-# Template.gritsFilter will be available globally.
+# Template.gritsSearchAndAdvancedFiltration will be available globally.
 _instance = null
 
 # returns the map instance
@@ -37,7 +37,7 @@ addDefaultControls = (map) ->
 Template.gritsMap.onCreated ->
   # Public API
   # Currently we declare methods above for documentation purposes then assign
-  # to the Template.gritsFilter as a global export
+  # to the Template.gritsSearchAndAdvancedFiltration as a global export
   Template.gritsMap.getInstance = getInstance
   Template.gritsMap.setInstance = setInstance
   Template.gritsMap.addDefaultControls = addDefaultControls
