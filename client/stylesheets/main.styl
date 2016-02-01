@@ -58,6 +58,8 @@ body
 
 #filter
   width 100%
+  .nav-tabs
+    border 0
   .nav-tabs > li
     font-size 1em
     color #496c8a
@@ -77,20 +79,23 @@ body
   background-color #496c8a
   color white
 
+
 .filter-tab-pane
   padding 20px
   .filter-group
-    margin-bottom 20px
+    margin-right 10px
+    margin-left 10px
+    margin-bottom 25px
 
 .filter-tabs
   display flex
-  border-bottom 1px solid #ddd
   > li
     flex 1 0 0
     align-items center
     border-bottom 0
     margin 0
     float none
+    border-bottom 1px solid #ddd
     .fa
       margin-right 2px
       color $d-gray
@@ -105,6 +110,7 @@ body
         background $ll-gray
     &.active
       font-weight 700
+      border-color $m-gray
       .fa
         color lighten($body-text,10%)
       > a
@@ -164,6 +170,9 @@ body
   padding 5px
   min-width initial
   border-radius 2px
+
+.filter-first-row
+  margin-bottom 5px
 
 .filter-title
   display inline
@@ -335,45 +344,46 @@ p.intro
 	.notice
 		font-size 11px
 
-.my-legend .legend-title
-  text-align left
-  margin-left 10px
-  margin-bottom 8px
-  font-weight bold
-  font-size 22px
-
-.my-legend .legend-scale ul
-  margin 0
-  padding 0
-  float left
-  list-style none
-
-.my-legend .legend-scale ul li
-  display block
-  float left
-  width 70px
-  margin-bottom 6px
-  text-align center
-  font-size 80%
-  list-style none
-
-.my-legend ul.legend-labels li span
-  display block
-  float left
-  height 15px
-  width 70px
-
-.my-legend .legend-source
-  font-size 70%
-  color #999
-  clear both
-  width 200px
-
-.my-legend a
-  color #777
-
 .my-legend
-  padding 40px 10px
+  padding 40px 40px 40px 35px
+  .legend-title
+    margin-bottom 8px
+    font-weight 600
+    font-size 20px
+
+  .legend-scale ul
+    margin 0
+    padding 0
+    list-style none
+    display flex
+
+  .legend-scale
+    ul
+      li
+        display block
+        flex-grow 1
+        text-align center
+        font-size 80%
+        list-style none
+
+  ul.legend-labels
+    margin-top 5px
+    border-radius 4px
+    li
+      span
+        display block
+        height 15px
+
+  .legend-source
+    font-size 70%
+    color #999
+    width 100%
+    margin-top 20px
+    text-align center
+
+  a
+    color #777
+
 
 #dataTableContainer
   font-size small
@@ -471,26 +481,41 @@ p.intro
 .pager
   display inline
 
-.slider-container
-  margin 0 10px 0 30px
-
 .slider.slider-horizontal
   width 250px
   cursor pointer
 
-.slider.slider-horizontal .slider-handle
-  margin-left -7px
-  margin-top -3px
+.slider-wrapper
+  margin-bottom 50px
+
+.slider
+  &.slider-horizontal
+    .slider-handle
+      margin-left -7px
+      margin-top -6px
 
 .slider-handle
-  width 15px
-  height 15px
+  width 22px
+  height 22px
+  border 2px solid white
+  background lighten($blue, 10%)
+  transition background .1s
+  &:focus
+    outline 0
+    border-color darken($blue, 30%)
+    background darken($blue, 10%)
+  &:active
+    background $green
+    border-color white
 
 .min-slider-handle
   opacity 1
 
 .max-slider-handle
   opacity 1
+
+.slider-track
+  background-image: linear-gradient(to bottom, $ll-gray 0%, $l-gray 100%)
 
 .slider-selection
   background-image none
@@ -584,9 +609,6 @@ p.intro
   margin-top 2px
   margin-bottom 0
 
-.sliderValIndicator
-  text-align right
-
  .slider-range-labels
    margin-top 3px
 
@@ -594,13 +616,23 @@ p.intro
 .sliderRangeIndicatorRight
 .sliderRangeIndicatorLeft
   font-size .9em
-  color $d-gray
+  color darken($d-gray, 20%)
+
+.sliderValIndicator
+  text-align right
+  font-weight 600
+
+.sliderRangeIndicatorRight
+.sliderRangeIndicatorLeft
+  margin-top 3px
+  width 50%
+  word-wrap break-word
 
 .sliderRangeIndicatorRight
   text-align right
 
 .advancedFilterRow
-  padding 10px 10px 30px 10px
+  padding 10px 15px 30px 10px
 
 .sidebar-tabs > li:hover
   color #333
