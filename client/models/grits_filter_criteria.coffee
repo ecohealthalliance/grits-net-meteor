@@ -277,7 +277,7 @@ class GritsFilterCriteria
     processQueue = async.queue(((flight, callback) ->
       nodes = nodeLayer.convertFlight(flight, 1, self.departures.get())
       pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
-      async.nextTick ->        
+      async.nextTick ->
         Session.set('grits-net-meteor:loadedRecords', ++count)
         callback()
     ), 4)
