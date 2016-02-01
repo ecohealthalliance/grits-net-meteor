@@ -115,6 +115,8 @@ class GritsPathLayer extends GritsLayer
   # @override
   draw: () ->
     self = this
+    self._map.removeLayer(self._layer)
+    self._map.addLayer(self._layer)
     self._layer.draw()
     # set visiblePaths to the current paths on every draw so that current slider
     # inputs are applied.
@@ -195,7 +197,7 @@ class GritsPathLayer extends GritsLayer
       .attr('class', 'arrowHead')
 
     paths = _.sortBy(self.getPaths(), (path) ->
-      return path.destination.latLng[0] * -1
+      return path.throughput
     )
 
     pathCount = paths.length
