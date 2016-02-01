@@ -600,15 +600,7 @@ class GritsFilterCriteria
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
     # the call to change did not come from the UI
-    if _.isEqual(self.stops.get(), {value: value, operator: operator})
-      # the reactive var is already set, change is from the UI
-      if _.isNull(value)
-        self.remove('stops')
-      else
-        self.createOrUpdate('stops', {key: 'stops', operator: operator, value: value, operator2: operator2, value2: value2})
-    else
-      self.stops.set({'value': value, 'operator': operator})
-      $('#stopsOperator').val(operator)
+    self.createOrUpdate('stops', {key: 'stops', operator: operator, value: value, operator2: operator2, value2: value2})
     return
   trackStops: () ->
     self = this
