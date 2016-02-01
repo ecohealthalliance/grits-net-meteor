@@ -291,6 +291,9 @@ class GritsFilterCriteria
         return
       pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
       async.nextTick ->
+        if !(count % 100)
+          nodeLayer.draw()
+          pathLayer.draw()
         Session.set('grits-net-meteor:loadedRecords', ++count)
         callback()
     ), 4)
