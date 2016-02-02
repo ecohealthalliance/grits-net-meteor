@@ -42,14 +42,14 @@ class GritsMap extends L.Map
 
     height = @_options.height
     document.getElementById(@_element).style.height = height + 'px'
-    
+
     for layer in @_options.layers
       @_gritsTileLayers[layer.options.layerName] = layer
-    
+
     @_options.layers = [@_options.layers[0]]
     super(@_element, @_options)
-    
-    @_drawOverlayControls()  
+
+    @_drawOverlayControls()
     return
 
   # adds a layer reference to the map object
@@ -96,6 +96,9 @@ class GritsMap extends L.Map
   addOverlayControl: (layerName, layerGroup) ->
     @_gritsOverlays[layerName] = layerGroup
     @_drawOverlayControls()
+    $("#sidebar-layer").empty()
+    $("#sidebar-layer").append($(".leaflet-control-layers-list"))
+    $(".leaflet-control-layers-toggle").hide()
     return
 
   # removes overlay control from the map
