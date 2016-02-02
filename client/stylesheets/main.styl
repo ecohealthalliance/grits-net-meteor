@@ -602,9 +602,6 @@ p.intro
 .advancedFilterRow
   padding 10px 10px 30px 10px
 
-.sidebar-tabs > li:hover
-  color #333
-
 .tablesorter
   cursor pointer
   th
@@ -654,20 +651,25 @@ p.intro
 
 .sidebar-tabs > li:hover
   color #333
-  background-color #333
 
 .sidebar-highlight
-  background-color #333
+  color #333
 
 #sidebar-draw-rectangle-tool
+  opacity .5
   position absolute
   width 50px
   height 60px
-  bottom 60px
+  bottom 75px
   padding 15px 9px 0px 9px
+  cursor pointer
+  cursor hand
 
-.sidebar-button
-  opacity .5
+#sidebar-draw-rectangle-tool:hover
+  opacity .75
+
+#sidebar-draw-rectangle-tool.sidebar-highlight
+  opacity 1
 
 .action-menu
   display none
