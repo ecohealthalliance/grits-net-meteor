@@ -1,0 +1,41 @@
+// #tableSidebar
+
+#sidebar-flightData-tab
+  verticallyCenter()
+  background alpha($blue, 90%)
+  border-radius 4px
+  height 32px
+  line-height 40px
+
+#sidebar-flightData-tab
+  right 25%
+  height 60px
+  border-top-left-radius 4px
+  border-bottom-left-radius 4px
+  border-top-right-radius 0
+  border-bottom-right-radius 0
+  width auto
+  min-width 75%
+  background $blue-transparent
+  > a
+    line-height normal
+    display flex
+    align-items center
+    position absolute
+    top 50%
+    transform translate(0,-50%)
+    font-size 1.25em
+    color white
+    transition background .2s
+    &:hover
+      background darken($blue-transparent, 30%)
+    .fa
+      margin 0 3px
+      &:first-of-type
+        margin-left 5px
+  &.active
+    min-width 40%
+    > a
+      .fa-white-table
+        display none
+

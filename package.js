@@ -47,6 +47,7 @@ Package.on_use(function(api){
     'client/stylesheets/variables.import.styl',
     'client/stylesheets/mixins.import.styl',
     'client/stylesheets/sidebar.import.styl',
+    'client/stylesheets/sidebar_table.import.styl',
     'client/stylesheets/main.styl',
     'client/stylesheets/overlay.styl',
     'client/lib/L.D3SvgOverlay.min.js',

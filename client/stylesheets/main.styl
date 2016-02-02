@@ -2,6 +2,7 @@
 @import 'mixins.import'
 
 @import 'sidebar.import'
+@import 'sidebar_table.import'
 
 body
   primaryFont()
@@ -16,7 +17,7 @@ body
   right 20px
   min-width 300px
   border-radius 4px
-  border 5px solid alpha($blue, 80%)
+  border 5px solid $blue-transparent
   font-family $fonts
   .tab-content
     padding 10px
@@ -62,7 +63,7 @@ body
     border 0
   .nav-tabs > li
     font-size 1em
-    color #496c8a
+    color $blue
 
   .nav-tabs > li.advFilTab
     font-size 1em
@@ -76,7 +77,7 @@ body
 .nav-tabs > li.active > a
 .nav-tabs > li.active > a:hover
 .nav-tabs > li.active > a:focus
-  background-color #496c8a
+  background-color $blue
   color white
 
 
@@ -122,7 +123,7 @@ body
 
 .tableDivider
   height 3px
-  background-color #496c8a
+  background-color $blue
   border-left solid #ddd 1px
 
 
@@ -720,7 +721,7 @@ p.intro
   opacity .50
 
 .action-menu-btn
-  background-color #496c8a
+  background-color $blue
   color white
 
 .action-menu-btn-selected
