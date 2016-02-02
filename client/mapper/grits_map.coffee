@@ -23,7 +23,6 @@ class GritsMap extends L.Map
 
     if typeof options == 'undefined'
       @_options = {
-        height: window.innerHeight
         center: [37.8, -92]
         zoomControl: false
         noWrap: true
@@ -36,12 +35,6 @@ class GritsMap extends L.Map
 
     if typeof @_options.layers == 'undefined'
       @_options.layers = [OpenStreetMap]
-
-    if typeof @_options.height == 'undefined'
-      @_options.height = window.innerHeight;
-
-    height = @_options.height
-    document.getElementById(@_element).style.height = height + 'px'
 
     for layer in @_options.layers
       @_gritsTileLayers[layer.options.layerName] = layer
