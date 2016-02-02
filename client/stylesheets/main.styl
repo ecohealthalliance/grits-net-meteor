@@ -1,6 +1,8 @@
 @import 'variables.import'
 @import 'mixins.import'
 
+@import 'globals.import'
+
 @import 'sidebar.import'
 @import 'sidebar_table.import'
 
@@ -59,18 +61,6 @@ body
 
 #filter
   width 100%
-  .nav-tabs
-    border 0
-  .nav-tabs > li
-    font-size 1em
-    color $blue
-
-  .nav-tabs > li.advFilTab
-    font-size 1em
-
-  .nav-tabs > li > a
-    padding 8px 10px
-
   .tab-content
     min-height 300px
 
@@ -89,37 +79,7 @@ body
     margin-bottom 25px
 
 .filter-tabs
-  display flex
-  > li
-    flex 1 0 0
-    align-items center
-    border-bottom 0
-    margin 0
-    float none
-    border-bottom 1px solid #ddd
-    .fa
-      margin-right 2px
-      color $d-gray
-    > a
-      margin 0
-      display block
-      border-radius 0
-      color $tab-unselected
-      text-align center
-      border 0
-      &:hover
-        background $ll-gray
-    &.active
-      font-weight 700
-      border-color $m-gray
-      .fa
-        color lighten($body-text,10%)
-      > a
-      > a:hover
-      > a:focus
-        border 0
-        color $body-text
-        background $l-gray
+  flexTabs(none, $l-gray, $ll-gray)
 
 .tableDivider
   height 3px
@@ -144,10 +104,6 @@ body
   // font-size small
   margin-top 0
   filter-container-width()
-
-#sidebar-flightData
-  height 100%
-  dataTable-container-width()
 
 #sidebar-layer
   layer-container-width()
@@ -190,13 +146,12 @@ body
   padding 2px
 
 .filter-footer
+  @extend .sidebar-footer
   position absolute
   bottom 0
   width $sidebar-width
   padding-top 20px
   padding-bottom 20px
-  background $l-gray
-  border-top 3px solid $border-gray
   font-size .8em
 
 .dow
@@ -385,31 +340,6 @@ p.intro
   a
     color #777
 
-
-#dataTableContainer
-  font-size small
-
-.dataTableContent
-  width 530px
-  height 85%
-  overflow-y scroll
-  overflow-x hidden
-
-.pathsTableContainer
-  bottom 0px
-
-.pathTableRow
-  width 350px
-  text-align center
-  cursor pointer
-  cursor hand
-
-.nodeTableRow, .heatmapTableRow
-  width 350px
-  text-align center
-
-.activeRow
-  background-color #d9fafe
 
 .leaflet-heatmap-layer
   z-index -1
@@ -637,24 +567,6 @@ p.intro
 
 .sidebar-tabs > li:hover
   color #333
-
-.tablesorter
-  cursor pointer
-  th
-    border solid 1px #ddd
-  .tablesorter-headerDesc
-    div
-      background-image url('../images/desc.png') !important
-      background-size 13px 13px
-      background-repeat no-repeat
-      background-position right center
-
-  .tablesorter-headerAsc
-    div
-      background-image url('../images/asc.png') !important
-      background-size 13px 13px
-      background-repeat no-repeat
-      background-position right center
 
 .limit
   > div
