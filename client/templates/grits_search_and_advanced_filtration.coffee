@@ -12,8 +12,6 @@ _initEndDate = null # onCreated will initialize the date through GritsFilterCrit
 _initLimit = null # onCreated will initialize the limt through GritsFilterCriteria
 _initLevels = null # onCreated will initialize the limt through GritsFilterCriteria
 _departureSearchMain = null # onRendered will set this to a typeahead object
-_departureSearch = null # onRendered will set this to a typeahead object
-_arrivalSearch = null # onRendered will set this to a typeahead object
 _effectiveDatePicker = null # onRendered will set this to a datetime picker object
 _discontinuedDatePicker = null # onRendered will set this to a datetime picker object
 _sharedTokens = [] # container for tokens that are shared from departureSearchMain input
@@ -49,40 +47,6 @@ _typeaheadFooter = _.template('
     </div>
   </div>')
 
-# provides one-way synchroniziation between tokens in departureSearchMain and
-# departureSearch when a token is created
-#
-# @param [String] newToken, a new token label
-# @param [String] id, the element id that triggered the tokenfield:createdtoken event
-_syncCreatedSharedToken = (newToken, id) ->
-  _sharedTokens = _departureSearchMain.tokenfield('getTokens')
-  if id == 'departureSearchMain'
-    rawTokens = _departureSearch.tokenfield('getTokens')
-    tokens = _.pluck(rawTokens, 'label')
-    if _.indexOf(tokens, newToken) >= 0
-      _sharedTokens = tokens
-    else
-      _sharedTokens = _.union(tokens, [newToken])
-      _departureSearch.tokenfield('createToken', newToken)
-  return
-
-# provides one-way synchroniziation between tokens in departureSearchMain and
-# departureSearch when a token is removed
-#
-# @param [String] newToken, a new token label
-# @param [String] id, the element id that triggered the tokenfield:removetoken event
-_syncRemovedSharedToken = (newToken, id) ->
-  _sharedTokens = _departureSearchMain.tokenfield('getTokens')
-  if id == 'departureSearchMain'
-    rawTokens = _departureSearch.tokenfield('getTokens')
-    tokens = _.pluck(rawTokens, 'label')
-    if _.indexOf(tokens, newToken) < 0
-      return
-    else
-      tokens.splice(_.indexOf(tokens, newToken), 1)
-      _departureSearch.tokenfield('setTokens', tokens)
-  return
-
 # returns the first origin within GritsFilterCriteria
 #
 # @return [String] origin, a string airport IATA code
@@ -106,30 +70,6 @@ getDepartureSearchMain = () ->
 # sets the typeahead object for the '#departureSearchMain' input
 _setDepartureSearchMain = (typeahead) ->
   _departureSearchMain = typeahead
-  return
-
-# returns the typeahead object for the '#departureSearch' input
-#
-# @see http://sliptree.github.io/bootstrap-tokenfield/#methods
-# @return [Object] typeahead
-getDepartureSearch = () ->
-  return _departureSearch
-
-# sets the typeahead object for the '#departureSearch' input
-_setDepartureSearch = (typeahead) ->
-  _departureSearch = typeahead
-  return
-
-# returns the typeahead object for the '#arrivalSearch' input
-#
-# @see http://sliptree.github.io/bootstrap-tokenfield/#methods
-# @return [Object] typeahead
-getArrivalSearch = () ->
-  return _arrivalSearch
-
-# sets the typeahead object for the '#departureSearchMain' input
-_setArrivalSearch = (typeahead) ->
-  _arrivalSearch = typeahead
   return
 
 # returns the datetime picker object for the '#effectiveDate' input  with the label 'End'
@@ -282,8 +222,6 @@ Template.gritsSearchAndAdvancedFiltration.onCreated ->
   # to the Template.gritsSearchAndAdvancedFiltration as a global export
   Template.gritsSearchAndAdvancedFiltration.getOrigin = getOrigin
   Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain = getDepartureSearchMain
-  Template.gritsSearchAndAdvancedFiltration.getDepartureSearch = getDepartureSearch
-  Template.gritsSearchAndAdvancedFiltration.getArrivalSearch = getArrivalSearch
   Template.gritsSearchAndAdvancedFiltration.getEffectiveDatePicker = getEffectiveDatePicker
   Template.gritsSearchAndAdvancedFiltration.getDiscontinuedDatePicker = getDiscontinuedDatePicker
 
@@ -369,12 +307,6 @@ Template.gritsSearchAndAdvancedFiltration.onRendered ->
     }]
   })
   _setDepartureSearchMain(departureSearchMain)
-
-  departureSearch = $('#departureSearch').tokenfield({})
-  _setDepartureSearch(departureSearch)
-
-  arrivalSearch = $('#arrivalSearch').tokenfield({})
-  _setArrivalSearch(arrivalSearch)
 
   # Toast notification options
   toastr.options = {
@@ -468,9 +400,6 @@ _changeSeatsSliderHandler = (e) ->
 _changeDepartureHandler = (e) ->
   combined = []
   tokens =  _departureSearchMain.tokenfield('getTokens')
-  codes = _.pluck(tokens, 'label')
-  combined = _.union(codes, combined)
-  tokens =  _departureSearch.tokenfield('getTokens')
   codes = _.pluck(tokens, 'label')
   combined = _.union(codes, combined)
   if _.isEqual(combined, GritsFilterCriteria.departures.get())
@@ -577,11 +506,11 @@ Template.gritsSearchAndAdvancedFiltration.events
 
         nearbyTokens = _.pluck(airports, '_id')
         union = _.union(_sharedTokens, nearbyTokens)
-        _departureSearch.tokenfield('setTokens', union)
+        _departureSearchMain.tokenfield('setTokens', union)
         Session.set('grits-net-meteor:isUpdating', false)
       )
     else
-      departureSearch = getDepartureSearch()
+      departureSearch = getDepartureSearchMain()
       departureSearch.tokenfield('setTokens', _sharedTokens)
     return
   'click #toggleFilter': (e) ->
@@ -624,7 +553,6 @@ Template.gritsSearchAndAdvancedFiltration.events
     $target = $(e.target)
     tokens = $target.tokenfield('getTokens')
     token = e.attrs.label
-    _syncCreatedSharedToken(token, $target.attr('id'))
     return false
   'tokenfield:removedtoken': (e) ->
     $target = $(e.target)
@@ -635,5 +563,4 @@ Template.gritsSearchAndAdvancedFiltration.events
         $('#includeNearbyAirports').prop('checked', false)
 
     token = e.attrs.label
-    _syncRemovedSharedToken(token, $target.attr('id'))
     return false
