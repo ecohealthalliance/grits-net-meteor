@@ -98,7 +98,7 @@ flightsByQuery = (query, limit, skip) ->
       {$limit: limit}
     ]
     _.each(arrangeQueryKeys(query), (key) ->
-      obj = {$match:{}}
+      obj = {$match: {}}
       value = query[key]
       obj['$match'][key] = value
       pipeline.unshift(obj)
@@ -127,7 +127,7 @@ Meteor.methods
     while ctr < levels
       flights = Flights.find(query, buildOptions(null)).fetch()
       flightsByLevel[ctr] = flights
-      originsByLevel[ctr+1] = []
+      originsByLevel[ctr + 1] = []
       for flight of flights
         addtoObl = true
         addtoAll = true
@@ -137,12 +137,12 @@ Meteor.methods
               addtoObl = false
               break
         if addtoObl
-          originsByLevel[ctr+1].push(flights[flight].arrivalAirport._id)
-      query['departureAirport._id'] = {'$in':originsByLevel[ctr+1]}
+          originsByLevel[ctr  +1].push(flights[flight].arrivalAirport._id)
+      query['departureAirport._id'] = {'$in': originsByLevel[ctr + 1]}
       ctr++
     for origins of originsByLevel
       Array::push.apply allOrigins, originsByLevel[origins]
-    query['departureAirport._id'] = {'$in':allOrigins}
+    query['departureAirport._id'] = {'$in': allOrigins}
     nullOpts = buildOptions(null)
     allFlights = Flights.find(query, nullOpts).fetch()
     if limit is null or limit is 0 #no limit specified
@@ -167,10 +167,10 @@ Meteor.methods
         trailingFlights = []
         remainderOPTS = buildOptions(limitRemainder)
         cpol = originsByLevel[retFlightByLevIndex]
-        query['departureAirport._id'] = {'$in':cpol}
+        query['departureAirport._id'] = {'$in': cpol}
         trailingFlights = Flights.find(query, remainderOPTS).fetch()
         Array::push.apply flightsToReturn, trailingFlights
-        lastId = flightsToReturn[flightsToReturn.length-1]._id
+        lastId = flightsToReturn[flightsToReturn.length - 1]._id
       return [flightsToReturn, allFlights.length, lastId]
 
 Meteor.methods
@@ -190,7 +190,7 @@ Meteor.methods
       flights = Flights.find(query, buildOptions(null)).fetch()
       totalFlights += flights.length
       flightsByLevel[ctr] = flights
-      originsByLevel[ctr+1] = []
+      originsByLevel[ctr + 1] = []
       for flight of flights
         addtoObl = true
         addtoAll = true
@@ -200,8 +200,8 @@ Meteor.methods
               addtoObl = false
               break
         if addtoObl
-          originsByLevel[ctr+1].push(flights[flight].arrivalAirport._id)
-      query['departureAirport._id'] = {'$in':originsByLevel[ctr+1]}
+          originsByLevel[ctr + 1].push(flights[flight].arrivalAirport._id)
+      query['departureAirport._id'] = {'$in': originsByLevel[ctr + 1]}
       ctr++
     limitReached = false
     addToReturn = false
@@ -223,8 +223,8 @@ Meteor.methods
               flightsToReturn.push(flightsByLevel[flights][flight])
     newLastId = null
     if flightsToReturn.length > 0
-      if _.isUndefined(flightsToReturn[flightsToReturn.length-1]._id) is false
-        newLastId = flightsToReturn[flightsToReturn.length-1]._id
+      if _.isUndefined(flightsToReturn[flightsToReturn.length - 1]._id) is false
+        newLastId = flightsToReturn[flightsToReturn.length - 1]._id
     return [flightsToReturn, totalFlights, newLastId]
 
 # count the total flights for the specified query
@@ -240,7 +240,7 @@ countFlightsByQuery = (query) ->
 
   extendQuery(query)
 
-  count = Flights.find(query, {transform:null}).count()
+  count = Flights.find(query, {transform: null}).count()
 
   if _profile
     recordProfile('countFlightsByQuery', new Date() - start)
@@ -306,7 +306,7 @@ findNearbyAirports = (id, miles) ->
     $maxDistance: metersToMiles * miles
   query =
     loc: {$near: value}
-  airports = Airports.find(query, {transform:null}).fetch()
+  airports = Airports.find(query, {transform: null}).fetch()
   if _profile
     recordProfile('findNearbyAirports', new Date() - start)
   return airports
@@ -320,7 +320,7 @@ findMinMaxDateRange = (key) ->
 
   # determine minimum date by sort ascending
   minDate = null
-  minResults = Flights.find({}, {sort: {"#{key}": 1}, limit:1, transform: null}).fetch()
+  minResults = Flights.find({}, {sort: {"#{key}": 1}, limit: 1, transform: null}).fetch()
   if !(_.isUndefined(minResults) || _.isEmpty(minResults))
     min = minResults[0]
     if min.hasOwnProperty(key)
@@ -328,7 +328,7 @@ findMinMaxDateRange = (key) ->
 
   # determine maximum date by sort descending
   maxDate = null
-  maxResults = Flights.find({}, {sort: {"#{key}": -1}, limit:1, transform: null}).fetch()
+  maxResults = Flights.find({}, {sort: {"#{key}": -1}, limit: 1, transform: null}).fetch()
   if !(_.isUndefined(maxResults) || _.isEmpty(maxResults))
     max = maxResults[0]
     if max.hasOwnProperty(key)

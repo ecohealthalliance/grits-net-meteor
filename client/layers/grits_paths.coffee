@@ -337,7 +337,7 @@ class GritsPathLayer extends GritsLayer
     else
       path.level = level
       path.occurrances += 1
-      path.throughput += flight.totalSeats
+      path.throughput += (flight.totalSeats * flight.weeklyFrequency)
     return
 
   # returns the normalized throughput for a node

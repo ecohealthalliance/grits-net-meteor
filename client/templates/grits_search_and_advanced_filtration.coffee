@@ -293,7 +293,7 @@ Template.gritsSearchAndAdvancedFiltration.onRendered ->
     return
 
   departureSearchMain = $('#departureSearchMain').tokenfield({
-    typeahead: [{hint:false, highlight: true}, {
+    typeahead: [{hint: false, highlight: true}, {
       display: (match) ->
         if _.isUndefined(match)
           return
@@ -459,10 +459,10 @@ Template.gritsSearchAndAdvancedFiltration.events
   'slideStop #stopsInputSlider': _changeStopsSliderHandler
   'slideStop #seatsInputSlider': _changeSeatsSliderHandler
   'slideStop #levelsInputSlider': _changeLevelsHandler
-  'slideStart #weeklyFrequencyInputSlider' : _setWFStartVal
-  'slideStart #stopsInputSlider' : _setStopsStartVal
-  'slideStart #seatsInputSlider' : _setSeatsStartVal
-  'slideStart #levelsInputSlider' : _setLevelsStartVal
+  'slideStart #weeklyFrequencyInputSlider': _setWFStartVal
+  'slideStart #stopsInputSlider': _setStopsStartVal
+  'slideStart #seatsInputSlider': _setSeatsStartVal
+  'slideStart #levelsInputSlider': _setLevelsStartVal
   'change #departureSearch': _changeDepartureHandler
   'change #arrivalSearch': _changeArrivalHandler
   'change #limit': _changeLimitHandler
