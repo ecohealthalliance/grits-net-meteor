@@ -4,8 +4,23 @@
 .sidebar-content
   background $whiteBG
 
+.sidebar-main
+  .sidebar-tabs
+    border-left 3px solid darken($blue,10%)
+
+.sidebar-tabs
+  opacity 1
+  background $blue-transparent
+  width 60px
+  &.right
+    background linear-gradient(to right, rgba(255,0,0,0) 75% , $blue-transparent 25%)
+
 #sidebar-plus-button
 #sidebar-minus-button
+  color white
+
+.fa-white
+  font-size 2em
   color white
 
 .sidebar-zoom-in
@@ -27,31 +42,8 @@
   background #496c8a
   opacity .75
 
-.fa-white
-  font-size 2em
-  color white
-
-.fa-white-table
-  font-size 1.5em
-  color white
-
-.fa-white-arrow
-  font-size 1.5em
-  color white
-
 #sidebar
   overflow visible
-
-#sidebar-flightData-tab
-  position absolute
-  bottom 50%
-  background #496c8a
-  border-radius 4px
-  height 32px
-  line-height 40px
-
-#sidebar-flightData-tab > a
-  line-height 35px
 
 .sidebar-pane
   width 410px
