@@ -1,6 +1,6 @@
 _useAggregation = true # enable/disable using the aggregation framework
 _profile = false # enable/disable recording method performance to the collection 'profiling'
-
+_activeAirports = null
 # collection to record profiling results
 Profiling = new Mongo.Collection('profiling')
 # records a profile document to mongo when profiling is enabled
@@ -273,6 +273,18 @@ findAirports = () ->
   if _profile
     recordProfile('findAirports', new Date() - start)
   return airports
+
+# finds airports that have flights
+#
+# @return [Array] airports, an array of airport document
+findActiveAirports = () ->
+  if _activeAirports isnt null
+    return _activeAirports
+  rawFlights = Flights.rawCollection()
+  rawDistinct = Meteor.wrapAsync(rawFlights.distinct, rawFlights)
+  _activeAirports = rawDistinct("departureAirport")
+  return _activeAirports
+
 # finds a single airport document
 #
 # @param [String] id, the airport code to retrieve
@@ -402,6 +414,7 @@ Meteor.methods
   findHeatmapByCode: findHeatmapByCode
   findHeatmapsByCodes: findHeatmapsByCodes
   findAirports: findAirports
+  findActiveAirports: findActiveAirports
   findAirportById: findAirportById
   findNearbyAirports: findNearbyAirports
   findMinMaxDateRange: findMinMaxDateRange

@@ -22,7 +22,7 @@ Meteor.startup ->
         callback(null, true)
       )
     'airports': (callback, result) ->
-      Meteor.call('findAirports', (err, airports) ->
+      Meteor.call('findActiveAirports', (err, airports) ->
         if err
           callback(err)
           return
@@ -36,7 +36,7 @@ Meteor.startup ->
         if err
           callback(err)
           return
-        Meteor.gritsUtil.effectiveDateMinMax = minMax;
+        Meteor.gritsUtil.effectiveDateMinMax = minMax
         if Meteor.gritsUtil.debug
           console.log('done effectiveDate')
         callback(null, true)
@@ -46,7 +46,7 @@ Meteor.startup ->
         if err
           callback(err)
           return
-        Meteor.gritsUtil.discontinuedDateMinMax = minMax;
+        Meteor.gritsUtil.discontinuedDateMinMax = minMax
         if Meteor.gritsUtil.debug
           console.log('done discontinuedDate')
         callback(null, true)
@@ -56,7 +56,7 @@ Meteor.startup ->
       console.err(err)
       return
     if Meteor.gritsUtil.debug
-          console.log('end sync [i18n, airports, effectiveDateMinMax, discontinuedDateMinMax] (ms): ', new Date() - start)
+      console.log('end sync [i18n, airports, effectiveDateMinMax, discontinuedDateMinMax] (ms): ', new Date() - start)
     # Hide the gritsOverlay indicator
     Template.gritsOverlay.hide()
     # Mark the app ready
