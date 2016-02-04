@@ -153,10 +153,11 @@ body
 
 .filter-footer
   @extend .sidebar-footer
-  position absolute
+  position relative
   bottom 0
+  height 98px
   width $sidebar-width
-  padding-top 20px
+  padding-top 10px
   padding-bottom 20px
   font-size .8em
 
@@ -197,17 +198,19 @@ body
   padding 0
   > div
     padding-right 0
+    padding-top 5px
 
 .status-bar-text
   padding-right 0
   padding-left 0
   color #333
-  width 70%
+  width 80%
   font-style italic
   text-align right
 
 .status-bar-val
   padding-left 2px
+  width 20%
 
 .filter-status
   position relative
@@ -477,11 +480,11 @@ p.intro
 
 #flirtTitle
   background url("/packages/grits_grits-net-meteor/client/images/flirt-logo-inline.png")
-  background-size 325px 73px
+  background-size 250px 49px
   background-position center center
-  width 325px
-  height 73px
-  margin 30px 0 30px 42px
+  width 250px
+  height 49px
+  margin 30px 0 30px 20px
   text-indent -9999px
 
 #flirtTitleText
@@ -513,6 +516,7 @@ p.intro
 .include-nearby
   margin-top 10px
   margin-bottom 20px
+  padding 0px 20px 0px 20px
   text-align center
   > div
   input
@@ -581,7 +585,7 @@ p.intro
 
 .limitSearchTitle
   padding 0
-  margin-right 5px
+  margin 0px 15px 0px 15px
 
 .limitInput
   width 75px
@@ -653,3 +657,7 @@ p.intro
 
 .action-menu span
   font-size smaller
+
+.pager li > a, .pager li > span
+  padding 5px 5px
+  border-radius 8px
