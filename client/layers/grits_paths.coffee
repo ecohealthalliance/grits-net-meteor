@@ -44,7 +44,7 @@ _eventHandlers = {
       # update the dataTable
       Template.gritsDataTable.highlightPathTableRow(this)
       # temporarily set the path color to blue
-      d3.select(element).style('stroke', 'blue')
+      d3.select(element).style('stroke', 'rgba(53, 185, 118, 1)')
       # set the _previousPath to this gritsPath
       _previousPath.set(this)
 }
@@ -115,6 +115,8 @@ class GritsPathLayer extends GritsLayer
   # @override
   draw: () ->
     self = this
+    self._map.removeLayer(self._layer)
+    self._map.addLayer(self._layer)
     self._layer.draw()
     # set visiblePaths to the current paths on every draw so that current slider
     # inputs are applied.
@@ -195,7 +197,7 @@ class GritsPathLayer extends GritsLayer
       .attr('class', 'arrowHead')
 
     paths = _.sortBy(self.getPaths(), (path) ->
-      return path.destination.latLng[0] * -1
+      return path.throughput
     )
 
     pathCount = paths.length
@@ -335,7 +337,7 @@ class GritsPathLayer extends GritsLayer
     else
       path.level = level
       path.occurrances += 1
-      path.throughput += flight.totalSeats
+      path.throughput += (flight.totalSeats * flight.weeklyFrequency)
     return
 
   # returns the normalized throughput for a node

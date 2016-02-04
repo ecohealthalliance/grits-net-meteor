@@ -10,7 +10,7 @@ _eventHandlers = {
   click: (element, selection, projection) ->
     self = this
     if not Session.get('grits-net-meteor:isUpdating')
-      departureSearch = Template.gritsFilter.getDepartureSearch()
+      departureSearch = Template.gritsSearchAndAdvancedFiltration.getDepartureSearch()
       if typeof departureSearch != 'undefined'
         rawTokens =  departureSearch.tokenfield('getTokens')
         tokens = _.pluck(rawTokens, 'label')
@@ -22,7 +22,7 @@ _eventHandlers = {
           # erase any previous departures
           GritsFilterCriteria.setDepartures(null)
           # set the clicked element as the new origin
-          departureSearchMain = Template.gritsFilter.getDepartureSearchMain()
+          departureSearchMain = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
           departureSearchMain.tokenfield('setTokens', [self._id])
           map = Template.gritsMap.getInstance()
           pathLayer = map.getGritsLayer('Paths')
@@ -96,8 +96,11 @@ class GritsAllNodesLayer extends GritsLayer
   # adds the layer
   #
   add: () ->
+    Template.gritsOverlay.show()
     self = this
-    self._addLayerGroup()
+    setTimeout(() ->
+      self._addLayerGroup()
+    , 125)
 
   # removes the layerGroup from the map
   #
@@ -235,32 +238,27 @@ class GritsAllNodesLayer extends GritsLayer
 
   # populates all nodes from the database
   _populateAllNodes: () ->
-    self = this
-    Meteor.call('findAirports', (err, airports) ->
-      if err
-        console.error(err)
-        return
+    self = this    
+    count = 0
+    total = Meteor.gritsUtil.airports.length
+    processQueue = async.queue(((airport, callback) ->
+      async.nextTick ->
+        try
+          marker = new GritsMarker(_size[0], _size[1], null)
+          node = new GritsNode(airport, marker)
+          node.setEventHandlers(_eventHandlers)
+          self._data[airport._id] = node
+        catch err
+          console.error(err)
+        callback()
+    ), 4)
 
-      count = 0
-      total = airports.length
-      processQueue = async.queue(((airport, callback) ->
-        async.nextTick ->
-          try
-            marker = new GritsMarker(_size[0], _size[1], null)
-            node = new GritsNode(airport, marker)
-            node.setEventHandlers(_eventHandlers)
-            self._data[airport._id] = node
-          catch err
-            console.error(err)
-          callback()
-      ), 4)
+    processQueue.drain = () ->
+      self.hasLoaded.set(true)
+      # save some memory and delete the airports collection
+      delete Meteor.gritsUtil.airports
 
-      processQueue.drain = () ->
-        self.hasLoaded.set(true)
-
-      processQueue.push(airports)
-      return
-    )
+    processQueue.push(Meteor.gritsUtil.airports) #collection from startup.coffee
     return
 
   # binds to the Tracker.gritsMap.getInstance() map event listener .on
@@ -272,9 +270,9 @@ class GritsAllNodesLayer extends GritsLayer
     self._map.on(
       overlayadd: (e) ->
         if e.name == self._displayName
+          Template.gritsOverlay.hide()
           if !self.hasLoaded.get()
             toastr.warning('The layer has not finished loading')
-            return
           if Meteor.gritsUtil.debug
             console.log("#{self._displayName} layer was added")
       overlayremove: (e) ->

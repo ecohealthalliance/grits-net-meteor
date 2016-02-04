@@ -10,7 +10,7 @@ _Filter = Astro.Class(
   name: 'FilterCriteria'
   collection: _Collection
   transform: true
-  fields: ['key', 'operator', 'value']
+  fields: ['key', 'operator', 'value', 'operator2', 'value2']
   validators: {
     key: [
         Validators.required(),
@@ -55,6 +55,9 @@ class GritsFilterCriteria
     # this._baseState keeps track of the initial plugin state after any init
     # methods have run
     self._baseState = {}
+
+    # processing queue
+    self._queue = null
 
     # reactive vars to track form binding
     #   departures
@@ -193,10 +196,14 @@ class GritsFilterCriteria
       k = filter.get('key')
       o = filter.get('operator')
       v = filter.get('value')
+      o2 = filter.get('operator2')
+      v2 = filter.get('value2')
       if _.indexOf(['$eq'], o) >= 0
         value = v
       else
         value[o] = v
+        if o2 isnt null
+          value[o2] = v2
       result[k] = value
     )
     return result
@@ -260,18 +267,28 @@ class GritsFilterCriteria
   # @param [Integer] offset, the offset of the query
   process: (flights, offset) ->
     self = this
+    if self._queue != null
+      self._queue.kill()
+      async.nextTick(() ->
+        self._queue = null
+      )
+
     map = Template.gritsMap.getInstance()
     nodeLayer = map.getGritsLayer('Nodes')
     pathLayer = map.getGritsLayer('Paths')
 
     # if the offset is equal to zero, clear the layers
     if offset == 0
-      nodeLayer.clear()
       pathLayer.clear()
+      nodeLayer.clear()
 
     count = Session.get('grits-net-meteor:loadedRecords')
-    processQueue = async.queue(((flight, callback) ->
+    self._queue = async.queue(((flight, callback) ->
       nodes = nodeLayer.convertFlight(flight, 1, self.departures.get())
+      # convertFlight may return null in the case of a metaNode
+      if (nodes[0] == null || nodes[1] == null)
+        callback()
+        return
       pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
       async.nextTick ->
         if !(count % 100)
@@ -282,16 +299,16 @@ class GritsFilterCriteria
     ), 4)
 
     # final method for when all items within the queue are processed
-    processQueue.drain = ->
+    self._queue.drain = ->
       nodeLayer.draw()
-      nodeLayer.hasLoaded.set(true)
       pathLayer.draw()
+      nodeLayer.hasLoaded.set(true)
       pathLayer.hasLoaded.set(true)
       Session.set('grits-net-meteor:loadedRecords', count)
       Session.set('grits-net-meteor:isUpdating', false)
 
     # add the flights to thet queue which will start processing
-    processQueue.push(flights)
+    self._queue.push(flights)
     return
   # applies the filter but does not reset the offset
   #
@@ -325,8 +342,23 @@ class GritsFilterCriteria
         delete query[field]
     )
 
+    # handle any metaNodes
+    tokens = query['departureAirport._id']['$in']
+    modifiedTokens = []
+    _.each(tokens, (token) ->
+      if (token.indexOf(GritsMetaNode.PREFIX) >= 0)
+        node = GritsMetaNode.find(token)
+        if node == null
+          return
+        if (node.hasOwnProperty('_children'))
+          modifiedTokens = _.union(modifiedTokens, _.pluck(node._children, '_id'))
+      else
+        modifiedTokens = _.union(modifiedTokens, token)
+    )
+    query['departureAirport._id']['$in'] = modifiedTokens
+
     if levels > 1
-      origin = Template.gritsFilter.getOrigin()
+      origin = Template.gritsSearchAndAdvancedFiltration.getOrigin()
       if !_.isNull(origin)
         # show the loading indicator and call the server-side method
         Session.set 'grits-net-meteor:isUpdating', true
@@ -420,7 +452,6 @@ class GritsFilterCriteria
       # reset the loadedRecords and totalRecords
       Session.set('grits-net-meteor:loadedRecords', 0)
       Session.set('grits-net-meteor:totalRecords', 0)
-      $('#loadMore').prop('disabled', false)
       # re-enable the loadMore button when a new filter is applied
       $('#loadMore').prop('disabled', false)
       # pass the callback function if its defined
@@ -447,7 +478,7 @@ class GritsFilterCriteria
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
-    discontinuedDatePicker = Template.gritsFilter.getDiscontinuedDatePicker()
+    discontinuedDatePicker = Template.gritsSearchAndAdvancedFiltration.getDiscontinuedDatePicker()
     if _.isNull(discontinuedDatePicker)
       return
 
@@ -486,7 +517,7 @@ class GritsFilterCriteria
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
-    effectiveDatePicker = Template.gritsFilter.getEffectiveDatePicker()
+    effectiveDatePicker = Template.gritsSearchAndAdvancedFiltration.getEffectiveDatePicker()
     if _.isNull(effectiveDatePicker)
       return
 
@@ -558,7 +589,7 @@ class GritsFilterCriteria
   #
   # @param [String] operator
   # @param [Integer] value
-  setStops: (operator, value) ->
+  setStops: (operator, value, operator2, value2) ->
     self = this
 
     # do not allow this to run prior to jQuery/DOM
@@ -569,15 +600,7 @@ class GritsFilterCriteria
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
     # the call to change did not come from the UI
-    if _.isEqual(self.stops.get(), {value: value, operator: operator})
-      # the reactive var is already set, change is from the UI
-      if _.isNull(value)
-        self.remove('stops')
-      else
-        self.createOrUpdate('stops', {key: 'stops', operator: operator, value: value})
-    else
-      self.stops.set({'value': value, 'operator': operator})
-      $('#stopsOperator').val(operator)
+    self.createOrUpdate('stops', {key: 'stops', operator: operator, value: value, operator2: operator2, value2: value2})
     return
   trackStops: () ->
     self = this
@@ -585,7 +608,7 @@ class GritsFilterCriteria
       obj = self.stops.get()
       if _.isNull(obj)
         return
-      self.setStops(obj.operator, obj.value)
+      self.setStops(obj.operator, obj.value, obj.operator2, obj.value2)
       async.nextTick(()->
         self.compareStates()
       )
@@ -595,7 +618,7 @@ class GritsFilterCriteria
   #
   # @param [String] operator
   # @param [Integer] value
-  setSeats: (operator, value) ->
+  setSeats: (operator, value, operator2, value2) ->
     self = this
 
     # do not allow this to run prior to jQuery/DOM
@@ -606,15 +629,7 @@ class GritsFilterCriteria
     if _.isUndefined(value)
       throw new Error('A value must be defined or null.')
 
-    if _.isEqual(self.seats.get(), {value: value, operator: operator})
-      # the reactive var is already set, change is from the UI
-      if _.isNull(value)
-        self.remove('seats')
-      else
-        self.createOrUpdate('seats', {key: 'totalSeats', operator: operator, value: value})
-    else
-      self.seats.set({value: value, operator: operator})
-      $('#seatsOperator').val(operator)
+    self.createOrUpdate('seats', {key: 'totalSeats', operator: operator, value: value, operator2: operator2, value2: value2})
     return
   trackSeats: () ->
     self = this
@@ -622,7 +637,7 @@ class GritsFilterCriteria
       obj = self.seats.get()
       if _.isNull(obj)
         return
-      self.setSeats(obj.operator, obj.value)
+      self.setSeats(obj.operator, obj.value, obj.operator2, obj.value2)
       async.nextTick(()->
         self.compareStates()
       )
@@ -655,18 +670,18 @@ class GritsFilterCriteria
         self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: [code]})
     else
       if _.isNull(code)
-        Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [])
+        Template.gritsSearchAndAdvancedFiltration.getDepartureSearch().tokenfield('setTokens', [])
         self.departures.set([])
         return
       if _.isEmpty(code)
-        Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [])
+        Template.gritsSearchAndAdvancedFiltration.getDepartureSearch().tokenfield('setTokens', [])
         self.departures.set([])
         return
       if _.isArray(code)
-        Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', code)
+        Template.gritsSearchAndAdvancedFiltration.getDepartureSearch().tokenfield('setTokens', code)
         self.departures.set(code)
       else
-        Template.gritsFilter.getDepartureSearch().tokenfield('setTokens', [code])
+        Template.gritsSearchAndAdvancedFiltration.getDepartureSearch().tokenfield('setTokens', [code])
         self.departures.set([code])
     return
   trackDepartures: () ->
@@ -706,18 +721,18 @@ class GritsFilterCriteria
          self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: [code]})
     else
       if _.isNull(code)
-        Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [])
+        Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', [])
         self.arrivals.set([])
         return
       if _.isEmpty(code)
-        Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [])
+        Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', [])
         self.arrivals.set([])
         return
       if _.isArray(code)
-        Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', code)
+        Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', code)
         self.arrivals.set(code)
       else
-        Template.gritsFilter.getArrivalSearch().tokenfield('setTokens', [code])
+        Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', [code])
         self.arrivals.set([code])
     return
   trackArrivals: () ->

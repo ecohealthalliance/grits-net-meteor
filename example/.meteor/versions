@@ -31,7 +31,7 @@ flawless:meteor-toastr@1.0.1
 fortawesome:fontawesome@4.4.0
 fourq:typeahead@1.0.0
 geojson-utils@1.0.4
-grits:grits-net-mapper@0.2.2
+grits:flirt-sidebar@0.0.1
 grits:grits-net-meteor@0.0.1
 halunka:i18n@1.1.1
 html-tools@1.0.5
@@ -42,6 +42,7 @@ insecure@1.0.4
 jagi:astronomy@1.2.2
 jagi:astronomy-validators@1.1.1
 jagi:reactive-map@2.0.0
+jaywon:meteor-node-uuid@1.0.1
 jparker:crypto-core@0.1.0
 jparker:crypto-md5@0.1.1
 jquery@1.11.4
@@ -98,7 +99,6 @@ velocity:html-reporter@0.9.1
 velocity:meteor-internals@1.1.0_7
 velocity:shim@0.1.0
 velocity:source-map-support@0.3.2_1
-waeltken:sidebar-v2@0.0.1
 webapp@1.2.3
 webapp-hashing@1.0.5
 xolvio:cucumber@0.19.4_1
