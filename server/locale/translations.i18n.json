@@ -132,6 +132,9 @@
             },
             "weekly-frequency-label": {
                 "en": "Weekly Frequency"
+            },
+            "simulated-passengers-label": {
+                "en": "# Simulated Passengers"
             }
         }
     },

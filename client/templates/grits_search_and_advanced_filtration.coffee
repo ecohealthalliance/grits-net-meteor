@@ -373,6 +373,15 @@ _changeWeeklyFrequencyHandler = (e) ->
     op = '$lte'
     GritsFilterCriteria.weeklyFrequency.set({'value': val, 'operator': op})
   return
+_changeSimulatedPassengersHandler = (e) ->
+  val = parseInt($("#simulatedPassengersInputSlider").val(), 10)
+  alert val
+  if val isnt _wfStartVal
+    _wfStartVal = val
+    if _.isNaN(val)
+      val = null
+    $('#simulatedPassengersInputSliderValIndicator').empty().html(val)
+  return
 _changeStopsSliderHandler = (e) ->
   val = $("#stopsInputSlider").val().split(',')
   val[0] = parseInt(val[0], 10)
@@ -380,7 +389,7 @@ _changeStopsSliderHandler = (e) ->
   if val[0] isnt _stopsStartVal[0] or val[1] isnt _stopsStartVal[1]
     _stopsStartVal = val
     $('#filterLoading').show()
-    $('#stopsSliderValIndicator').empty().html(val[0]+" : "+val[1])
+    $('#stopsSliderValIndicator').empty().html(val[0] + " : " + val[1])
     if _.isNaN(val[0]) || _.isNaN(val[1])
       val = null
     GritsFilterCriteria.stops.set({'value': val[0], 'operator': '$gte', 'value2': val[1], 'operator2': '$lte'})
@@ -392,7 +401,7 @@ _changeSeatsSliderHandler = (e) ->
   if val[0] isnt _seatsStartVal[0] or val[1] isnt _seatsStartVal[1]
     _seatsStartVal = val
     $('#filterLoading').show()
-    $('#seatsSliderValIndicator').empty().html(val[0]+" : "+val[1])
+    $('#seatsSliderValIndicator').empty().html(val[0] + " : " + val[1])
     if _.isNaN(val[0]) || _.isNaN(val[1])
       val = null
     GritsFilterCriteria.seats.set({'value': val[0], 'operator': '$gte', 'value2': val[1], 'operator2': '$lte'})
@@ -450,12 +459,25 @@ _setSeatsStartVal = (e) ->
   _startVal = $("#seatsInputSlider").val().split(',')
 _setLevelsStartVal = (e) ->
   _startVal = $("#levelsInputSlider").val()
+_startSimulation = (e) ->
+  simPas = parseInt($("#simulatedPassengersInputSlider").val(), 10)
+  startDate = GritsFilterCriteria.operatingDateRangeStart.curValue._d
+  endDate = GritsFilterCriteria.operatingDateRangeEnd.curValue._d
+  origin = GritsFilterCriteria.departures.curValue
+  Meteor.call('startSimulation', simPas, startDate, endDate, origin, (err, simulationId) ->
+    if err
+      Meteor.gritsUtil.errorHandler(err)
+      return
+    Session.set('grits-net-meteor:simulationId', simulationId)
+    $("#sidebar-flightData-tab a")[0].click()
+  )
 
 # events
 #
 # Event handlers for the grits_filter.html template
 Template.gritsSearchAndAdvancedFiltration.events
   'slideStop #weeklyFrequencyInputSlider': _changeWeeklyFrequencyHandler
+  'slideStop #simulatedPassengersInputSlider': _changeSimulatedPassengersHandler
   'slideStop #stopsInputSlider': _changeStopsSliderHandler
   'slideStop #seatsInputSlider': _changeSeatsSliderHandler
   'slideStop #levelsInputSlider': _changeLevelsHandler
@@ -463,6 +485,7 @@ Template.gritsSearchAndAdvancedFiltration.events
   'slideStart #stopsInputSlider': _setStopsStartVal
   'slideStart #seatsInputSlider': _setSeatsStartVal
   'slideStart #levelsInputSlider': _setLevelsStartVal
+  'click #startSimulation': _startSimulation
   'change #departureSearch': _changeDepartureHandler
   'change #arrivalSearch': _changeArrivalHandler
   'change #limit': _changeLimitHandler
@@ -534,7 +557,7 @@ Template.gritsSearchAndAdvancedFiltration.events
     $container.find('.token-input.tt-input').css('height', '30px')
     $container.find('.token-input.tt-input').css('font-size', '20px')
     $container.find('.tokenized.main').prepend($("#searchIcon"))
-    $('#'+id+'-tokenfield').on('blur', (e) ->
+    $('#' + id + '-tokenfield').on('blur', (e) ->
       # only allow tokens
       $container.find('.token-input.tt-input').val("")
     )

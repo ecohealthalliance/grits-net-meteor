@@ -293,6 +293,14 @@ findAirportById = (id) ->
   if _.isUndefined(id) or _.isEmpty(id)
     return []
   return Airports.findOne({'_id': id})
+
+startSimulation = (simPas, startDate, endDate, origin) ->
+  console.log('simulated passengers: ',simPas)
+  console.log('startDate: ',startDate)
+  console.log('endDate: ',endDate)
+  console.log('origin: ',origin)
+  simId = 'test'
+  return simId
 # finds nearby airports through geo $near
 #
 # @param [String] id, the airport code to use as the center/base of search
@@ -409,6 +417,7 @@ countTypeaheadAirports = (search) ->
 
 # Public API
 Meteor.methods
+  startSimulation: startSimulation
   flightsByQuery: flightsByQuery
   countFlightsByQuery: countFlightsByQuery
   findHeatmapByCode: findHeatmapByCode
