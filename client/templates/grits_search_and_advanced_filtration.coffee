@@ -470,6 +470,13 @@ _startSimulation = (e) ->
       return
     Session.set('grits-net-meteor:simulationId', simulationId)
     $("#sidebar-flightData-tab a")[0].click()
+    Meteor.subscribe('SimulationItineraries')
+    Itineraries.find({simulationId: simulationId}).observeChanges({
+      added: (id, fields) ->
+        console.log('itinerary: ', id)
+      removed: (id) ->
+        console.log('itinerary: ', id)
+    })
   )
 
 # events

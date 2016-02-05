@@ -102,7 +102,8 @@ Package.on_use(function(api){
   api.add_files([
     'models/airports.coffee',
     'models/flights.coffee',
-    'models/heatmaps.coffee'
+    'models/heatmaps.coffee',
+    'models/itineraries.coffee'
   ],['client', 'server']);
   //server-side only files
   api.add_files([
@@ -131,6 +132,8 @@ Package.on_use(function(api){
     'GritsNodeLayer',
     'GritsAllNodesLayer',
     'GritsPathLayer',
+    'Itinerary',
+    'Itineraries',
     'i18n'
   ], ['client', 'server']);
 });

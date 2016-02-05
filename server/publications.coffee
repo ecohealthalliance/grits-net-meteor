@@ -415,6 +415,10 @@ countTypeaheadAirports = (search) ->
     recordProfile('countTypeaheadAirports', new Date() - start)
   return count
 
+Meteor.publish 'SimulationItineraries', ->
+  console.log("Subscribed to SimulationItineraries")
+  return Itineraries.find()
+
 # Public API
 Meteor.methods
   startSimulation: startSimulation
