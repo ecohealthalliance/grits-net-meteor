@@ -230,6 +230,7 @@ class GritsFilterCriteria
                 pathLayer = map.getGritsLayer('Paths')
                 nodeLayer.clear()
                 pathLayer.clear()
+                Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress()
         else
           self.stateChanged.set(true)
 
