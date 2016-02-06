@@ -649,6 +649,46 @@ class GritsNodeLayer extends GritsLayer
 
     return [originNode, destinationNode]
 
+  convertItineraries: (itinerary, originToken) ->
+    self = this
+    
+    originNode = null
+    destinationNode = null
+    
+    origin = _.find(Meteor.gritsUtil.airports, (airport) -> return airport._id == itinerary.origin)
+    if (typeof origin == 'undefined' or origin == null)
+      return [null, null]
+    
+    originNode = self._data[origin._id]
+    if (typeof originNode == 'undefined' or originNode == null)
+      try
+        marker = new GritsMarker(_size[0], _size[1], _colorScale)
+        originNode = new GritsNode(origin, marker)
+        originNode.setEventHandlers(_eventHandlers)
+        self._data[origin._id] = originNode
+        if originNode._id == originToken
+          originNode.isOrigin = true
+      catch e
+        console.error(e.message)
+        return [null, null]
+    
+    destination = _.find(Meteor.gritsUtil.airports, (airport) -> return airport._id == itinerary.destination)
+    if (typeof destination == 'undefined' or destination == null)
+      return [null, null]
+    
+    destinationNode = self._data[destination._id]
+    if (typeof destinationNode == 'undefined' or destinationNode == null)
+      try
+        marker = new GritsMarker(_size[0], _size[1], _colorScale)
+        destinationNode = new GritsNode(destination, marker)
+        destinationNode.setEventHandlers(_eventHandlers)
+        self._data[destination._id] = destinationNode
+      catch e
+        console.error(e.message)
+        return [null, null]
+    
+    return [originNode, destinationNode]
+
   # returns the normalized throughput for a node
   #
   # @return [Number] normalizedThroughput, 0 >= n <= .9
