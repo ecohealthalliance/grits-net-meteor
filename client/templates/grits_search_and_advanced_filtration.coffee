@@ -486,7 +486,7 @@ _startSimulation = (e) ->
     
     loaded = 0
     Meteor.subscribe('SimulationItineraries', res.simId)
-    Itineraries.find().observeChanges({
+    Itineraries.find({'simulationId':res.simId}).observeChanges({
       added: (id, fields) ->
         loaded += 1
         nodes = nodeLayer.convertItineraries(fields, origin)
