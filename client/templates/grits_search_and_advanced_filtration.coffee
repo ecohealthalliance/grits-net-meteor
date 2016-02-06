@@ -515,22 +515,23 @@ _startSimulation = (e) ->
         # update the simulatorProgress bar
         if simPas > 0
           progress = Math.ceil((loaded/simPas) * 100)
-          #nodeLayer.draw()
-          #pathLayer.draw()
           _simulationProgress.set(progress)
 
-
-        if !(loaded % Math.floor(simPas/10))
-          nodeLayer.draw()
-          pathLayer.draw()
-        if (loaded == simPas)
+        if loaded == simPas
           #finaldraw
           _simulationProgress.set(100)
           nodeLayer.draw()
           pathLayer.draw()
-
+        else
+          _debouncedDraw(nodeLayer, pathLayer)
     })
   )
+
+_debouncedDraw = _.debounce((nodeLayer, pathLayer) ->
+  nodeLayer.draw()
+  pathLayer.draw()
+, 250)
+
 # events
 #
 # Event handlers for the grits_filter.html template
