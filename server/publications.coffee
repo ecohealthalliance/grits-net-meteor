@@ -1,3 +1,9 @@
+Future = Npm.require('fibers/future');
+
+_FLIRT_SIMULATOR_URL = process.env.FLIRT_SIMULATOR_URL
+if _FLIRT_SIMULATOR_URL == ''
+  throw new Error('You must set FLIRT_SIMULATOR_URL environment variable, ex: http://localhost:45000/simulator');
+
 _useAggregation = true # enable/disable using the aggregation framework
 _profile = false # enable/disable recording method performance to the collection 'profiling'
 _activeAirports = null
@@ -295,12 +301,22 @@ findAirportById = (id) ->
   return Airports.findOne({'_id': id})
 
 startSimulation = (simPas, startDate, endDate, origin) ->
-  console.log('simulated passengers: ',simPas)
-  console.log('startDate: ',startDate)
-  console.log('endDate: ',endDate)
-  console.log('origin: ',origin)
-  simId = 'test'
-  return simId
+  future = new Future();
+  HTTP.post(_FLIRT_SIMULATOR_URL, {
+    params: {
+      submittedBy: 'robo@noreply.io',
+      startDate: startDate,
+      endDate: endDate,
+      departureNode: origin,
+      numberPassengers: simPas
+    }
+  }, (err, res) ->
+    if err
+      future.throw(err)
+      return
+    future.return(JSON.parse(res.content))
+  )
+  return future.wait()
 # finds nearby airports through geo $near
 #
 # @param [String] id, the airport code to use as the center/base of search
@@ -415,9 +431,9 @@ countTypeaheadAirports = (search) ->
     recordProfile('countTypeaheadAirports', new Date() - start)
   return count
 
-Meteor.publish 'SimulationItineraries', ->
+Meteor.publish 'SimulationItineraries', (simId) ->
   console.log("Subscribed to SimulationItineraries")
-  return Itineraries.find()
+  return Itineraries.find({simulationId: simId})
 
 # Public API
 Meteor.methods
