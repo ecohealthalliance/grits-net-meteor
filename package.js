@@ -12,6 +12,7 @@ Package.on_use(function(api){
     'mongo',
     'reactive-var',
     'reactive-dict',
+    'http',
     'jagi:astronomy@1.2.2',
     'jagi:astronomy-validators@1.1.1',
     'peerlibrary:async@0.9.2_1',
