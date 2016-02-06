@@ -15,6 +15,7 @@ _departureSearchMain = null # onRendered will set this to a typeahead object
 _effectiveDatePicker = null # onRendered will set this to a datetime picker object
 _discontinuedDatePicker = null # onRendered will set this to a datetime picker object
 _sharedTokens = [] # container for tokens that are shared from departureSearchMain input
+_simulationProgress = new ReactiveVar(0);
 _suggestionTemplate = _.template('
   <span class="airport-code"><%= raw._id %></span>
   <span class="airport-info">
@@ -154,8 +155,21 @@ _determineFieldMatchesByWeight = (input, res) ->
     return matches.sort(compare)
   return matches
 
+# resets the simuationProgress
+resetSimulationProgress = () ->
+  _simulationProgress.set(0)
+  return
+
+# update the simulationProgress bar
+_updateSimulationProgress = (progress) ->
+  $('#simulationProgress').css({width: progress})
+  return progress
+
 # sets an object to be used by Meteors' Blaze templating engine (views)
 Template.gritsSearchAndAdvancedFiltration.helpers({
+  simulationProgress: () ->
+    progress = _simulationProgress.get() + '%'
+    return _updateSimulationProgress(progress)
   loadedRecords: () ->
     return Session.get 'grits-net-meteor:loadedRecords'
   totalRecords: () ->
@@ -224,6 +238,7 @@ Template.gritsSearchAndAdvancedFiltration.onCreated ->
   Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain = getDepartureSearchMain
   Template.gritsSearchAndAdvancedFiltration.getEffectiveDatePicker = getEffectiveDatePicker
   Template.gritsSearchAndAdvancedFiltration.getDiscontinuedDatePicker = getDiscontinuedDatePicker
+  Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress = resetSimulationProgress
 
 # triggered when the 'filter' template is rendered
 Template.gritsSearchAndAdvancedFiltration.onRendered ->
@@ -475,15 +490,18 @@ _startSimulation = (e) ->
       Meteor.gritsUtil.errorHandler(res)
       console.error(res)
       return
-    
+
+    # let the user know the simulation started
+    _simulationProgress.set(1)
+
     #Session.set('grits-net-meteor:simulationId', res.simId)
     #$("#sidebar-flightData-tab a")[0].click()
-    
+
     nodeLayer = Template.gritsMap.getInstance().getGritsLayer('Nodes')
     pathLayer = Template.gritsMap.getInstance().getGritsLayer('Paths')
     nodeLayer.clear()
     pathLayer.clear()
-    
+
     loaded = 0
     Meteor.subscribe('SimulationItineraries', res.simId)
     Itineraries.find({'simulationId':res.simId}).observeChanges({
@@ -493,11 +511,18 @@ _startSimulation = (e) ->
         if nodes[0] == null || nodes[1] == null
           return
         pathLayer.convertItineraries(fields, nodes[0], nodes[1])
+
+        # update the simulatorProgress bar
+        if simPas > 0
+          progress = Math.ceil((loaded/simPas) * 100)
+          _simulationProgress.set(progress)
+
         if !(loaded % Math.floor(simPas/4))
           nodeLayer.draw()
           pathLayer.draw()
         if (loaded == simPas)
           #finaldraw
+          _simulationProgress.set(100)
           nodeLayer.draw()
           pathLayer.draw()
     })
