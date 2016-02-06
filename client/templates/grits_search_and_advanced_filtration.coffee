@@ -375,7 +375,6 @@ _changeWeeklyFrequencyHandler = (e) ->
   return
 _changeSimulatedPassengersHandler = (e) ->
   val = parseInt($("#simulatedPassengersInputSlider").val(), 10)
-  alert val
   if val isnt _wfStartVal
     _wfStartVal = val
     if _.isNaN(val)
@@ -460,25 +459,49 @@ _setSeatsStartVal = (e) ->
 _setLevelsStartVal = (e) ->
   _startVal = $("#levelsInputSlider").val()
 _startSimulation = (e) ->
-  simPas = parseInt($("#simulatedPassengersInputSlider").val(), 10)
-  startDate = GritsFilterCriteria.operatingDateRangeStart.curValue._d
-  endDate = GritsFilterCriteria.operatingDateRangeEnd.curValue._d
-  origin = GritsFilterCriteria.departures.curValue
-  Meteor.call('startSimulation', simPas, startDate, endDate, origin, (err, simulationId) ->
+  simPas = parseInt($('#simulatedPassengersInputSlider').slider('getValue'), 10)
+  startDate = _discontinuedDatePicker.data('DateTimePicker').date().format("DD/MM/YYYY")
+  endDate = _effectiveDatePicker.data('DateTimePicker').date().format("DD/MM/YYYY")
+  departures = GritsFilterCriteria.departures.get()
+  if departures.length == 0
+    toastr.error('The simulator requires at least one Departure')
+    return
+  origin = departures[0]
+  Meteor.call('startSimulation', simPas, startDate, endDate, origin, (err, res) ->
     if err
       Meteor.gritsUtil.errorHandler(err)
       return
-    Session.set('grits-net-meteor:simulationId', simulationId)
-    $("#sidebar-flightData-tab a")[0].click()
-    Meteor.subscribe('SimulationItineraries')
-    Itineraries.find({simulationId: simulationId}).observeChanges({
+    if res.hasOwnProperty('error')
+      Meteor.gritsUtil.errorHandler(res)
+      console.error(res)
+      return
+    
+    #Session.set('grits-net-meteor:simulationId', res.simId)
+    #$("#sidebar-flightData-tab a")[0].click()
+    
+    nodeLayer = Template.gritsMap.getInstance().getGritsLayer('Nodes')
+    pathLayer = Template.gritsMap.getInstance().getGritsLayer('Paths')
+    nodeLayer.clear()
+    pathLayer.clear()
+    
+    loaded = 0
+    Meteor.subscribe('SimulationItineraries', res.simId)
+    Itineraries.find().observeChanges({
       added: (id, fields) ->
-        console.log('itinerary: ', id)
-      removed: (id) ->
-        console.log('itinerary: ', id)
+        loaded += 1
+        nodes = nodeLayer.convertItineraries(fields, origin)
+        if nodes[0] == null || nodes[1] == null
+          return
+        pathLayer.convertItineraries(fields, nodes[0], nodes[1])
+        if !(loaded % Math.floor(simPas/4))
+          nodeLayer.draw()
+          pathLayer.draw()
+        if (loaded == simPas)
+          #finaldraw
+          nodeLayer.draw()
+          pathLayer.draw()
     })
   )
-
 # events
 #
 # Event handlers for the grits_filter.html template
