@@ -515,9 +515,12 @@ _startSimulation = (e) ->
         # update the simulatorProgress bar
         if simPas > 0
           progress = Math.ceil((loaded/simPas) * 100)
+          #nodeLayer.draw()
+          #pathLayer.draw()
           _simulationProgress.set(progress)
 
-        if !(loaded % Math.floor(simPas/4))
+
+        if !(loaded % Math.floor(simPas/10))
           nodeLayer.draw()
           pathLayer.draw()
         if (loaded == simPas)
@@ -525,6 +528,7 @@ _startSimulation = (e) ->
           _simulationProgress.set(100)
           nodeLayer.draw()
           pathLayer.draw()
+
     })
   )
 # events
