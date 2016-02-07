@@ -10,7 +10,7 @@ _eventHandlers = {
   click: (element, selection, projection) ->
     self = this
     if not Session.get('grits-net-meteor:isUpdating')
-      departureSearch = Template.gritsSearchAndAdvancedFiltration.getDepartureSearch()
+      departureSearch = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
       if typeof departureSearch != 'undefined'
         rawTokens =  departureSearch.tokenfield('getTokens')
         tokens = _.pluck(rawTokens, 'label')
@@ -255,8 +255,6 @@ class GritsAllNodesLayer extends GritsLayer
 
     processQueue.drain = () ->
       self.hasLoaded.set(true)
-      # save some memory and delete the airports collection
-      delete Meteor.gritsUtil.airports
 
     processQueue.push(Meteor.gritsUtil.airports) #collection from startup.coffee
     return

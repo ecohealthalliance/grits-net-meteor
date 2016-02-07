@@ -230,6 +230,7 @@ class GritsFilterCriteria
                 pathLayer = map.getGritsLayer('Paths')
                 nodeLayer.clear()
                 pathLayer.clear()
+                Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress()
         else
           self.stateChanged.set(true)
 
@@ -670,18 +671,18 @@ class GritsFilterCriteria
         self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: [code]})
     else
       if _.isNull(code)
-        Template.gritsSearchAndAdvancedFiltration.getDepartureSearch().tokenfield('setTokens', [])
+        Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain().tokenfield('setTokens', [])
         self.departures.set([])
         return
       if _.isEmpty(code)
-        Template.gritsSearchAndAdvancedFiltration.getDepartureSearch().tokenfield('setTokens', [])
+        Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain().tokenfield('setTokens', [])
         self.departures.set([])
         return
       if _.isArray(code)
-        Template.gritsSearchAndAdvancedFiltration.getDepartureSearch().tokenfield('setTokens', code)
+        Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain().tokenfield('setTokens', code)
         self.departures.set(code)
       else
-        Template.gritsSearchAndAdvancedFiltration.getDepartureSearch().tokenfield('setTokens', [code])
+        Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain().tokenfield('setTokens', [code])
         self.departures.set([code])
     return
   trackDepartures: () ->

@@ -12,6 +12,7 @@ Package.on_use(function(api){
     'mongo',
     'reactive-var',
     'reactive-dict',
+    'http',
     'jagi:astronomy@1.2.2',
     'jagi:astronomy-validators@1.1.1',
     'peerlibrary:async@0.9.2_1',
@@ -102,7 +103,8 @@ Package.on_use(function(api){
   api.add_files([
     'models/airports.coffee',
     'models/flights.coffee',
-    'models/heatmaps.coffee'
+    'models/heatmaps.coffee',
+    'models/itineraries.coffee'
   ],['client', 'server']);
   //server-side only files
   api.add_files([
@@ -131,6 +133,8 @@ Package.on_use(function(api){
     'GritsNodeLayer',
     'GritsAllNodesLayer',
     'GritsPathLayer',
+    'Itinerary',
+    'Itineraries',
     'i18n'
   ], ['client', 'server']);
 });

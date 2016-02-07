@@ -25,7 +25,7 @@
                 "en": "Destination"
             },
             "occurrances-heading": {
-                "en": "Occurrances"
+                "en": "Occurrences"
             },
             "throughput-heading": {
                 "en": "Total Seats"
@@ -132,6 +132,9 @@
             },
             "weekly-frequency-label": {
                 "en": "Weekly Frequency"
+            },
+            "simulated-passengers-label": {
+                "en": "# Simulated Passengers"
             }
         }
     },
@@ -144,7 +147,7 @@
                 "en": "Level"
             },
             "occurrances-label": {
-                "en": "Occurrances"
+                "en": "Occurrences"
             },
             "weight-label": {
                 "en": "Weight"

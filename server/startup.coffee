@@ -26,6 +26,18 @@ _warmupMongoAirports = (done) ->
       done()
   )
   return
+_warmupMongoItineraries = (done) ->
+  query = {"origin":{"$in":["BNA"]}}
+  console.log('warmup itineraries')
+  async.eachSeries([0..9],
+    (x, callback) ->
+      Meteor.call('itinerariesByQuery', query, 100, x*100, (err, res) ->
+        callback()
+      )
+    (err) ->
+      done()
+  )
+  return
 warmupMongo = () ->
   start = new Date()
   console.log('starting warmup')
@@ -34,6 +46,8 @@ warmupMongo = () ->
       _warmupMongoFlights(callback)
     'warmupMongoAirports': (callback, result) ->
       _warmupMongoAirports(callback)
+    'warmupMongoItineraries': (callback, result) ->
+      _warmupMongoItineraries(callback)
   }, (err, result) ->
     console.log('warmup done(ms): ', new Date() - start)
   )
