@@ -139,7 +139,7 @@ class GritsHeatmapLayer extends GritsLayer
       # update the heatmap data
       heatmap = Heatmaps.findOne({'_id': departures.sort().join("") })
       self.clear()
-      self._data = heatmap?.data
+      self._data = heatmap?.data or []
       self.draw()
 
       _previousOrigins = departures
