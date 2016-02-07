@@ -56,7 +56,7 @@ class GritsHeatmapLayer extends GritsLayer
   draw: () ->
     self = this
     data = self._data.map((d)->
-      [d[0], d[1], d[2]]
+      [d[0], d[1], d[2] * HEATMAP_INTENSITY_MULTIPLIER]
     )
     # An extra point with no intensity is added because passing in an empty
     # array causes a bug where the previous heatmap is frozen in view.
@@ -115,10 +115,6 @@ class GritsHeatmapLayer extends GritsLayer
     Tracker.autorun () ->
       departures = GritsFilterCriteria.departures.get()
 
-      if _.isEqual(_previousOrigins, departures)
-        # do nothing
-        return
-
       if _.isEmpty(departures)
         # if a departure airport is not specified, clear the heatmap
         _previousOrigins = null
@@ -141,39 +137,28 @@ class GritsHeatmapLayer extends GritsLayer
       departures = modifiedDepartures
 
       # update the heatmap data
-      Meteor.call('findHeatmapsByCodes', departures, (err, heatmaps) ->
-        if err
-          Meteor.gritsUtil.errorHandler(err)
-          return
+      heatmap = Heatmaps.findOne({'_id': departures.sort().join("") })
+      self.clear()
+      self._data = heatmap?.data or []
+      self.draw()
 
-        self.clear()
-        len = heatmaps.length
-        for heatmap in heatmaps
-          _.each(heatmap.data, (a) ->
-            value = a[2] * HEATMAP_INTENSITY_MULTIPLIER
-            if len > 0
-              value = value / len
-            self._data.push([a[0], a[1], value, a[3]])
-          )
-        self.draw()
-      )
       _previousOrigins = departures
     return
 
   # append a single heatmap to the existing layer, does not clear existing data
   #
   # @param [Object] heatmap, Astro.class representation of 'Heatmap' model
-  add: (heatmap) ->
-    self = this
-    if _.isUndefined(heatmap)
-      return
-    _.each(heatmap.data, (a) ->
-      intensity = a[2] * HEATMAP_INTENSITY_MULTIPLIER
-      self._data.push([a[0], a[1], intensity])
-    )
-    self.hasLoaded.set(true)
-    self.draw()
-    return
+  # add: (heatmap) ->
+  #   self = this
+  #   if _.isUndefined(heatmap)
+  #     return
+  #   _.each(heatmap.data, (a) ->
+  #     intensity = a[2] * HEATMAP_INTENSITY_MULTIPLIER
+  #     self._data.push([a[0], a[1], intensity])
+  #   )
+  #   self.hasLoaded.set(true)
+  #   self.draw()
+  #   return
 
   # get the heatmap data
   #

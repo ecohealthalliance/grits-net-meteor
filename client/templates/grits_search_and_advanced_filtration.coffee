@@ -482,10 +482,22 @@ _startSimulation = (e) ->
     toastr.error('The simulator requires at least one Departure')
     return
   origin = departures[0]
-  Meteor.call('startSimulation', simPas, startDate, endDate, origin, (err, res) ->
-    if err
-      Meteor.gritsUtil.errorHandler(err)
-      return
+  Promise.all([
+    new Promise (resolve, reject)->
+      Meteor.call('airportLocations', (err, res)->
+        if err then return reject(err)
+        resolve(res)
+      )
+    new Promise (resolve, reject)->
+      Meteor.call('startSimulation', simPas, startDate, endDate, origin, (err, res) ->
+        if err then return reject(err)
+        resolve(res)
+      )
+  ])
+  .catch (err)->
+    Meteor.gritsUtil.errorHandler(err)
+    console.error err
+  .then ([airportToCoordinates, res])->
     if res.hasOwnProperty('error')
       Meteor.gritsUtil.errorHandler(res)
       console.error(res)
@@ -503,9 +515,26 @@ _startSimulation = (e) ->
     pathLayer.clear()
 
     loaded = 0
+    
+    airportCounts = {}
+    itinCount = 0
+    _updateHeatmap = _.throttle(->
+      Heatmaps.remove({})
+      # map the airportCounts object to one with percentage values
+      airportPercentages = _.object([key, val / itinCount] for key, val of airportCounts)
+      # key the heatmap to the departure airports so it can be filtered
+      # out if the query changes.
+      airportPercentages._id = departures.sort().join("")
+      Heatmap.createFromDoc(airportPercentages, airportToCoordinates)
+    , 500)
     Meteor.subscribe('SimulationItineraries', res.simId)
     Itineraries.find({'simulationId':res.simId}).observeChanges({
       added: (id, fields) ->
+        itinCount++
+        if airportCounts[fields.destination]
+          airportCounts[fields.destination]++
+        else
+          airportCounts[fields.destination] = 1
         loaded += 1
         nodes = nodeLayer.convertItineraries(fields, origin)
         if nodes[0] == null || nodes[1] == null
@@ -522,10 +551,11 @@ _startSimulation = (e) ->
           _simulationProgress.set(100)
           nodeLayer.draw()
           pathLayer.draw()
+          _updateHeatmap()
         else
+          _updateHeatmap()
           _debouncedDraw(nodeLayer, pathLayer)
     })
-  )
 
 _debouncedDraw = _.debounce((nodeLayer, pathLayer) ->
   nodeLayer.draw()

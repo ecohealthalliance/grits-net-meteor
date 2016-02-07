@@ -251,24 +251,6 @@ countFlightsByQuery = (query) ->
   if _profile
     recordProfile('countFlightsByQuery', new Date() - start)
   return count
-# finds a heatmap document
-#
-# @param [String] code, an airport codes (_id)
-# @return [Object] heatmap, a heatmap document
-findHeatmapByCode = (code) ->
-  if _.isUndefined(code) or _.isEmpty(code)
-    return {}
-  heatmap = Heatmaps.findOne({'_id': code})
-  return heatmap
-# finds one or many heatmap documents
-#
-# @param [Array] codes, an array of airport codes (_id)
-# @return [Array] heatmaps, heatmap documents
-findHeatmapsByCodes = (codes) ->
-  if _.isUndefined(codes) or _.isEmpty(codes)
-    return []
-  heatmaps = Heatmaps.find({'_id': {'$in': codes}}).fetch()
-  return heatmaps
 # finds all airport documents
 #
 # @return [Array] airports, an array of airport document
@@ -280,6 +262,15 @@ findAirports = () ->
     recordProfile('findAirports', new Date() - start)
   return airports
 
+# Get airport to location map
+#
+# @return { "Aiport code" : [coordinates] }
+airportLocations = () ->
+  airports = Airports.find({}, {
+    fields: { 'loc.coordinates' : 1 }, 
+    transform: null
+  }).fetch()
+  return _.object([airport['_id'], airport['loc']['coordinates']] for airport in airports)
 # finds airports that have flights
 #
 # @return [Array] airports, an array of airport document
@@ -440,8 +431,7 @@ Meteor.methods
   startSimulation: startSimulation
   flightsByQuery: flightsByQuery
   countFlightsByQuery: countFlightsByQuery
-  findHeatmapByCode: findHeatmapByCode
-  findHeatmapsByCodes: findHeatmapsByCodes
+  airportLocations: airportLocations
   findAirports: findAirports
   findActiveAirports: findActiveAirports
   findAirportById: findAirportById
