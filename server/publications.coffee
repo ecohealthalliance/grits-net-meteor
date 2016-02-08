@@ -422,9 +422,14 @@ countTypeaheadAirports = (search) ->
     recordProfile('countTypeaheadAirports', new Date() - start)
   return count
 
-Meteor.publish 'SimulationItineraries', (simId) ->
+Meteor.publish 'SimulationItineraries', (simIds) ->
   console.log("Subscribed to SimulationItineraries")
-  return Itineraries.find({simulationId: simId})
+  if not _.isArray(simIds)
+    check(simIds, String)
+    simIds = [simIds]
+  return Itineraries.find
+    simulationId:
+      $in: simIds
 
 # Public API
 Meteor.methods

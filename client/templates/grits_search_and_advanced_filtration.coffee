@@ -482,26 +482,30 @@ _startSimulation = (e) ->
     toastr.error('The simulator requires at least one Departure')
     return
   origin = departures[0]
+  # split the passengers into a simulation for each origin.
+  # results of the simulations are combined by the app.
+  simulations = _.map departures, (origin)->
+    new Promise (resolve, reject)->
+      Meteor.call('startSimulation', Math.ceil(simPas / departures.length), startDate, endDate, origin, (err, res) ->
+        if err then return reject(err)
+        resolve(res)
+      )
   Promise.all([
     new Promise (resolve, reject)->
       Meteor.call('airportLocations', (err, res)->
         if err then return reject(err)
         resolve(res)
       )
-    new Promise (resolve, reject)->
-      Meteor.call('startSimulation', simPas, startDate, endDate, origin, (err, res) ->
-        if err then return reject(err)
-        resolve(res)
-      )
-  ])
+  ].concat(simulations))
   .catch (err)->
     Meteor.gritsUtil.errorHandler(err)
     console.error err
-  .then ([airportToCoordinates, res])->
-    if res.hasOwnProperty('error')
-      Meteor.gritsUtil.errorHandler(res)
-      console.error(res)
-      return
+  .then ([airportToCoordinates, simulationResults...])->
+    for res in simulationResults
+      if res.hasOwnProperty('error')
+        Meteor.gritsUtil.errorHandler(res)
+        console.error(res)
+        return
 
     # let the user know the simulation started
     _simulationProgress.set(1)
@@ -527,8 +531,8 @@ _startSimulation = (e) ->
       airportPercentages._id = departures.sort().join("")
       Heatmap.createFromDoc(airportPercentages, airportToCoordinates)
     , 500)
-    Meteor.subscribe('SimulationItineraries', res.simId)
-    Itineraries.find({'simulationId':res.simId}).observeChanges({
+    Meteor.subscribe('SimulationItineraries', _.pluck(simulationResults, 'simId'))
+    Itineraries.find('simulationId': { $in: _.pluck(simulationResults, 'simId') }).observeChanges({
       added: (id, fields) ->
         itinCount++
         if airportCounts[fields.destination]
