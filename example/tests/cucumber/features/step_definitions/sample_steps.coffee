@@ -32,12 +32,13 @@ do ->
       @client.keys('Enter')
 
     @When /^I enter ([^"]*) and ([^"]*) into the seat filter$/, (seatA, seatB) ->
-      @client.waitForVisible('.advancedFilterRow.seats')
-      @client.click('.advancedFilterRow.seats .legend-scale .slider-container .slider .slider-track .min-slider-handle')
+      @client.waitForVisible('#sidebar-slider-tab > a > i')
+      @client.click('#sidebar-slider-tab > a > i')
+      @client.waitForVisible('#sidebar-slider > div > div:nth-child(1) > div.slider-container > div > div.slider-track > div.slider-handle.min-slider-handle.round')
+      @client.click('#sidebar-slider > div > div:nth-child(1) > div.slider-container > div > div.slider-track > div.slider-handle.min-slider-handle.round')
       @client.keys('Right arrow') for i in [0 .. seatA-1]
-      @client.click('.advancedFilterRow.seats .legend-scale .slider-container .slider .slider-track .max-slider-handle')
+      @client.click('#sidebar-slider > div > div:nth-child(1) > div.slider-container > div > div.slider-track > div.slider-handle.max-slider-handle.round')
       @client.keys('Left arrow') for i in [0 .. (900-seatB-1)]
-
 
     @When /^I enter ([^"]*) into the startDate$/, (startDate) ->
       @client.waitForVisible('#discontinuedDate')
@@ -51,12 +52,12 @@ do ->
       @client.click id
 
     @Then /^I should see ([^"]*) map markers$/, (numMarkers) ->
-      @client.waitForVisible('.marker-icon')
+      @client.waitForVisible('.marker-icon', 20000)
       elements = @client.elements('.marker-icon')
       expect(elements.value.length).toEqual(parseInt(numMarkers, 10))
 
     @Then /^I should see some map markers$/, ->
-      @client.waitForVisible('.marker-icon', 10000)
+      @client.waitForVisible('.marker-icon', 20000)
       elements = @client.elements('.marker-icon')
       expect(elements.value.length > 0).toEqual(true)
 
