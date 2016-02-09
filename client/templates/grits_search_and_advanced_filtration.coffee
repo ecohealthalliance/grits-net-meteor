@@ -490,17 +490,11 @@ _startSimulation = (e) ->
         if err then return reject(err)
         resolve(res)
       )
-  Promise.all([
-    new Promise (resolve, reject)->
-      Meteor.call('airportLocations', (err, res)->
-        if err then return reject(err)
-        resolve(res)
-      )
-  ].concat(simulations))
+  Promise.all(simulations)
   .catch (err)->
     Meteor.gritsUtil.errorHandler(err)
     console.error err
-  .then ([airportToCoordinates, simulationResults...])->
+  .then ([simulationResults...])->
     for res in simulationResults
       if res.hasOwnProperty('error')
         Meteor.gritsUtil.errorHandler(res)
@@ -529,7 +523,7 @@ _startSimulation = (e) ->
       # key the heatmap to the departure airports so it can be filtered
       # out if the query changes.
       airportPercentages._id = departures.sort().join("")
-      Heatmap.createFromDoc(airportPercentages, airportToCoordinates)
+      Heatmap.createFromDoc(airportPercentages, Meteor.gritsUtil.airportsToLocations)
     , 500)
     Meteor.subscribe('SimulationItineraries', _.pluck(simulationResults, 'simId'))
     Itineraries.find('simulationId': { $in: _.pluck(simulationResults, 'simId') }).observeChanges({
@@ -558,13 +552,13 @@ _startSimulation = (e) ->
           _updateHeatmap()
         else
           _updateHeatmap()
-          _debouncedDraw(nodeLayer, pathLayer)
+          _throttledDraw(nodeLayer, pathLayer)
     })
 
-_debouncedDraw = _.debounce((nodeLayer, pathLayer) ->
+_throttledDraw = _.throttle((nodeLayer, pathLayer) ->
   nodeLayer.draw()
   pathLayer.draw()
-, 250)
+, 500)
 
 # events
 #
