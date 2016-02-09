@@ -485,7 +485,7 @@ _startSimulation = (e) ->
   # results of the simulations are combined by the app.
   originIds = _.chain(departures)
     .map (originId)->
-      if originId.startsWith('META-')
+      if originId.startsWith(GritsMetaNode.PREFIX)
         return GritsMetaNode.find(originId).getAirportIds()
       else
         [originId]
