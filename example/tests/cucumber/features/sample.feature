@@ -32,14 +32,6 @@ Feature: Map display
   Scenario: Entering an airport code and date range should give us some paths
     When I navigate to "/"
     And I search for JFK
-    And I click on #dateTab
-    And I enter 12/9/2015 into the startDate
+    And I enter 2/8/2016 into the startDate
     Then I should see some map markers
     And I should see paths between them
-
-  @watch
-  Scenario: Entering an airport code, and a minimum seat count should give us some paths with flight having at least that many seats
-    When I navigate to "/"
-    And I search for JFK
-    And I enter 50 and 850 into the seat filter
-    Then I should see some map markers

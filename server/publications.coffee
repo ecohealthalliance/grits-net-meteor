@@ -41,6 +41,20 @@ extendQuery = (query, lastId) ->
     offsetFilter = _id: $gt: lastId
     _.extend query, offsetFilter
 
+# cache the results of calling the given function for a period of time.
+tempCache = (func)->
+  ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24
+  cache = {}
+  return (args...)->
+    key = args.join(',')
+    if key of cache
+      [result, timestamp] = cache[key]
+      if (new Date() - timestamp) < ONE_DAY_IN_MILLISECONDS
+        return result
+    result = func.apply(this, args)
+    cache[key] = [result, new Date()]
+    return result
+
 # builds the mongo options object that contains sort and limit clauses
 #
 # @param [Integer] limit, the amout to limit the results
@@ -274,7 +288,7 @@ airportLocations = () ->
 # finds airports that have flights
 #
 # @return [Array] airports, an array of airport document
-findActiveAirports = () ->
+findActiveAirports = tempCache () ->
   if _activeAirports isnt null
     return _activeAirports
   rawFlights = Flights.rawCollection()
@@ -341,7 +355,7 @@ findNearbyAirports = (id, miles) ->
 #
 # @param [String] the key of the flight documents the contains a date value
 # @return [Array] array of two dates, defaults to 'null' if not found [min, max]
-findMinMaxDateRange = (key) ->
+findMinMaxDateRange = tempCache (key) ->
   if _profile
     start = new Date()
 
@@ -422,9 +436,14 @@ countTypeaheadAirports = (search) ->
     recordProfile('countTypeaheadAirports', new Date() - start)
   return count
 
-Meteor.publish 'SimulationItineraries', (simId) ->
+Meteor.publish 'SimulationItineraries', (simIds) ->
   console.log("Subscribed to SimulationItineraries")
-  return Itineraries.find({simulationId: simId})
+  if not _.isArray(simIds)
+    check(simIds, String)
+    simIds = [simIds]
+  return Itineraries.find
+    simulationId:
+      $in: simIds
 
 # Public API
 Meteor.methods

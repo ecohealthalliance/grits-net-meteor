@@ -8,6 +8,7 @@ machine:
   environment:
     PACKAGE_DIRS: "/home/ubuntu"
     MONGO_URL: "mongodb://127.0.0.1:27017/grits"
+    FLIRT_SIMULATOR_URL: "http://127.0.0.1:45000/simulator"
 
 checkout:
   post:
