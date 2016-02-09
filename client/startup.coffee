@@ -53,7 +53,7 @@ Meteor.startup ->
       )
   , (err, result) ->
     if err
-      console.err(err)
+      console.error(err)
       return
     if Meteor.gritsUtil.debug
       console.log('end sync [i18n, airports, effectiveDateMinMax, discontinuedDateMinMax] (ms): ', new Date() - start)
