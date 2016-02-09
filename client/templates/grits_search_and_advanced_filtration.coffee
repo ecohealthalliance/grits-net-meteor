@@ -15,7 +15,7 @@ _departureSearchMain = null # onRendered will set this to a typeahead object
 _effectiveDatePicker = null # onRendered will set this to a datetime picker object
 _discontinuedDatePicker = null # onRendered will set this to a datetime picker object
 _sharedTokens = [] # container for tokens that are shared from departureSearchMain input
-_simulationProgress = new ReactiveVar(0);
+_simulationProgress = new ReactiveVar(0)
 _suggestionTemplate = _.template('
   <span class="airport-code"><%= raw._id %></span>
   <span class="airport-info">
@@ -483,21 +483,21 @@ _startSimulation = (e) ->
     return
   origin = departures[0]
   Promise.all([
-    new Promise (resolve, reject)->
-      Meteor.call('airportLocations', (err, res)->
+    new Promise (resolve, reject) ->
+      Meteor.call('airportLocations', (err, res) ->
         if err then return reject(err)
         resolve(res)
       )
-    new Promise (resolve, reject)->
+    new Promise (resolve, reject) ->
       Meteor.call('startSimulation', simPas, startDate, endDate, origin, (err, res) ->
         if err then return reject(err)
         resolve(res)
       )
   ])
-  .catch (err)->
+  .catch (err) ->
     Meteor.gritsUtil.errorHandler(err)
     console.error err
-  .then ([airportToCoordinates, res])->
+  .then ([airportToCoordinates, res]) ->
     if res.hasOwnProperty('error')
       Meteor.gritsUtil.errorHandler(res)
       console.error(res)
@@ -511,11 +511,13 @@ _startSimulation = (e) ->
 
     nodeLayer = Template.gritsMap.getInstance().getGritsLayer('Nodes')
     pathLayer = Template.gritsMap.getInstance().getGritsLayer('Paths')
+    heatmapLayer = Template.gritsMap.getInstance().getGritsLayer('Heatmap')
     nodeLayer.clear()
     pathLayer.clear()
+    heatmapLayer.clear()
 
     loaded = 0
-    
+
     airportCounts = {}
     itinCount = 0
     _updateHeatmap = _.throttle(->
@@ -528,7 +530,7 @@ _startSimulation = (e) ->
       Heatmap.createFromDoc(airportPercentages, airportToCoordinates)
     , 500)
     Meteor.subscribe('SimulationItineraries', res.simId)
-    Itineraries.find({'simulationId':res.simId}).observeChanges({
+    Itineraries.find({'simulationId': res.simId}).observeChanges({
       added: (id, fields) ->
         itinCount++
         if airportCounts[fields.destination]
@@ -543,7 +545,7 @@ _startSimulation = (e) ->
 
         # update the simulatorProgress bar
         if simPas > 0
-          progress = Math.ceil((loaded/simPas) * 100)
+          progress = Math.ceil((loaded / simPas) * 100)
           _simulationProgress.set(progress)
 
         if loaded == simPas
@@ -552,14 +554,16 @@ _startSimulation = (e) ->
           nodeLayer.draw()
           pathLayer.draw()
           _updateHeatmap()
+          heatmap.add()
         else
           _updateHeatmap()
-          _debouncedDraw(nodeLayer, pathLayer)
+          _debouncedDraw(nodeLayer, pathLayer, heatmapLayer)
     })
 
-_debouncedDraw = _.debounce((nodeLayer, pathLayer) ->
+_debouncedDraw = _.debounce((nodeLayer, pathLayer, heatmapLayer) ->
   nodeLayer.draw()
   pathLayer.draw()
+  heatmapLayer.add()
 , 250)
 
 # events
