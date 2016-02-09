@@ -70,8 +70,8 @@ class GritsFilterCriteria
     self.weeklyFrequency = new ReactiveVar(null)
     self.trackWeeklyFrequency()
     #   stops
-    self.stops = new ReactiveVar(null)
-    self.trackStops()
+    # self.stops = new ReactiveVar(null)
+    # self.trackStops()
     #   seats
     self.seats = new ReactiveVar(null)
     self.trackSeats()
@@ -590,30 +590,30 @@ class GritsFilterCriteria
   #
   # @param [String] operator
   # @param [Integer] value
-  setStops: (operator, value, operator2, value2) ->
-    self = this
+  # setStops: (operator, value, operator2, value2) ->
+  #   self = this
 
-    # do not allow this to run prior to jQuery/DOM
-    if _.isUndefined($)
-      return
-    if _.indexOf(_validOperators, operator) < 0
-      throw new Error('Invalid operator: ', operator)
-    if _.isUndefined(value)
-      throw new Error('A value must be defined or null.')
-    # the call to change did not come from the UI
-    self.createOrUpdate('stops', {key: 'stops', operator: operator, value: value, operator2: operator2, value2: value2})
-    return
-  trackStops: () ->
-    self = this
-    Tracker.autorun ->
-      obj = self.stops.get()
-      if _.isNull(obj)
-        return
-      self.setStops(obj.operator, obj.value, obj.operator2, obj.value2)
-      async.nextTick(()->
-        self.compareStates()
-      )
-    return
+  #   # do not allow this to run prior to jQuery/DOM
+  #   if _.isUndefined($)
+  #     return
+  #   if _.indexOf(_validOperators, operator) < 0
+  #     throw new Error('Invalid operator: ', operator)
+  #   if _.isUndefined(value)
+  #     throw new Error('A value must be defined or null.')
+  #   # the call to change did not come from the UI
+  #   self.createOrUpdate('stops', {key: 'stops', operator: operator, value: value, operator2: operator2, value2: value2})
+  #   return
+  # trackStops: () ->
+  #   self = this
+  #   Tracker.autorun ->
+  #     obj = self.stops.get()
+  #     if _.isNull(obj)
+  #       return
+  #     self.setStops(obj.operator, obj.value, obj.operator2, obj.value2)
+  #     async.nextTick(()->
+  #       self.compareStates()
+  #     )
+  #   return
   # sets the seats input on the UI to the 'operator' and 'value'
   # specified, as well as, updating the underlying FilterCriteria.
   #

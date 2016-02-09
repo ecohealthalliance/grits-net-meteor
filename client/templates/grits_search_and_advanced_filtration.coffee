@@ -467,8 +467,8 @@ _changeLimitHandler = (e) ->
   return
 _setWFStartVal = (e) ->
   _startVal = $("#weeklyFrequencyInputSlider").val().split(',')
-_setStopsStartVal = (e) ->
-  _startVal = $("#stopsInputSlider").val().split(',')
+# _setStopsStartVal = (e) ->
+#   _startVal = $("#stopsInputSlider").val().split(',')
 _setSeatsStartVal = (e) ->
   _startVal = $("#seatsInputSlider").val().split(',')
 _setLevelsStartVal = (e) ->
@@ -572,7 +572,7 @@ Template.gritsSearchAndAdvancedFiltration.events
   'slideStop #seatsInputSlider': _changeSeatsSliderHandler
   'slideStop #levelsInputSlider': _changeLevelsHandler
   'slideStart #weeklyFrequencyInputSlider': _setWFStartVal
-  'slideStart #stopsInputSlider': _setStopsStartVal
+  #'slideStart #stopsInputSlider': _setStopsStartVal
   'slideStart #seatsInputSlider': _setSeatsStartVal
   'slideStart #levelsInputSlider': _setLevelsStartVal
   'click #startSimulation': _startSimulation
