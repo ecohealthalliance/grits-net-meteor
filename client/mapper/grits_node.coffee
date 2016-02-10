@@ -23,6 +23,13 @@ class GritsNode
     @_id = obj._id
     @_name = 'GritsNode'
 
+    @city = obj.city
+    @state = obj.stateName
+    @countryName = obj.countryName
+    @globalRegion = obj.globalRegion
+
+    @name = obj.name
+
     if typeof marker != 'undefined' and marker instanceof GritsMarker
       @marker = marker
     else

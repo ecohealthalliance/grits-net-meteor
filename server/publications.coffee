@@ -4,7 +4,7 @@ _FLIRT_SIMULATOR_URL = process.env.FLIRT_SIMULATOR_URL
 if _FLIRT_SIMULATOR_URL == ''
   throw new Error('You must set FLIRT_SIMULATOR_URL environment variable, ex: http://localhost:45000/simulator');
 
-_useAggregation = true # enable/disable using the aggregation framework
+_useAggregation = false # enable/disable using the aggregation framework
 _profile = false # enable/disable recording method performance to the collection 'profiling'
 _activeAirports = null
 # collection to record profiling results
@@ -125,7 +125,11 @@ flightsByQuery = (query, limit, skip) ->
     )
     matches = Flights.aggregate(pipeline)
   else
-    matches = Flights.find(query, {limit: limit, skip: skip, transform: null}).fetch()
+    matches = Flights.find(query, {limit: limit, skip: skip, transform: (flight) ->
+      flight.arrivalAirport = Airports.findOne({'_id': flight.arrivalAirport._id})
+      flight.departureAirport = Airports.findOne({'_id': flight.departureAirport._id})
+      flight
+      }).fetch()
 
   if _profile
     recordProfile('flightsByQuery', new Date() - start)
@@ -281,7 +285,7 @@ findAirports = () ->
 # @return { "Aiport code" : [coordinates] }
 airportLocations = () ->
   airports = Airports.find({}, {
-    fields: { 'loc.coordinates' : 1 }, 
+    fields: { 'loc.coordinates' : 1 },
     transform: null
   }).fetch()
   return _.object([airport['_id'], airport['loc']['coordinates']] for airport in airports)
