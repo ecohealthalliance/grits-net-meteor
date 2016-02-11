@@ -1,3 +1,4 @@
+_previousLayerGroup = null
 # currently GritsLayerGroup acts as a wrapper to L.layerGroup
 class GritsLayerGroup #extends L.layerGroup
   constructor: (layers, map, id, label) ->
@@ -82,7 +83,7 @@ class GritsLayerGroup #extends L.layerGroup
     # box, so do not draw a path
     if (nodes[0] == null || nodes[1] == null)
       return
-    pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
+    pathLayer.convertFlight(flight, level, nodes[0], nodes[1])
     return
 
   convertItineraries: (fields, originToken) ->
@@ -131,6 +132,14 @@ class GritsLayerGroup #extends L.layerGroup
       return self._layers[id]
     return null
 
+_resetPreviousLayer = (newLayerGroup) ->
+  if _previousLayerGroup != null
+    if _previousLayerGroup._id != newLayerGroup._id
+      _previousLayerGroup.reset()
+      Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress()
+  _previousLayerGroup = newLayerGroup
+  return
+
 GritsLayerGroup.getCurrentLayerGroup = () ->
   layerGroup = null
   map = Template.gritsMap.getInstance()
@@ -141,4 +150,5 @@ GritsLayerGroup.getCurrentLayerGroup = () ->
     layerGroup = map.getGritsLayerGroup(GritsConstants.EXPLORE_GROUP_LAYER_ID)
   else
     console.error("Invalid Map Mode '#{mode}'")
+  _resetPreviousLayer(layerGroup)
   return layerGroup
