@@ -1,5 +1,6 @@
 _isDrawing = false
 _boundingBox = null
+_lastMode = null
 
 Template.gritsMapSidebar.helpers
   'MODE_EXPLORE': () ->
@@ -9,7 +10,10 @@ Template.gritsMapSidebar.helpers
 
 Template.gritsMapSidebar.events
   'change #mode-toggle': (event) ->
-    Session.set(GritsConstants.SESSION_KEY_MODE, $(event.target).data('mode'));
+    mode = $(event.target).data('mode')
+    if _lastMode == mode
+      return
+    Session.set(GritsConstants.SESSION_KEY_MODE, mode)
     return
   'click #sidebar-plus-button': (event) ->
     Template.gritsMap.getInstance().zoomIn()
@@ -29,3 +33,11 @@ Template.gritsMapSidebar.events
       $('#sidebar-draw-rectangle-tool').removeClass('sidebar-highlight')
       if _boundingBox != null
         _boundingBox.remove()
+
+Template.gritsMapSidebar.onRendered ->
+  self = this
+
+  # keep the UI reactive with the current mode
+  Tracker.autorun ->
+    _lastMode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    $('#mode-toggle :input[data-mode="' + _lastMode + '"]').click()
