@@ -61,4 +61,5 @@ Meteor.startup ->
     Template.gritsOverlay.hide()
     # Mark the app ready
     Session.set 'grits-net-meteor:isReady', true
+    Session.set 'grits-net-meteor:mode', GritsConstants.EXPLORE_MODE
   )
