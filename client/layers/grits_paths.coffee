@@ -339,7 +339,7 @@ class GritsPathLayer extends GritsLayer
       path.occurrances += 1
       path.throughput += (flight.totalSeats * flight.weeklyFrequency)
     return
-  
+
   convertItineraries: (itinerary, origin, destination) ->
     self = this
     _id = CryptoJS.MD5(origin._id + destination._id).toString()
@@ -355,6 +355,7 @@ class GritsPathLayer extends GritsLayer
         return
     else
       path.occurrances += 1
+      path.throughput += 1
     return
 
   # returns the normalized throughput for a node
