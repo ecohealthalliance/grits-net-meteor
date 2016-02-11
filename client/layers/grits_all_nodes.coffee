@@ -2,7 +2,8 @@ _eventHandlers = {
   mouseover: (element, selection, projection) ->
     self = this
     map = Template.gritsMap.getInstance()
-    nodeLayer = map.getGritsLayer('Nodes')
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+    nodeLayer = layerGroup.getNodeLayer()
     if not Session.get('grits-net-meteor:isUpdating')
       # set nodeLayer previous/current node
       nodeLayer.currentNode.set(self)
@@ -25,9 +26,10 @@ _eventHandlers = {
           departureSearchMain = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
           departureSearchMain.tokenfield('setTokens', [self._id])
           map = Template.gritsMap.getInstance()
-          pathLayer = map.getGritsLayer('Paths')
-          nodeLayer = map.getGritsLayer('Nodes')
-          allNodesLayer = map.getGritsLayer('AllNodes')
+          layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+          pathLayer = layerGroup.getPathLayer()
+          nodeLayer = layerGroup.getNodeLayer()
+          allNodesLayer = map.getGritsLayerGroup(GritsConstants.ALL_NODES_GROUP_LAYER_ID)
           async.nextTick(() ->
             # apply the filter
             GritsFilterCriteria.apply((err, res) ->
@@ -76,8 +78,6 @@ class GritsAllNodesLayer extends GritsLayer
     self._map = map
 
     self._layer = L.d3SvgOverlay(_.bind(self._drawCallback, this), {})
-    self._layerGroup = L.layerGroup([self._layer])
-    self._map.addOverlayControl(self._displayName, @_layerGroup)
 
     self._prefixDOMID = 'all-node-'
 
@@ -85,40 +85,6 @@ class GritsAllNodesLayer extends GritsLayer
 
     self._bindMapEvents()
     self._populateAllNodes()
-    return
-
-  # removes the layer
-  #
-  remove: () ->
-    self = this
-    self._removeLayerGroup()
-
-  # adds the layer
-  #
-  add: () ->
-    Template.gritsOverlay.show()
-    self = this
-    setTimeout(() ->
-      self._addLayerGroup()
-    , 125)
-
-  # removes the layerGroup from the map
-  #
-  # @override
-  _removeLayerGroup: () ->
-    self = this
-    if !(typeof self._layerGroup == 'undefined' or self._layerGroup == null)
-      self._map.removeLayer(self._layerGroup)
-    return
-
-  # adds the layer group to the map
-  #
-  # @override
-  _addLayerGroup: () ->
-    self = this
-    self._layerGroup = L.layerGroup([self._layer])
-    self._map.addOverlayControl(self._displayName, self._layerGroup)
-    self._map.addLayer(self._layerGroup)
     return
 
   # draws the layer
@@ -238,7 +204,7 @@ class GritsAllNodesLayer extends GritsLayer
 
   # populates all nodes from the database
   _populateAllNodes: () ->
-    self = this    
+    self = this
     count = 0
     total = Meteor.gritsUtil.airports.length
     processQueue = async.queue(((airport, callback) ->

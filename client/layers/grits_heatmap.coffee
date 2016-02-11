@@ -144,22 +144,6 @@ class GritsHeatmapLayer extends GritsLayer
 
       _previousOrigins = departures
     return
-
-  # append a single heatmap to the existing layer, does not clear existing data
-  #
-  # @param [Object] heatmap, Astro.class representation of 'Heatmap' model
-  # add: (heatmap) ->
-  #   self = this
-  #   if _.isUndefined(heatmap)
-  #     return
-  #   _.each(heatmap.data, (a) ->
-  #     intensity = a[2] * HEATMAP_INTENSITY_MULTIPLIER
-  #     self._data.push([a[0], a[1], intensity])
-  #   )
-  #   self.hasLoaded.set(true)
-  #   self.draw()
-  #   return
-
   # get the heatmap data
   #
   # @return [Array] array of the heatmap data
