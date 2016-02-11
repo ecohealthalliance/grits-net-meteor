@@ -482,6 +482,8 @@ _startSimulation = (e) ->
     toastr.error('The simulator requires at least one Departure')
     return
   origin = departures[0]
+  # switch mode
+  Session.set(GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_ANALYZE)
   # split the passengers into a simulation for each origin.
   # results of the simulations are combined by the app.
   simulations = _.map departures, (origin)->
@@ -519,6 +521,7 @@ _startSimulation = (e) ->
     loaded = 0
     airportCounts = {}
     itinCount = 0
+
     _updateHeatmap = _.throttle(->
       Heatmaps.remove({})
       # map the airportCounts object to one with percentage values
@@ -533,8 +536,9 @@ _startSimulation = (e) ->
       layerGroup.draw()
     , 250)
 
-    Meteor.subscribe('SimulationItineraries', _.pluck(simulationResults, 'simId'))
-    Itineraries.find('simulationId': { $in: _.pluck(simulationResults, 'simId') }).observeChanges({
+    simIds = _.pluck(simulationResults, 'simId')
+    Meteor.subscribe('SimulationItineraries', simIds)
+    Itineraries.find('simulationId': { $in: simIds }).observeChanges({
       added: (id, fields) ->
         itinCount++
         if airportCounts[fields.destination]
@@ -542,27 +546,20 @@ _startSimulation = (e) ->
         else
           airportCounts[fields.destination] = 1
         loaded += 1
-        layerGroup.convertItineraries(fields, origin, (err, res) ->
-          if (err)
-            Meteor.gritsUtil.errorHandler(err)
-            return
-
-          # update the simulatorProgress bar
-          if simPas > 0
-            progress = Math.ceil((loaded/simPas) * 100)
-            _simulationProgress.set(progress)
-          if loaded == simPas
-            #finaldraw
-            _simulationProgress.set(100)
-            layerGroup.finish()
-            _updateHeatmap()
-          else
-            _updateHeatmap()
-            debouncedDraw()
-        )
+        layerGroup.convertItineraries(fields, origin)
+        # update the simulatorProgress bar
+        if simPas > 0
+          progress = Math.ceil((loaded/simPas) * 100)
+          _simulationProgress.set(progress)
+        if loaded == simPas
+          #finaldraw
+          _simulationProgress.set(100)
+          layerGroup.finish()
+          _updateHeatmap()
+        else
+          _updateHeatmap()
+          debouncedDraw()
     })
-
-
 
 # events
 #
