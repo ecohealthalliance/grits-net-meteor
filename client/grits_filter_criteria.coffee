@@ -277,11 +277,14 @@ class GritsFilterCriteria
     map = Template.gritsMap.getInstance()
     nodeLayer = map.getGritsLayer('Nodes')
     pathLayer = map.getGritsLayer('Paths')
+    heatmapLayer = map.getGritsLayer('Heatmap')
 
     # if the offset is equal to zero, clear the layers
     if offset == 0
       pathLayer.clear()
       nodeLayer.clear()
+      heatmapLayer.clear()
+      heatmapLayer._removeLayerGroup()
 
     count = Session.get('grits-net-meteor:loadedRecords')
     self._queue = async.queue(((flight, callback) ->
