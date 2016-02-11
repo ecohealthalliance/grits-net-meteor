@@ -225,11 +225,10 @@ class GritsFilterCriteria
             if !_.isUndefined(Template.gritsMap.getInstance)
               map = Template.gritsMap.getInstance()
               if !_.isNull(map)
-                # clear the node/paths
-                nodeLayer = map.getGritsLayer('Nodes')
-                pathLayer = map.getGritsLayer('Paths')
-                nodeLayer.clear()
-                pathLayer.clear()
+                layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+                # clears the sub-layers and resets the layer group
+                if layerGroup != null
+                  layerGroup.reset()
                 Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress()
         else
           self.stateChanged.set(true)
@@ -275,36 +274,25 @@ class GritsFilterCriteria
       )
 
     map = Template.gritsMap.getInstance()
-    nodeLayer = map.getGritsLayer('Nodes')
-    pathLayer = map.getGritsLayer('Paths')
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
 
     # if the offset is equal to zero, clear the layers
     if offset == 0
-      pathLayer.clear()
-      nodeLayer.clear()
+      layerGroup.reset()
 
     count = Session.get('grits-net-meteor:loadedRecords')
     self._queue = async.queue(((flight, callback) ->
-      nodes = nodeLayer.convertFlight(flight, 1, self.departures.get())
-      # convertFlight may return null in the case of a metaNode
-      if (nodes[0] == null || nodes[1] == null)
-        callback()
-        return
-      pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
+      layerGroup.convertFlight(flight, 1, self.departures.get(), callback)
       async.nextTick ->
         if !(count % 100)
-          nodeLayer.draw()
-          pathLayer.draw()
+          layerGroup.draw()
         Session.set('grits-net-meteor:loadedRecords', ++count)
         callback()
     ), 4)
 
     # final method for when all items within the queue are processed
     self._queue.drain = ->
-      nodeLayer.draw()
-      pathLayer.draw()
-      nodeLayer.hasLoaded.set(true)
-      pathLayer.hasLoaded.set(true)
+      layerGroup.finish()
       Session.set('grits-net-meteor:loadedRecords', count)
       Session.set('grits-net-meteor:isUpdating', false)
 

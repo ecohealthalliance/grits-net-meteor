@@ -510,16 +510,13 @@ _startSimulation = (e) ->
     # let the user know the simulation started
     _simulationProgress.set(1)
 
-    #Session.set('grits-net-meteor:simulationId', res.simId)
-    #$("#sidebar-flightData-tab a")[0].click()
-
-    nodeLayer = Template.gritsMap.getInstance().getGritsLayer('Nodes')
-    pathLayer = Template.gritsMap.getInstance().getGritsLayer('Paths')
-    nodeLayer.clear()
-    pathLayer.clear()
+    # get the current mode groupLayer
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+    if layerGroup == null
+      return
+    layerGroup.reset()
 
     loaded = 0
-    
     airportCounts = {}
     itinCount = 0
     _updateHeatmap = _.throttle(->
@@ -531,6 +528,11 @@ _startSimulation = (e) ->
       airportPercentages._id = departures.sort().join("")
       Heatmap.createFromDoc(airportPercentages, airportToCoordinates)
     , 500)
+
+    debouncedDraw = _.debounce(() ->
+      layerGroup.draw()
+    , 250)
+
     Meteor.subscribe('SimulationItineraries', _.pluck(simulationResults, 'simId'))
     Itineraries.find('simulationId': { $in: _.pluck(simulationResults, 'simId') }).observeChanges({
       added: (id, fields) ->
@@ -540,31 +542,27 @@ _startSimulation = (e) ->
         else
           airportCounts[fields.destination] = 1
         loaded += 1
-        nodes = nodeLayer.convertItineraries(fields, origin)
-        if nodes[0] == null || nodes[1] == null
-          return
-        pathLayer.convertItineraries(fields, nodes[0], nodes[1])
+        layerGroup.convertItineraries(fields, origin, (err, res) ->
+          if (err)
+            Meteor.gritsUtil.errorHandler(err)
+            return
 
-        # update the simulatorProgress bar
-        if simPas > 0
-          progress = Math.ceil((loaded/simPas) * 100)
-          _simulationProgress.set(progress)
-
-        if loaded == simPas
-          #finaldraw
-          _simulationProgress.set(100)
-          nodeLayer.draw()
-          pathLayer.draw()
-          _updateHeatmap()
-        else
-          _updateHeatmap()
-          _debouncedDraw(nodeLayer, pathLayer)
+          # update the simulatorProgress bar
+          if simPas > 0
+            progress = Math.ceil((loaded/simPas) * 100)
+            _simulationProgress.set(progress)
+          if loaded == simPas
+            #finaldraw
+            _simulationProgress.set(100)
+            layerGroup.finish()
+            _updateHeatmap()
+          else
+            _updateHeatmap()
+            debouncedDraw()
+        )
     })
 
-_debouncedDraw = _.debounce((nodeLayer, pathLayer) ->
-  nodeLayer.draw()
-  pathLayer.draw()
-, 250)
+
 
 # events
 #

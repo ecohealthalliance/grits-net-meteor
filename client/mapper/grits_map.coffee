@@ -43,32 +43,64 @@ class GritsMap extends L.Map
     super(@_element, @_options)
 
     @_drawOverlayControls()
+    @_createDefaultLayerGroups()
     return
+
+  # creates the default layer groups required by the map
+  _createDefaultLayerGroups: () ->
+    self = this
+    # Add analyze layers to a layer group then store to map
+    analyzeLayers = {}
+    analyzeLayers[GritsConstants.NODE_LAYER_ID] = new GritsNodeLayer(self, GritsConstants.NODE_LAYER_ID)
+    analyzeLayers[GritsConstants.PATH_LAYER_ID] = new GritsPathLayer(self, GritsConstants.PATH_LAYER_ID)
+    analyzeLayerGroup = new GritsLayerGroup(analyzeLayers, self, GritsConstants.ANALYZE_GROUP_LAYER_ID, 'Analyze')
+    analyzeLayerGroup.add()
+    self.addGritsLayerGroup(analyzeLayerGroup)
+
+    # Add explore layers to a layer group then store to map
+    exploreLayers = {}
+    exploreLayers[GritsConstants.NODE_LAYER_ID] = new GritsNodeLayer(self, GritsConstants.NODE_LAYER_ID)
+    exploreLayers[GritsConstants.PATH_LAYER_ID] = new GritsPathLayer(self, GritsConstants.PATH_LAYER_ID)
+    exploreLayerGroup = new GritsLayerGroup(exploreLayers, self, GritsConstants.EXPLORE_GROUP_LAYER_ID, 'Explore')
+    exploreLayerGroup.add()
+    self.addGritsLayerGroup(exploreLayerGroup)
+
+    # Add heatmap layer to a layer group then store to map
+    heatmapLayers = {}
+    heatmapLayers[GritsConstants.HEATMAP_LAYER_ID] = new GritsHeatmapLayer(self, GritsConstants.HEATMAP_LAYER_ID)
+    heatmapLayerGroup = new GritsLayerGroup(heatmapLayers, self, GritsConstants.HEATMAP_GROUP_LAYER_ID, 'Heatmap')
+    self.addGritsLayerGroup(heatmapLayerGroup)
+
+    # Add all nodes layers to a layer group then add to map
+    allNodesLayers = {}
+    allNodesLayers[GritsConstants.NODE_LAYER_ID] = new GritsAllNodesLayer(self)
+    allNodesLayerGroup = new GritsLayerGroup(allNodesLayers, self, GritsConstants.ALL_NODES_GROUP_LAYER_ID, 'All Nodes')
+    self.addGritsLayerGroup(allNodesLayerGroup)
 
   # adds a layer reference to the map object
   #
   # @note This does not add the layer to the Leaflet map.  Its just a container
   # @param [Object] layer, a GritsLayer instance
-  addGritsLayer: (layer) ->
-    if typeof layer == 'undefined'
+  addGritsLayerGroup: (layerGroup) ->
+    if typeof layerGroup == 'undefined'
       throw new Error('A layer must be defined')
       return
-    if !layer instanceof GritsLayer
-      throw new Error('A map requires a valid GritsLayer instance')
+    if !layerGroup instanceof GritsLayerGroup
+      throw new Error('A map requires a valid GritsLayerGroup instance')
       return
-    @_layers[layer._name] = layer
-    return layer
+    @_layers[layerGroup._id] = layerGroup
+    return
 
   # gets a layer refreence from the map object
   #
-  # @param [String] name, a string containing the name of the layer as shown
+  # @param [String] id, a string containing the name of the layer as shown
   #  in the UI layer controls
-  getGritsLayer: (name) ->
-    if typeof name == 'undefined'
-      throw new Error('A name must be defined')
+  getGritsLayerGroup: (id) ->
+    if typeof id == 'undefined'
+      throw new Error('A GritsLayerGroup Id must be defined')
       return
-    if @_layers.hasOwnProperty(name) == true
-      return @_layers[name]
+    if @_layers.hasOwnProperty(id) == true
+      return @_layers[id]
     return null
 
   # draws the overlay controls within the control box in the upper-right
