@@ -1,6 +1,6 @@
 Future = Npm.require('fibers/future');
 
-_FLIRT_SIMULATOR_URL = 'http://localhost:45000/simulator'
+_FLIRT_SIMULATOR_URL = process.env.FLIRT_SIMULATOR_URL
 if _FLIRT_SIMULATOR_URL == ''
   throw new Error('You must set FLIRT_SIMULATOR_URL environment variable, ex: http://localhost:45000/simulator');
 
@@ -293,8 +293,8 @@ findActiveAirports = tempCache () ->
     return _activeAirports
   rawFlights = Flights.rawCollection()
   rawDistinct = Meteor.wrapAsync(rawFlights.distinct, rawFlights)
-  _activeAirports = rawDistinct("departureAirport._id")
-  return Airports.find({'_id': {$in: _activeAirports}}).fetch()
+  _activeAirports = Airports.find({'_id': {$in: rawDistinct("departureAirport._id")}}).fetch()
+  return _activeAirports
 
 # finds a single airport document
 #

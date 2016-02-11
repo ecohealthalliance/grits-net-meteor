@@ -535,11 +535,7 @@ _startSimulation = (e) ->
       Heatmap.createFromDoc(airportPercentages, airportToCoordinates)
     , 500)
     Meteor.subscribe('SimulationItineraries', _.pluck(simulationResults, 'simId'))
-    Itineraries.find('simulationId': { $in: _.pluck(simulationResults, 'simId') }, {transform: (itinerary) ->
-      itinerary.origin = Airports.findOne({'_id': itinerary.origin})
-      itinerary.destination = Airports.findOne({'_id': itinerary.destination})
-      flight
-    }).observeChanges({
+    Itineraries.find('simulationId': { $in: _.pluck(simulationResults, 'simId') }).observeChanges({
       added: (id, fields) ->
         itinCount++
         if airportCounts[fields.destination]
