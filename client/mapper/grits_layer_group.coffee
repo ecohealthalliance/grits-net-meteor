@@ -26,13 +26,13 @@ class GritsLayerGroup #extends L.layerGroup
 
     self._layers = {}
     for own key, value of layers
-        if validStr.test(key) == false
-            throw new Error('Layers Object requires the key name to consist of [A-Za-z0-9_] characters')
-        if !value instanceof GritsLayer
-            throw new Error('Layers Object must have GritsLayer instance for values')
-        if self._layers.hasOwnProperty(key)
-            throw new Error("Layers Object with #{key} already exists")
-        self._layers[key] = value
+      if validStr.test(key) == false
+        throw new Error('Layers Object requires the key name to consist of [A-Za-z0-9_] characters')
+      if !value instanceof GritsLayer
+        throw new Error('Layers Object must have GritsLayer instance for values')
+      if self._layers.hasOwnProperty(key)
+        throw new Error("Layers Object with #{key} already exists")
+      self._layers[key] = value
 
     self._map = map
     self._id = id # the unique string that identifies this layerGroup
@@ -72,26 +72,30 @@ class GritsLayerGroup #extends L.layerGroup
     self = this
     return self._layers[GritsConstants.PATH_LAYER_ID]
 
-  convertFlight: (flight, level, originTokens, callback) ->
+  convertFlight: (flight, level, originTokens) ->
     self = this
     nodeLayer = self._layers[GritsConstants.NODE_LAYER_ID]
     pathLayer = self._layers[GritsConstants.PATH_LAYER_ID]
     nodes = nodeLayer.convertFlight(flight, level, originTokens)
     # convertFlight may return null in the case of a metaNode
+    # which signifies that the node is contained within the bounding
+    # box, so do not draw a path
     if (nodes[0] == null || nodes[1] == null)
-      callback()
       return
     pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
+    return
 
-  convertItineraries: (itinerary, originToken, callback) ->
+  convertItineraries: (fields, originToken) ->
+    self = this
     nodeLayer = self._layers[GritsConstants.NODE_LAYER_ID]
     pathLayer = self._layers[GritsConstants.PATH_LAYER_ID]
-    nodes = nodeLayer.convertItineraries(fields, origin)
+    nodes = nodeLayer.convertItineraries(fields, originToken)
+    # convertFlight may return null in the case of a metaNode
+    # which signifies that the node is contained within the bounding
+    # box, so do not draw a path
     if nodes[0] == null || nodes[1] == null
-      callback({error: true, message: 'nodes cannot be null'})
       return
     pathLayer.convertItineraries(fields, nodes[0], nodes[1])
-    callback(null, true)
     return
 
   draw: () ->
@@ -133,8 +137,8 @@ GritsLayerGroup.getCurrentLayerGroup = () ->
   mode = Session.get(GritsConstants.SESSION_KEY_MODE)
   if mode == GritsConstants.MODE_ANALYZE
     layerGroup = map.getGritsLayerGroup(GritsConstants.ANALYZE_GROUP_LAYER_ID)
-  else if mode == GritsConstants.MODE_EXPLORE 
+  else if mode == GritsConstants.MODE_EXPLORE
     layerGroup = map.getGritsLayerGroup(GritsConstants.EXPLORE_GROUP_LAYER_ID)
   else
-    toastr.error('INVALID MODE')
+    console.error("Invalid Map Mode '#{mode}'")
   return layerGroup
