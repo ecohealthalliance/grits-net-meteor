@@ -597,7 +597,7 @@ class GritsNodeLayer extends GritsLayer
     originNode = null
     destinationNode = null
     # the departureAirport of the flight
-    origin = flight.departureAirport
+    origin = _.find(Meteor.gritsUtil.airports, (airport) -> return airport._id == flight.departureAirport._id)
     if (typeof origin != 'undefined' and origin != null and origin.hasOwnProperty('_id'))
       if origin._id in Object.keys(metaNodeChildren)
         node = self._data[metaToken]
@@ -623,7 +623,7 @@ class GritsNodeLayer extends GritsLayer
           originNode.outgoingThroughput += flight.totalSeats
 
     # the arrivalAirport of the flight
-    destination = flight.arrivalAirport
+    destination = _.find(Meteor.gritsUtil.airports, (airport) -> return airport._id == flight.arrivalAirport._id)
     if (typeof destination != "undefined" and destination != null and destination.hasOwnProperty('_id'))
       destinationNode = self._data[destination._id]
       if (typeof destinationNode == "undefined" or destinationNode == null)

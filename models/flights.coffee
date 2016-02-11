@@ -1,8 +1,4 @@
-Flights = new (Mongo.Collection)('legs', transform: (flight) ->
-  flight.arrivalAirport = Airports.findOne({'_id': flight.arrivalAirport._id})
-  flight.departureAirport = Airports.findOne({'_id': flight.departureAirport._id})
-  flight
-)
+Flights = new (Mongo.Collection)('legs')
 Flight = Astro.Class(
   name: 'Flight'
   collection: Flights

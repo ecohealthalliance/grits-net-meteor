@@ -1,10 +1,10 @@
 Future = Npm.require('fibers/future');
 
-_FLIRT_SIMULATOR_URL = process.env.FLIRT_SIMULATOR_URL
+_FLIRT_SIMULATOR_URL = 'http://localhost:45000/simulator'
 if _FLIRT_SIMULATOR_URL == ''
   throw new Error('You must set FLIRT_SIMULATOR_URL environment variable, ex: http://localhost:45000/simulator');
 
-_useAggregation = false # enable/disable using the aggregation framework
+_useAggregation = true # enable/disable using the aggregation framework
 _profile = false # enable/disable recording method performance to the collection 'profiling'
 _activeAirports = null
 # collection to record profiling results
@@ -125,11 +125,7 @@ flightsByQuery = (query, limit, skip) ->
     )
     matches = Flights.aggregate(pipeline)
   else
-    matches = Flights.find(query, {limit: limit, skip: skip, transform: (flight) ->
-      flight.arrivalAirport = Airports.findOne({'_id': flight.arrivalAirport._id})
-      flight.departureAirport = Airports.findOne({'_id': flight.departureAirport._id})
-      flight
-      }).fetch()
+    matches = Flights.find(query, {limit: limit, skip: skip, transform: null}).fetch()
 
   if _profile
     recordProfile('flightsByQuery', new Date() - start)
@@ -297,8 +293,8 @@ findActiveAirports = tempCache () ->
     return _activeAirports
   rawFlights = Flights.rawCollection()
   rawDistinct = Meteor.wrapAsync(rawFlights.distinct, rawFlights)
-  _activeAirports = rawDistinct("departureAirport")
-  return _activeAirports
+  _activeAirports = rawDistinct("departureAirport._id")
+  return Airports.find({'_id': {$in: _activeAirports}}).fetch()
 
 # finds a single airport document
 #
