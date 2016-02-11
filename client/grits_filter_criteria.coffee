@@ -1,4 +1,3 @@
-_debounceInMilliseconds = 2000 # time to delay the auto-submission of the filter
 _ignoreFields = ['levels', 'limit', 'offset'] # fields that are used for maintaining state but will be ignored when sent to the server
 _validFields = ['weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels', 'effectiveDate', 'discontinuedDate', 'levels', 'limit']
 _validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in', '$near', null]
@@ -34,10 +33,6 @@ _Filter = Astro.Class(
 class GritsFilterCriteria
   constructor: () ->
     self = this
-
-    # debounce wrapper to limit the amount of calls to this function within
-    # the specified time period
-    self.autoApply = _.debounce(self.autoApply, _debounceInMilliseconds)
 
     # lastFlightId used for query with more than one level
     self.lastFlightId = null
@@ -232,10 +227,6 @@ class GritsFilterCriteria
                 Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress()
         else
           self.stateChanged.set(true)
-
-          # auto-apply the filter
-          self.autoApply()
-
           # disable [More...] button when filter has changed
           $('#loadMore').prop('disabled', true)
       else
@@ -281,13 +272,20 @@ class GritsFilterCriteria
       layerGroup.reset()
 
     count = Session.get('grits-net-meteor:loadedRecords')
+
+    debounceDraw = _.debounce(() ->
+      layerGroup.draw()
+    , 250)
+
     self._queue = async.queue(((flight, callback) ->
-      layerGroup.convertFlight(flight, 1, self.departures.get(), callback)
-      async.nextTick ->
-        if !(count % 100)
-          layerGroup.draw()
-        Session.set('grits-net-meteor:loadedRecords', ++count)
-        callback()
+      # convert the flight into a node/path
+      layerGroup.convertFlight(flight, 1, self.departures.get())
+      # update the layer
+      debounceDraw()
+      # update the counter
+      Session.set('grits-net-meteor:loadedRecords', ++count)
+      # done processing
+      callback()
     ), 4)
 
     # final method for when all items within the queue are processed
@@ -304,6 +302,10 @@ class GritsFilterCriteria
   # @param [Function] cb, the callback function
   more: (cb) ->
     self = this
+
+    # applying the filter is always EXPLORE mode
+    Session.set(GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_EXPLORE)
+
     query = self.getQueryObject()
     if _.isUndefined(query) or _.isEmpty(query)
       toastr.error('The filter requires at least one Departure')
@@ -450,14 +452,6 @@ class GritsFilterCriteria
         self.more()
     )
     return
-  # automatically applies the filter; resets the offset, loadedRecords, and
-  # totalRecords
-  #
-  # @note this method is debounced in the constructor
-  autoApply: () ->
-    self = this
-    if !Session.get('grits-net-meteor:isUpdating')
-      self.apply()
   # sets the 'start' date from the filter and updates the filter criteria
   #
   # @param [Object] date, Date object or null to clear the criteria
