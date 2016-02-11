@@ -131,9 +131,9 @@ GritsLayerGroup.getCurrentLayerGroup = () ->
   layerGroup = null
   map = Template.gritsMap.getInstance()
   mode = Session.get(GritsConstants.SESSION_KEY_MODE)
-  if mode == GritsConstants.ANALYZE_MODE
+  if mode == GritsConstants.MODE_ANALYZE
     layerGroup = map.getGritsLayerGroup(GritsConstants.ANALYZE_GROUP_LAYER_ID)
-  else if mode == GritsConstants.EXPLORE_MODE
+  else if mode == GritsConstants.MODE_EXPLORE 
     layerGroup = map.getGritsLayerGroup(GritsConstants.EXPLORE_GROUP_LAYER_ID)
   else
     toastr.error('INVALID MODE')

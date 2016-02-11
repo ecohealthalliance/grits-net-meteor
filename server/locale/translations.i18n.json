@@ -2,6 +2,14 @@
     "window-title": {
         "en": "FLIRT"
     },
+    "mode": {
+        "explore": {
+            "en": "EXPLORE"
+        },
+        "analyze": {
+            "en": "ANALYZE"
+        }
+    },
     "gritsLegend": {
         "path-throughput": {
             "en": "Flight Seat Count"
