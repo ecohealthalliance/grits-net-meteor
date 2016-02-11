@@ -214,17 +214,7 @@ class GritsFilterCriteria
         # do not notifiy on an empty query or the base state
         if current == "{}" || current == self._baseState
           self.stateChanged.set(false)
-          # checks are necessary as Tracker autorun will fire before the DOM
-          # is ready and the Template.gritsMap.onRenered is called
-          if !(_.isUndefined(Template.gritsMap) || _.isNull(Template.gritsMap))
-            if !_.isUndefined(Template.gritsMap.getInstance)
-              map = Template.gritsMap.getInstance()
-              if !_.isNull(map)
-                layerGroup = GritsLayerGroup.getCurrentLayerGroup()
-                # clears the sub-layers and resets the layer group
-                if layerGroup != null
-                  layerGroup.reset()
-                Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress()
+
         else
           self.stateChanged.set(true)
           # disable [More...] button when filter has changed
@@ -671,6 +661,17 @@ class GritsFilterCriteria
     self = this
     Tracker.autorun ->
       obj = self.departures.get()
+      if _.isEmpty(obj)
+        # checks are necessary as Tracker autorun will fire before the DOM
+        # is ready and the Template.gritsMap.onRenered is called
+        if !(_.isUndefined(Template.gritsMap) || _.isUndefined(Template.gritsMap.getInstance))
+          map = Template.gritsMap.getInstance()
+          if !_.isNull(map)
+            layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+            # clears the sub-layers and resets the layer group
+            if layerGroup != null
+              layerGroup.reset()
+            Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress()
       self.setDepartures(obj)
       async.nextTick(()->
         self.compareStates()
