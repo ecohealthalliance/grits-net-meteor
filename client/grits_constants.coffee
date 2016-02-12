@@ -2,8 +2,8 @@ GritsConstants = {}
 # session keys
 GritsConstants.SESSION_KEY_MODE = 'grits-net-meteor:mode'
 # map modes
-GritsConstants.EXPLORE_MODE = 'EXPLORE'
-GritsConstants.ANALYZE_MODE = 'ANALYZE'
+GritsConstants.MODE_EXPLORE = 'EXPLORE'
+GritsConstants.MODE_ANALYZE = 'ANALYZE'
 # group layer ids
 GritsConstants.EXPLORE_GROUP_LAYER_ID = 'explore'
 GritsConstants.ANALYZE_GROUP_LAYER_ID = 'analyze'
