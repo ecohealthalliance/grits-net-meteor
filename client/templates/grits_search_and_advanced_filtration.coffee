@@ -377,6 +377,40 @@ Template.gritsSearchAndAdvancedFiltration.onRendered ->
       $('#applyFilter').prop('disabled', false)
       $('#filterLoading').hide()
 
+# smooth out the rate at which the given function is called by queuing up calls
+# and spreading them out over time.
+smoothRate = (func)->
+  BASE_CALLS_PER_SECOND = 10
+  queue = []
+  active = false
+  MAX_DELAY_SECONDS = 5
+  callsPerSecond = BASE_CALLS_PER_SECOND
+  timeoutFunc = ->
+    callsToDo = callsPerSecond
+    while callsToDo > 0
+      callsToDo--
+      queuedCall = queue.shift()
+      if not queuedCall
+        break
+      [self, args] = queuedCall
+      func.apply(self, args)
+    # calls required to keep up with the queue without going over the max delay
+    requiredCallsPerSecond = queue.length / MAX_DELAY_SECONDS
+    callsPerSecond = Math.max(requiredCallsPerSecond, callsPerSecond)
+    if queue.length > 0
+      setTimeout(
+        timeoutFunc,
+        900 # less than 1000 because we assume the calls take 100ms
+      )
+    else
+      callsPerSecond = BASE_CALLS_PER_SECOND
+      active = false
+  (args...)->
+    queue.push([this, args])
+    if not active
+      active = true
+      setTimeout(timeoutFunc, 900)
+
 _changeWeeklyFrequencyHandler = (e) ->
   val = parseInt($("#weeklyFrequencyInputSlider").val(), 10)
   if val isnt _wfStartVal
@@ -481,6 +515,8 @@ _startSimulation = (e) ->
   if departures.length == 0
     toastr.error('The simulator requires at least one Departure')
     return
+  # switch mode
+  Session.set(GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_ANALYZE)
   # split the passengers into a simulation for each origin.
   # results of the simulations are combined by the app.
   originIds = _.chain(departures)
@@ -498,17 +534,11 @@ _startSimulation = (e) ->
         if err then return reject(err)
         resolve(res)
       )
-  Promise.all([
-    new Promise (resolve, reject)->
-      Meteor.call('airportLocations', (err, res)->
-        if err then return reject(err)
-        resolve(res)
-      )
-  ].concat(simulations))
+  Promise.all(simulations)
   .catch (err)->
     Meteor.gritsUtil.errorHandler(err)
     console.error err
-  .then ([airportToCoordinates, simulationResults...])->
+  .then ([simulationResults...])->
     for res in simulationResults
       if res.hasOwnProperty('error')
         Meteor.gritsUtil.errorHandler(res)
@@ -518,18 +548,16 @@ _startSimulation = (e) ->
     # let the user know the simulation started
     _simulationProgress.set(1)
 
-    #Session.set('grits-net-meteor:simulationId', res.simId)
-    #$("#sidebar-flightData-tab a")[0].click()
-
-    nodeLayer = Template.gritsMap.getInstance().getGritsLayer('Nodes')
-    pathLayer = Template.gritsMap.getInstance().getGritsLayer('Paths')
-    nodeLayer.clear()
-    pathLayer.clear()
+    # get the current mode groupLayer
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+    if layerGroup == null
+      return
+    layerGroup.reset()
 
     loaded = 0
-    
     airportCounts = {}
     itinCount = 0
+
     _updateHeatmap = _.throttle(->
       Heatmaps.remove({})
       # map the airportCounts object to one with percentage values
@@ -537,43 +565,37 @@ _startSimulation = (e) ->
       # key the heatmap to the departure airports so it can be filtered
       # out if the query changes.
       airportPercentages._id = originIds.sort().join("")
-      Heatmap.createFromDoc(airportPercentages, airportToCoordinates)
+      Heatmap.createFromDoc(airportPercentages, Meteor.gritsUtil.airportsToLocations)
     , 500)
-    Meteor.subscribe('SimulationItineraries', _.pluck(simulationResults, 'simId'))
-    Itineraries.find('simulationId': { $in: _.pluck(simulationResults, 'simId') }).observeChanges({
-      added: (id, fields) ->
+
+    _throttledDraw = _.throttle(->
+      layerGroup.draw()
+    , 500)
+
+    simIds = _.pluck(simulationResults, 'simId')
+    Meteor.subscribe('SimulationItineraries', simIds)
+    Itineraries.find('simulationId': { $in: simIds }).observeChanges({
+      added: smoothRate (id, fields) ->
         itinCount++
         if airportCounts[fields.destination]
           airportCounts[fields.destination]++
         else
           airportCounts[fields.destination] = 1
         loaded += 1
-        nodes = nodeLayer.convertItineraries(fields, fields.origin)
-        if nodes[0] == null || nodes[1] == null
-          return
-        pathLayer.convertItineraries(fields, nodes[0], nodes[1])
-
+        layerGroup.convertItineraries(fields, fields.origin)
         # update the simulatorProgress bar
         if simPas > 0
           progress = Math.ceil((loaded/simPas) * 100)
           _simulationProgress.set(progress)
-
         if loaded == simPas
           #finaldraw
           _simulationProgress.set(100)
-          nodeLayer.draw()
-          pathLayer.draw()
+          layerGroup.finish()
           _updateHeatmap()
         else
           _updateHeatmap()
-          _debouncedDraw(nodeLayer, pathLayer)
+          _throttledDraw()
     })
-
-_debouncedDraw = _.debounce((nodeLayer, pathLayer) ->
-  nodeLayer.draw()
-  pathLayer.draw()
-, 250)
-
 # events
 #
 # Event handlers for the grits_filter.html template
