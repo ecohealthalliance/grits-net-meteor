@@ -515,14 +515,22 @@ _startSimulation = (e) ->
   if departures.length == 0
     toastr.error('The simulator requires at least one Departure')
     return
-  origin = departures[0]
   # switch mode
   Session.set(GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_ANALYZE)
   # split the passengers into a simulation for each origin.
   # results of the simulations are combined by the app.
-  simulations = _.map departures, (origin)->
+  originIds = _.chain(departures)
+    .map (originId)->
+      if originId.startsWith(GritsMetaNode.PREFIX)
+        return GritsMetaNode.find(originId).getAirportIds()
+      else
+        [originId]
+    .flatten()
+    .uniq()
+    .value()
+  simulations = _.map originIds, (origin)->
     new Promise (resolve, reject)->
-      Meteor.call('startSimulation', Math.ceil(simPas / departures.length), startDate, endDate, origin, (err, res) ->
+      Meteor.call('startSimulation', Math.ceil(simPas / originIds.length), startDate, endDate, origin, (err, res) ->
         if err then return reject(err)
         resolve(res)
       )
@@ -556,7 +564,7 @@ _startSimulation = (e) ->
       airportPercentages = _.object([key, val / itinCount] for key, val of airportCounts)
       # key the heatmap to the departure airports so it can be filtered
       # out if the query changes.
-      airportPercentages._id = departures.sort().join("")
+      airportPercentages._id = originIds.sort().join("")
       Heatmap.createFromDoc(airportPercentages, Meteor.gritsUtil.airportsToLocations)
     , 500)
 
@@ -574,7 +582,7 @@ _startSimulation = (e) ->
         else
           airportCounts[fields.destination] = 1
         loaded += 1
-        layerGroup.convertItineraries(fields, origin)
+        layerGroup.convertItineraries(fields, fields.origin)
         # update the simulatorProgress bar
         if simPas > 0
           progress = Math.ceil((loaded/simPas) * 100)
