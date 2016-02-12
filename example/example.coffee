@@ -74,10 +74,6 @@ if Meteor.isClient
           [360, -360],[-360, 360]
         ])
 
-        map.addGritsLayer(new GritsHeatmapLayer(map))
-        map.addGritsLayer(new GritsPathLayer(map))
-        map.addGritsLayer(new GritsNodeLayer(map))
-
         # Add the default controls to the map.
         Template.gritsMap.addDefaultControls(map)
 
@@ -96,8 +92,6 @@ if Meteor.isClient
           if result
             map.addControl(new GritsControl('<b> Select a Module </b><div id="moduleSelectorDiv"></div>', 7, 'topright', 'info'))
             Blaze.render(Template.moduleSelector, $('#moduleSelectorDiv')[0])
-          else
-            map.addGritsLayer(new GritsAllNodesLayer(map))
         )
 
         Template.gritsMap.setInstance(map)

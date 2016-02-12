@@ -16,9 +16,10 @@ class GritsBoundingBox
     self._initialZoom = self._map.options.zoom
     self._initialCenter = self._map.options.center
 
-    # the bounding box works on the 'AllNodes' layer
-    self._allNodesLayer = self._map.getGritsLayer('AllNodes')
-    self._allNodesLayer.add()
+    # the bounding box works on the 'AllNodes' layer group
+    self._allNodesLayerGroup = self._map.getGritsLayerGroup(GritsConstants.ALL_NODES_GROUP_LAYER_ID)
+    self._allNodesLayerGroup.add()
+    self._allNodesLayer = self._allNodesLayerGroup.getNodeLayer()
 
     # underscore templates that represent the action menu and actions
     self._actionMenuTmpl = _.template('<ul id="<%= obj.id %>" class="action-menu"></ul>')
@@ -200,6 +201,6 @@ class GritsBoundingBox
       self._map.removeLayer(self._shape)
     self._selectOff()
     self._actionMenu.remove()
-    self._allNodesLayer.remove()
+    self._allNodesLayerGroup.remove()
     self._map.setView(self._initialCenter, self._initialZoom)
     return

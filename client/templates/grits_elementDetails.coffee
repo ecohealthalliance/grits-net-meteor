@@ -52,24 +52,30 @@ Template.gritsElementDetails.onRendered ->
   $('.element-details').hide()
   #store reference to the map and layer instances
   self.map = Template.gritsMap.getInstance()
-  self.pathLayer = self.map.getGritsLayer('Paths')
-  self.nodeLayer = self.map.getGritsLayer('Nodes')
 
   # update the currentPath
-  self.autorun ->
-    p1 = self.pathLayer.currentPath.get()
+  Tracker.autorun ->
+    # determine the current layer group
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+    p1 = layerGroup.getPathLayer().currentPath.get()
     p2 = self.path.get()
     if _.isEqual(p1, p2)
       return
     self.path.set(p1)
     showPath()
+    return
 
   # update the currentNode
-  self.autorun ->
-    n1 = self.nodeLayer.currentNode.get()
+  Tracker.autorun ->
+    # determine the current layer group
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+    n1 = layerGroup.getNodeLayer().currentNode.get()
     n2 = self.node.get()
     if _.isEqual(n1, n2)
       return
     self.node.set(n1)
     if !_.isNull(n1)
       showNode()
+    return
