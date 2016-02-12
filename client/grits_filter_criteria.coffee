@@ -1,4 +1,3 @@
-_debounceInMilliseconds = 2000 # time to delay the auto-submission of the filter
 _ignoreFields = ['levels', 'limit', 'offset'] # fields that are used for maintaining state but will be ignored when sent to the server
 _validFields = ['weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels', 'effectiveDate', 'discontinuedDate', 'levels', 'limit']
 _validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in', '$near', null]
@@ -34,10 +33,6 @@ _Filter = Astro.Class(
 class GritsFilterCriteria
   constructor: () ->
     self = this
-
-    # debounce wrapper to limit the amount of calls to this function within
-    # the specified time period
-    self.autoApply = _.debounce(self.autoApply, _debounceInMilliseconds)
 
     # lastFlightId used for query with more than one level
     self.lastFlightId = null
@@ -219,24 +214,9 @@ class GritsFilterCriteria
         # do not notifiy on an empty query or the base state
         if current == "{}" || current == self._baseState
           self.stateChanged.set(false)
-          # checks are necessary as Tracker autorun will fire before the DOM
-          # is ready and the Template.gritsMap.onRenered is called
-          if !(_.isUndefined(Template.gritsMap) || _.isNull(Template.gritsMap))
-            if !_.isUndefined(Template.gritsMap.getInstance)
-              map = Template.gritsMap.getInstance()
-              if !_.isNull(map)
-                # clear the node/paths
-                nodeLayer = map.getGritsLayer('Nodes')
-                pathLayer = map.getGritsLayer('Paths')
-                nodeLayer.clear()
-                pathLayer.clear()
-                Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress()
+
         else
           self.stateChanged.set(true)
-
-          # auto-apply the filter
-          self.autoApply()
-
           # disable [More...] button when filter has changed
           $('#loadMore').prop('disabled', true)
       else
@@ -275,39 +255,35 @@ class GritsFilterCriteria
       )
 
     map = Template.gritsMap.getInstance()
-    nodeLayer = map.getGritsLayer('Nodes')
-    pathLayer = map.getGritsLayer('Paths')
-    heatmapLayer = map.getGritsLayer('Heatmap')
-
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+    heatmapLayerGroup = Template.gritsMap.getInstance().getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
     # if the offset is equal to zero, clear the layers
     if offset == 0
-      pathLayer.clear()
-      nodeLayer.clear()
-      heatmapLayer.clear()
-      heatmapLayer._removeLayerGroup()
+      layerGroup.reset()
+      heatmapLayerGroup.reset()
 
     count = Session.get('grits-net-meteor:loadedRecords')
+
+    throttleDraw = _.throttle(->
+      layerGroup.draw()
+      heatmapLayerGroup.draw()
+    , 500)
+
     self._queue = async.queue(((flight, callback) ->
-      nodes = nodeLayer.convertFlight(flight, 1, self.departures.get())
-      # convertFlight may return null in the case of a metaNode
-      if (nodes[0] == null || nodes[1] == null)
-        callback()
-        return
-      pathLayer.convertFlight(flight, 1, nodes[0], nodes[1])
-      async.nextTick ->
-        if !(count % 100)
-          nodeLayer.draw()
-          pathLayer.draw()
-        Session.set('grits-net-meteor:loadedRecords', ++count)
-        callback()
+      # convert the flight into a node/path
+      layerGroup.convertFlight(flight, 1, self.departures.get())
+      # update the layer
+      throttleDraw()
+      # update the counter
+      Session.set('grits-net-meteor:loadedRecords', ++count)
+      # done processing
+      callback()
     ), 4)
 
     # final method for when all items within the queue are processed
     self._queue.drain = ->
-      nodeLayer.draw()
-      pathLayer.draw()
-      nodeLayer.hasLoaded.set(true)
-      pathLayer.hasLoaded.set(true)
+      layerGroup.finish()
+      heatmapLayerGroup.finish()
       Session.set('grits-net-meteor:loadedRecords', count)
       Session.set('grits-net-meteor:isUpdating', false)
 
@@ -319,6 +295,10 @@ class GritsFilterCriteria
   # @param [Function] cb, the callback function
   more: (cb) ->
     self = this
+
+    # applying the filter is always EXPLORE mode
+    Session.set(GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_EXPLORE)
+
     query = self.getQueryObject()
     if _.isUndefined(query) or _.isEmpty(query)
       toastr.error('The filter requires at least one Departure')
@@ -465,14 +445,6 @@ class GritsFilterCriteria
         self.more()
     )
     return
-  # automatically applies the filter; resets the offset, loadedRecords, and
-  # totalRecords
-  #
-  # @note this method is debounced in the constructor
-  autoApply: () ->
-    self = this
-    if !Session.get('grits-net-meteor:isUpdating')
-      self.apply()
   # sets the 'start' date from the filter and updates the filter criteria
   #
   # @param [Object] date, Date object or null to clear the criteria
@@ -692,6 +664,17 @@ class GritsFilterCriteria
     self = this
     Tracker.autorun ->
       obj = self.departures.get()
+      if _.isEmpty(obj)
+        # checks are necessary as Tracker autorun will fire before the DOM
+        # is ready and the Template.gritsMap.onRenered is called
+        if !(_.isUndefined(Template.gritsMap) || _.isUndefined(Template.gritsMap.getInstance))
+          map = Template.gritsMap.getInstance()
+          if !_.isNull(map)
+            layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+            # clears the sub-layers and resets the layer group
+            if layerGroup != null
+              layerGroup.reset()
+            Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress()
       self.setDepartures(obj)
       async.nextTick(()->
         self.compareStates()

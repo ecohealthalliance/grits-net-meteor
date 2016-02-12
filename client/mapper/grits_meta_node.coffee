@@ -76,7 +76,8 @@ class GritsMetaNode extends GritsNode
     if props.length > 0
       style = props.join(';')
     return style
-
+  getAirportIds: ()->
+    _.pluck @_children, '_id'
 GritsMetaNode.PREFIX = 'META-'
 # find a metanode
 #

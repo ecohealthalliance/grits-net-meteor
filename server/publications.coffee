@@ -276,15 +276,6 @@ findAirports = () ->
     recordProfile('findAirports', new Date() - start)
   return airports
 
-# Get airport to location map
-#
-# @return { "Aiport code" : [coordinates] }
-airportLocations = () ->
-  airports = Airports.find({}, {
-    fields: { 'loc.coordinates' : 1 }, 
-    transform: null
-  }).fetch()
-  return _.object([airport['_id'], airport['loc']['coordinates']] for airport in airports)
 # finds airports that have flights
 #
 # @return [Array] airports, an array of airport document
@@ -293,7 +284,7 @@ findActiveAirports = tempCache () ->
     return _activeAirports
   rawFlights = Flights.rawCollection()
   rawDistinct = Meteor.wrapAsync(rawFlights.distinct, rawFlights)
-  _activeAirports = rawDistinct("departureAirport")
+  _activeAirports = Airports.find({'_id': {$in: rawDistinct("departureAirport._id")}}).fetch()
   return _activeAirports
 
 # finds a single airport document
@@ -441,16 +432,21 @@ Meteor.publish 'SimulationItineraries', (simIds) ->
   if not _.isArray(simIds)
     check(simIds, String)
     simIds = [simIds]
-  return Itineraries.find
+  return Itineraries.find({
     simulationId:
       $in: simIds
+  }, {
+    fields:
+      simulationId: 1
+      origin: 1
+      destination: 1
+  })
 
 # Public API
 Meteor.methods
   startSimulation: startSimulation
   flightsByQuery: flightsByQuery
   countFlightsByQuery: countFlightsByQuery
-  airportLocations: airportLocations
   findAirports: findAirports
   findActiveAirports: findActiveAirports
   findAirportById: findAirportById

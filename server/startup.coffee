@@ -38,6 +38,11 @@ _warmupMongoItineraries = (done) ->
       done()
   )
   return
+_cacheActiveAirports = (done) ->
+  console.log('cache active airports')
+  Meteor.call('findActiveAirports', done)
+  return
+
 warmupMongo = () ->
   start = new Date()
   console.log('starting warmup')
@@ -48,6 +53,8 @@ warmupMongo = () ->
       _warmupMongoAirports(callback)
     'warmupMongoItineraries': (callback, result) ->
       _warmupMongoItineraries(callback)
+    'cacheActiveAirports': (callback, result) ->
+      _cacheActiveAirports(callback)
   }, (err, result) ->
     console.log('warmup done(ms): ', new Date() - start)
   )

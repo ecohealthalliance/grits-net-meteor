@@ -27,6 +27,11 @@ Meteor.startup ->
           callback(err)
           return
         Meteor.gritsUtil.airports = airports
+        Meteor.gritsUtil.airportsToLocations = _.object([
+          airport['_id']
+          airport['loc']['coordinates']
+        ] for airport in airports)
+
         if Meteor.gritsUtil.debug
           console.log('done airports')
         callback(null, true)
@@ -61,4 +66,5 @@ Meteor.startup ->
     Template.gritsOverlay.hide()
     # Mark the app ready
     Session.set 'grits-net-meteor:isReady', true
+    Session.set GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_EXPLORE
   )
