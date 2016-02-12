@@ -28,7 +28,7 @@ setInstance = (map) ->
 addDefaultControls = (map) ->
   Blaze.render(Template.gritsLegend, $('#sidebar-slider')[0])
 
-  elementDetails = new GritsControl('<div id="elementDetailsContainer"></div>', 7, 'bottomright', 'info element-details')
+  elementDetails = new GritsControl('<div id="elementDetailsContainer"></div>', 7, 'bottomright', 'element-details')
   map.addControl(elementDetails)
   Blaze.render(Template.gritsElementDetails, $('#elementDetailsContainer')[0])
   Blaze.render(Template.gritsSearchAndAdvancedFiltration, $('#sidebar-search-and-advanced-filter')[0])
