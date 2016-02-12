@@ -14,6 +14,14 @@
             <li id="sidebar-question-tab"><a href="#sidebar-question" role="tab"><i class="fa fa-question-circle fa-white"></i></a></li>
             <button id="sidebar-plus-button" class="sidebar-zoom-in fa fa-plus btn btn-sm"></button>
             <button id="sidebar-minus-button" class="sidebar-zoom-out fa fa-minus btn btn-sm"></button>
+            <div id="mode-toggle" class="btn-group" data-toggle="buttons" style="position: absolute; top: 0px; left: 60px; padding-top: 7px; width: 200px;">
+              <label class="btn btn-primary active">
+                <input type="radio" name="mode" data-mode="{{MODE_EXPLORE}}" autocomplete="off" checked> {{_ "mode.explore" }}
+              </label>
+              <label class="btn btn-primary">
+                <input type="radio" name="mode" data-mode="{{MODE_ANALYZE}}" autocomplete="off"> {{_ "mode.analyze" }}
+              </label>
+            </div>
         </ul>
         <!-- Tab panes -->
         <div class="sidebar-content">
