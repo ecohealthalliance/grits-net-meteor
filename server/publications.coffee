@@ -284,7 +284,7 @@ findActiveAirports = tempCache () ->
     return _activeAirports
   rawFlights = Flights.rawCollection()
   rawDistinct = Meteor.wrapAsync(rawFlights.distinct, rawFlights)
-  _activeAirports = rawDistinct("departureAirport")
+  _activeAirports = Airports.find({'_id': {$in: rawDistinct("departureAirport._id")}}).fetch()
   return _activeAirports
 
 # finds a single airport document
