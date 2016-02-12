@@ -21,7 +21,7 @@ highlightPathTableRow = (path) ->
     $row.addClass('activeRow').css({'background-color':''})
     # reset the previous path background-color
     if !_.isNull(_previousPath)
-      $previousPath = $("tr[data-id=#{_previousPath._id}]")      
+      $previousPath = $("tr[data-id=#{_previousPath._id}]")
     # this path becomes the previousPath
     _previousPath = path
   else
@@ -139,17 +139,19 @@ Template.gritsDataTable.onRendered ->
   self = this
 
   _dataTableUpdateInterval = setInterval _refreshTables, 1000
-  # get the map instance and layers
+  # get the map instance
   self.map = Template.gritsMap.getInstance()
-  self.pathsLayer = self.map.getGritsLayer('Paths')
-  self.nodesLayer = self.map.getGritsLayer('Nodes')
-  self.heatmapLayer = self.map.getGritsLayer('Heatmap')
+  # get the heatmap layer
+  heatmapLayerGroup = self.map.getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
+  self.heatmapLayer = heatmapLayerGroup.find(GritsConstants.HEATMAP_LAYER_ID)
 
-  self.autorun ->
-    # when the paths have changed, set the template data to the result
+  Tracker.autorun ->
+    # determine the current layer group
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
 
     # update the table reactively to the current visible paths
-    data = self.pathsLayer.visiblePaths.get()
+    data = layerGroup.getPathLayer().visiblePaths.get()
     if _.isEmpty(data)
       self.paths.set([])
     else
@@ -159,7 +161,7 @@ Template.gritsDataTable.onRendered ->
       self.paths.set(sorted)
 
     # update the table reactively to the current visible nodes
-    data = self.nodesLayer.visibleNodes.get()
+    data = layerGroup.getNodeLayer().visibleNodes.get()
     if _.isEmpty(data)
       self.nodes.set([])
     else
@@ -169,6 +171,7 @@ Template.gritsDataTable.onRendered ->
       nodes = _formatNodeData(sorted)
       self.nodes.set(nodes)
 
+  Tracker.autorun ->
     # when the heatmap is finished loading, set the template data to the result
     heatmapLoaded = self.heatmapLayer.hasLoaded.get()
     if heatmapLoaded

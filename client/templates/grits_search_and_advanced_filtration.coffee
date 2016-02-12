@@ -482,6 +482,8 @@ _startSimulation = (e) ->
     toastr.error('The simulator requires at least one Departure')
     return
   origin = departures[0]
+  # switch mode
+  Session.set(GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_ANALYZE)
   # split the passengers into a simulation for each origin.
   # results of the simulations are combined by the app.
   simulations = _.map departures, (origin)->
@@ -510,18 +512,16 @@ _startSimulation = (e) ->
     # let the user know the simulation started
     _simulationProgress.set(1)
 
-    #Session.set('grits-net-meteor:simulationId', res.simId)
-    #$("#sidebar-flightData-tab a")[0].click()
-
-    nodeLayer = Template.gritsMap.getInstance().getGritsLayer('Nodes')
-    pathLayer = Template.gritsMap.getInstance().getGritsLayer('Paths')
-    nodeLayer.clear()
-    pathLayer.clear()
+    # get the current mode groupLayer
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+    if layerGroup == null
+      return
+    layerGroup.reset()
 
     loaded = 0
-    
     airportCounts = {}
     itinCount = 0
+
     _updateHeatmap = _.throttle(->
       Heatmaps.remove({})
       # map the airportCounts object to one with percentage values
@@ -531,8 +531,14 @@ _startSimulation = (e) ->
       airportPercentages._id = departures.sort().join("")
       Heatmap.createFromDoc(airportPercentages, airportToCoordinates)
     , 500)
-    Meteor.subscribe('SimulationItineraries', _.pluck(simulationResults, 'simId'))
-    Itineraries.find('simulationId': { $in: _.pluck(simulationResults, 'simId') }).observeChanges({
+
+    debouncedDraw = _.debounce(() ->
+      layerGroup.draw()
+    , 250)
+
+    simIds = _.pluck(simulationResults, 'simId')
+    Meteor.subscribe('SimulationItineraries', simIds)
+    Itineraries.find('simulationId': { $in: simIds }).observeChanges({
       added: (id, fields) ->
         itinCount++
         if airportCounts[fields.destination]
@@ -540,31 +546,20 @@ _startSimulation = (e) ->
         else
           airportCounts[fields.destination] = 1
         loaded += 1
-        nodes = nodeLayer.convertItineraries(fields, origin)
-        if nodes[0] == null || nodes[1] == null
-          return
-        pathLayer.convertItineraries(fields, nodes[0], nodes[1])
-
+        layerGroup.convertItineraries(fields, origin)
         # update the simulatorProgress bar
         if simPas > 0
           progress = Math.ceil((loaded/simPas) * 100)
           _simulationProgress.set(progress)
-
         if loaded == simPas
           #finaldraw
           _simulationProgress.set(100)
-          nodeLayer.draw()
-          pathLayer.draw()
+          layerGroup.finish()
           _updateHeatmap()
         else
           _updateHeatmap()
-          _debouncedDraw(nodeLayer, pathLayer)
+          debouncedDraw()
     })
-
-_debouncedDraw = _.debounce((nodeLayer, pathLayer) ->
-  nodeLayer.draw()
-  pathLayer.draw()
-, 250)
 
 # events
 #

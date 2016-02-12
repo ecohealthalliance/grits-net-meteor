@@ -281,7 +281,7 @@ findAirports = () ->
 # @return { "Aiport code" : [coordinates] }
 airportLocations = () ->
   airports = Airports.find({}, {
-    fields: { 'loc.coordinates' : 1 }, 
+    fields: { 'loc.coordinates' : 1 },
     transform: null
   }).fetch()
   return _.object([airport['_id'], airport['loc']['coordinates']] for airport in airports)
@@ -293,7 +293,7 @@ findActiveAirports = tempCache () ->
     return _activeAirports
   rawFlights = Flights.rawCollection()
   rawDistinct = Meteor.wrapAsync(rawFlights.distinct, rawFlights)
-  _activeAirports = rawDistinct("departureAirport")
+  _activeAirports = Airports.find({'_id': {$in: rawDistinct("departureAirport._id")}}).fetch()
   return _activeAirports
 
 # finds a single airport document

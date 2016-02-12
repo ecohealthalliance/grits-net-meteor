@@ -27,7 +27,7 @@ _eventHandlers = {
             GritsFilterCriteria.apply((err, res) ->
               if res
                 map = Template.gritsMap.getInstance()
-                pathLayer = map.getGritsLayer('Paths')
+                layerGroup = GritsLayerGroup.getCurrentLayerGroup()
                 if map.getZoom() > 2
                   # panto the map if we're at zoom level 3 or greater
                   map.panTo(self.latLng)
@@ -35,7 +35,7 @@ _eventHandlers = {
                   # set the view to the latLng and zoom level to 2
                   map.setView(self.latLng, 2)
                 # reset the current path
-                pathLayer.currentPath.set(null)
+                layerGroup.getPathLayer().currentPath.set(null)
                 # set previous/current node to self
                 _previousNode.set(self)
             )
@@ -102,8 +102,8 @@ class GritsNodeLayer extends GritsLayer
     self = this
     self._data = {}
     self._normalizedCI = 1
-    self._removeLayerGroup()
-    self._addLayerGroup()
+    #self._removeLayerGroup()
+    #self._addLayerGroup()
     self.hasLoaded.set(false)
 
   # draws the layer
@@ -119,37 +119,6 @@ class GritsNodeLayer extends GritsLayer
     min = self.min.get()
     max = self.max.get()
     self.visibleNodes.set(self.filterMinMaxThroughput(min, max))
-    return
-
-  # removes the layer
-  #
-  remove: () ->
-    self = this
-    self._removeLayerGroup()
-
-  # adds the layer
-  #
-  add: () ->
-    self = this
-    self._addLayerGroup()
-
-  # removes the layerGroup from the map
-  #
-  # @override
-  _removeLayerGroup: () ->
-    self = this
-    if !(typeof self._layerGroup == 'undefined' or self._layerGroup == null)
-      self._map.removeLayer(self._layerGroup)
-    return
-
-  # adds the layer group to the map
-  #
-  # @override
-  _addLayerGroup: () ->
-    self = this
-    self._layerGroup = L.layerGroup([self._layer])
-    self._map.addOverlayControl(self._displayName, self._layerGroup)
-    self._map.addLayer(self._layerGroup)
     return
 
   # moves the origins to the top of the node layer
@@ -597,7 +566,7 @@ class GritsNodeLayer extends GritsLayer
     originNode = null
     destinationNode = null
     # the departureAirport of the flight
-    origin = flight.departureAirport
+    origin = _.find(Meteor.gritsUtil.airports, (airport) -> return airport._id == flight.departureAirport._id)
     if (typeof origin != 'undefined' and origin != null and origin.hasOwnProperty('_id'))
       if origin._id in Object.keys(metaNodeChildren)
         node = self._data[metaToken]
@@ -623,7 +592,7 @@ class GritsNodeLayer extends GritsLayer
           originNode.outgoingThroughput += flight.totalSeats
 
     # the arrivalAirport of the flight
-    destination = flight.arrivalAirport
+    destination = _.find(Meteor.gritsUtil.airports, (airport) -> return airport._id == flight.arrivalAirport._id)
     if (typeof destination != "undefined" and destination != null and destination.hasOwnProperty('_id'))
       destinationNode = self._data[destination._id]
       if (typeof destinationNode == "undefined" or destinationNode == null)
@@ -651,14 +620,13 @@ class GritsNodeLayer extends GritsLayer
 
   convertItineraries: (itinerary, originToken) ->
     self = this
-    
     originNode = null
     destinationNode = null
-    
+
     origin = _.find(Meteor.gritsUtil.airports, (airport) -> return airport._id == itinerary.origin)
     if (typeof origin == 'undefined' or origin == null)
       return [null, null]
-    
+
     originNode = self._data[origin._id]
     if (typeof originNode == 'undefined' or originNode == null)
       try
@@ -671,11 +639,11 @@ class GritsNodeLayer extends GritsLayer
       catch e
         console.error(e.message)
         return [null, null]
-    
+
     destination = _.find(Meteor.gritsUtil.airports, (airport) -> return airport._id == itinerary.destination)
     if (typeof destination == 'undefined' or destination == null)
       return [null, null]
-    
+
     destinationNode = self._data[destination._id]
     if (typeof destinationNode == 'undefined' or destinationNode == null)
       try
@@ -686,7 +654,7 @@ class GritsNodeLayer extends GritsLayer
       catch e
         console.error(e.message)
         return [null, null]
-    
+
     return [originNode, destinationNode]
 
   # returns the normalized throughput for a node
