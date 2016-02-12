@@ -121,39 +121,6 @@ class GritsNodeLayer extends GritsLayer
     self.visibleNodes.set(self.filterMinMaxThroughput(min, max))
     return
 
-  ###
-  # removes the layer
-  #
-  remove: () ->
-    self = this
-    self._removeLayerGroup()
-
-  # adds the layer
-  #
-  add: () ->
-    self = this
-    self._addLayerGroup()
-
-  # removes the layerGroup from the map
-  #
-  # @override
-  _removeLayerGroup: () ->
-    self = this
-    if !(typeof self._layerGroup == 'undefined' or self._layerGroup == null)
-      self._map.removeLayer(self._layerGroup)
-    return
-
-  # adds the layer group to the map
-  #
-  # @override
-  _addLayerGroup: () ->
-    self = this
-    self._layerGroup = L.layerGroup([self._layer])
-    self._map.addOverlayControl(self._displayName, self._layerGroup)
-    self._map.addLayer(self._layerGroup)
-    return
-  ###
-
   # moves the origins to the top of the node layer
   _moveOriginsToTop: () ->
     self = this
@@ -599,7 +566,7 @@ class GritsNodeLayer extends GritsLayer
     originNode = null
     destinationNode = null
     # the departureAirport of the flight
-    origin = flight.departureAirport
+    origin = _.find(Meteor.gritsUtil.airports, (airport) -> return airport._id == flight.departureAirport._id)
     if (typeof origin != 'undefined' and origin != null and origin.hasOwnProperty('_id'))
       if origin._id in Object.keys(metaNodeChildren)
         node = self._data[metaToken]
@@ -625,7 +592,7 @@ class GritsNodeLayer extends GritsLayer
           originNode.outgoingThroughput += flight.totalSeats
 
     # the arrivalAirport of the flight
-    destination = flight.arrivalAirport
+    destination = _.find(Meteor.gritsUtil.airports, (airport) -> return airport._id == flight.arrivalAirport._id)
     if (typeof destination != "undefined" and destination != null and destination.hasOwnProperty('_id'))
       destinationNode = self._data[destination._id]
       if (typeof destinationNode == "undefined" or destinationNode == null)
@@ -653,7 +620,6 @@ class GritsNodeLayer extends GritsLayer
 
   convertItineraries: (itinerary, originToken) ->
     self = this
-
     originNode = null
     destinationNode = null
 
