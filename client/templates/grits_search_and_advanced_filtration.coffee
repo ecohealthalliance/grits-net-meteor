@@ -15,7 +15,7 @@ _departureSearchMain = null # onRendered will set this to a typeahead object
 _effectiveDatePicker = null # onRendered will set this to a datetime picker object
 _discontinuedDatePicker = null # onRendered will set this to a datetime picker object
 _sharedTokens = [] # container for tokens that are shared from departureSearchMain input
-_simulationProgress = new ReactiveVar(0);
+_simulationProgress = new ReactiveVar(0)
 _suggestionTemplate = _.template('
   <span class="airport-code"><%= raw._id %></span>
   <span class="airport-info">
@@ -553,6 +553,8 @@ _startSimulation = (e) ->
     if layerGroup == null
       return
     layerGroup.reset()
+    heatmapLayerGroup = Template.gritsMap.getInstance().getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
+    heatmapLayerGroup.reset()
 
     loaded = 0
     airportCounts = {}
@@ -570,6 +572,7 @@ _startSimulation = (e) ->
 
     _throttledDraw = _.throttle(->
       layerGroup.draw()
+      heatmapLayerGroup.draw()
     , 500)
 
     simIds = _.pluck(simulationResults, 'simId')
@@ -585,13 +588,14 @@ _startSimulation = (e) ->
         layerGroup.convertItineraries(fields, fields.origin)
         # update the simulatorProgress bar
         if simPas > 0
-          progress = Math.ceil((loaded/simPas) * 100)
+          progress = Math.ceil((loaded / simPas) * 100)
           _simulationProgress.set(progress)
         if loaded == simPas
           #finaldraw
           _simulationProgress.set(100)
-          layerGroup.finish()
           _updateHeatmap()
+          layerGroup.finish()
+          heatmapLayerGroup.finish()
         else
           _updateHeatmap()
           _throttledDraw()

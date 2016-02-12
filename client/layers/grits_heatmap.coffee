@@ -30,9 +30,6 @@ class GritsHeatmapLayer extends GritsLayer
       opacity: 0.75
     )
 
-    self._layerGroup = L.layerGroup([self._layer])
-    self._map.addOverlayControl(@_displayName, self._layerGroup)
-
     self.hasLoaded = new ReactiveVar(false)
 
     self._bindMapEvents()
@@ -74,37 +71,6 @@ class GritsHeatmapLayer extends GritsLayer
     self._data = []
     self._layer.setData(self._data)
     self.hasLoaded.set(false)
-    return
-
-  # removes the layer
-  #
-  remove: () ->
-    self = this
-    self._removeLayerGroup()
-
-  # adds the layer
-  #
-  add: () ->
-    self = this
-    self._addLayerGroup()
-
-  # removes the layerGroup from the map
-  #
-  # @override
-  _removeLayerGroup: () ->
-    self = this
-    if !(typeof self._layerGroup == 'undefined' or self._layerGroup == null)
-      self._map.removeLayer(self._layerGroup)
-    return
-
-  # adds the layer group to the map
-  #
-  # @override
-  _addLayerGroup: () ->
-    self = this
-    self._layerGroup = L.layerGroup([self._layer])
-    self._map.addOverlayControl(self._displayName, self._layerGroup)
-    self._map.addLayer(self._layerGroup)
     return
 
   # setup a Meteor Tracker.autorun function to watch the global Session object

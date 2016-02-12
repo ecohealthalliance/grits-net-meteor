@@ -256,22 +256,24 @@ class GritsFilterCriteria
 
     map = Template.gritsMap.getInstance()
     layerGroup = GritsLayerGroup.getCurrentLayerGroup()
-
+    heatmapLayerGroup = Template.gritsMap.getInstance().getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
     # if the offset is equal to zero, clear the layers
     if offset == 0
       layerGroup.reset()
+      heatmapLayerGroup.reset()
 
     count = Session.get('grits-net-meteor:loadedRecords')
 
-    debounceDraw = _.debounce(() ->
+    throttleDraw = _.throttle(->
       layerGroup.draw()
-    , 250)
+      heatmapLayerGroup.draw()
+    , 500)
 
     self._queue = async.queue(((flight, callback) ->
       # convert the flight into a node/path
       layerGroup.convertFlight(flight, 1, self.departures.get())
       # update the layer
-      debounceDraw()
+      throttleDraw()
       # update the counter
       Session.set('grits-net-meteor:loadedRecords', ++count)
       # done processing
@@ -281,6 +283,7 @@ class GritsFilterCriteria
     # final method for when all items within the queue are processed
     self._queue.drain = ->
       layerGroup.finish()
+      heatmapLayerGroup.finish()
       Session.set('grits-net-meteor:loadedRecords', count)
       Session.set('grits-net-meteor:isUpdating', false)
 
