@@ -10,6 +10,7 @@ Template.gritsMapSidebar.helpers
 
 Template.gritsMapSidebar.events
   'change #mode-toggle': (event) ->
+    Template.gritsMap.getInstance()._layers.heatmap.reset()
     mode = $(event.target).data('mode')
     if _lastMode == mode
       return
