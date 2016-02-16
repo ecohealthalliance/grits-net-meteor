@@ -30,9 +30,6 @@ class GritsHeatmapLayer extends GritsLayer
       opacity: 0.75
     )
 
-    self._layerGroup = L.layerGroup([self._layer])
-    self._map.addOverlayControl(@_displayName, self._layerGroup)
-
     self.hasLoaded = new ReactiveVar(false)
 
     self._bindMapEvents()
@@ -76,37 +73,6 @@ class GritsHeatmapLayer extends GritsLayer
     self.hasLoaded.set(false)
     return
 
-  # removes the layer
-  #
-  remove: () ->
-    self = this
-    self._removeLayerGroup()
-
-  # adds the layer
-  #
-  add: () ->
-    self = this
-    self._addLayerGroup()
-
-  # removes the layerGroup from the map
-  #
-  # @override
-  _removeLayerGroup: () ->
-    self = this
-    if !(typeof self._layerGroup == 'undefined' or self._layerGroup == null)
-      self._map.removeLayer(self._layerGroup)
-    return
-
-  # adds the layer group to the map
-  #
-  # @override
-  _addLayerGroup: () ->
-    self = this
-    self._layerGroup = L.layerGroup([self._layer])
-    self._map.addOverlayControl(self._displayName, self._layerGroup)
-    self._map.addLayer(self._layerGroup)
-    return
-
   # setup a Meteor Tracker.autorun function to watch the global Session object
   # 'grits-net-meteor:query' to contain departures.  If so, make a server side
   # call to get the heatmap data.  Do this everytime the global query changes.
@@ -144,22 +110,6 @@ class GritsHeatmapLayer extends GritsLayer
 
       _previousOrigins = departures
     return
-
-  # append a single heatmap to the existing layer, does not clear existing data
-  #
-  # @param [Object] heatmap, Astro.class representation of 'Heatmap' model
-  # add: (heatmap) ->
-  #   self = this
-  #   if _.isUndefined(heatmap)
-  #     return
-  #   _.each(heatmap.data, (a) ->
-  #     intensity = a[2] * HEATMAP_INTENSITY_MULTIPLIER
-  #     self._data.push([a[0], a[1], intensity])
-  #   )
-  #   self.hasLoaded.set(true)
-  #   self.draw()
-  #   return
-
   # get the heatmap data
   #
   # @return [Array] array of the heatmap data

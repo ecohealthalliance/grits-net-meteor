@@ -106,8 +106,8 @@ class GritsPathLayer extends GritsLayer
     self = this
     self._data = {}
     self._normalizedCI = 1
-    self._removeLayerGroup()
-    self._addLayerGroup()
+    #self._removeLayerGroup()
+    #self._addLayerGroup()
     self.hasLoaded.set(false)
 
   # draws the layer
@@ -125,6 +125,7 @@ class GritsPathLayer extends GritsLayer
     self.visiblePaths.set(self.filterMinMaxThroughput(min, max))
     return
 
+  ###
   # removes the layer
   #
   remove: () ->
@@ -155,6 +156,7 @@ class GritsPathLayer extends GritsLayer
     self._map.addOverlayControl(self._displayName, self._layerGroup)
     self._map.addLayer(self._layerGroup)
     return
+  ###
 
   # gets the paths from the layer
   #
