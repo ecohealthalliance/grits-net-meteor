@@ -620,6 +620,7 @@ class GritsNodeLayer extends GritsLayer
 
   convertItineraries: (itinerary, originToken) ->
     self = this
+
     originNode = null
     destinationNode = null
 

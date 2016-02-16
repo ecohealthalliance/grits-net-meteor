@@ -1,8 +1,8 @@
-Future = Npm.require('fibers/future');
+Future = Npm.require('fibers/future')
 
 _FLIRT_SIMULATOR_URL = process.env.FLIRT_SIMULATOR_URL
 if _FLIRT_SIMULATOR_URL == ''
-  throw new Error('You must set FLIRT_SIMULATOR_URL environment variable, ex: http://localhost:45000/simulator');
+  throw new Error('You must set FLIRT_SIMULATOR_URL environment variable, ex: http://localhost:45000/simulator')
 
 _useAggregation = true # enable/disable using the aggregation framework
 _profile = false # enable/disable recording method performance to the collection 'profiling'
@@ -42,10 +42,10 @@ extendQuery = (query, lastId) ->
     _.extend query, offsetFilter
 
 # cache the results of calling the given function for a period of time.
-tempCache = (func)->
+tempCache = (func) ->
   ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24
   cache = {}
-  return (args...)->
+  return (args...) ->
     key = args.join(',')
     if key of cache
       [result, timestamp] = cache[key]
@@ -297,7 +297,7 @@ findAirportById = (id) ->
   return Airports.findOne({'_id': id})
 
 startSimulation = (simPas, startDate, endDate, origin) ->
-  future = new Future();
+  future = new Future()
   HTTP.post(_FLIRT_SIMULATOR_URL, {
     params: {
       submittedBy: 'robo@noreply.io',

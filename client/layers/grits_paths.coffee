@@ -357,6 +357,7 @@ class GritsPathLayer extends GritsLayer
         return
     else
       path.occurrances += 1
+      path.throughput += 1
     return
 
   # returns the normalized throughput for a node

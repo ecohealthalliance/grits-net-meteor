@@ -480,7 +480,7 @@ class GritsFilterCriteria
     Tracker.autorun ->
       obj = self.operatingDateRangeStart.get()
       self.setOperatingDateRangeStart(obj)
-      async.nextTick(()->
+      async.nextTick(() ->
         self.compareStates()
       )
     return
@@ -519,7 +519,7 @@ class GritsFilterCriteria
     Tracker.autorun ->
       obj = self.operatingDateRangeEnd.get()
       self.setOperatingDateRangeEnd(obj)
-      async.nextTick(()->
+      async.nextTick(() ->
         self.compareStates()
       )
     return
@@ -556,7 +556,7 @@ class GritsFilterCriteria
       if _.isNull(obj)
         return
       self.setWeeklyFrequency(obj.operator, obj.value)
-      async.nextTick(()->
+      async.nextTick(() ->
         self.compareStates()
       )
     return
@@ -614,7 +614,7 @@ class GritsFilterCriteria
       if _.isNull(obj)
         return
       self.setSeats(obj.operator, obj.value, obj.operator2, obj.value2)
-      async.nextTick(()->
+      async.nextTick(() ->
         self.compareStates()
       )
     return
@@ -676,7 +676,7 @@ class GritsFilterCriteria
               layerGroup.reset()
             Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress()
       self.setDepartures(obj)
-      async.nextTick(()->
+      async.nextTick(() ->
         self.compareStates()
       )
     return
@@ -703,9 +703,9 @@ class GritsFilterCriteria
         self.remove('arrival')
         return
       if _.isArray(code)
-         self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: code})
+        self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: code})
       else
-         self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: [code]})
+        self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: [code]})
     else
       if _.isNull(code)
         Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', [])
@@ -727,7 +727,7 @@ class GritsFilterCriteria
     Tracker.autorun ->
       obj = self.arrivals.get()
       self.setArrivals(obj)
-      async.nextTick(()->
+      async.nextTick(() ->
         self.compareStates()
       )
     return
@@ -763,7 +763,7 @@ class GritsFilterCriteria
       obj = self.levels.get()
       try
         self.setLevels(obj)
-        async.nextTick(()->
+        async.nextTick(() ->
           self.compareStates()
         )
       catch e
@@ -801,7 +801,7 @@ class GritsFilterCriteria
       obj = self.limit.get()
       try
         self.setLimit(obj)
-        async.nextTick(()->
+        async.nextTick(() ->
           self.compareStates()
         )
       catch e
