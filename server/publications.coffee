@@ -395,17 +395,42 @@ typeaheadAirport = (search, skip) ->
   if _useAggregation
     pipeline = [
       {$match: {$or: fields}},
-      {$sort: {_id: 1}},
-      {$skip: skip},
-      {$limit: 10}
     ]
     matches = Airports.aggregate(pipeline)
   else
     query = { $or: fields }
-    matches = Airports.find(query, {limit: 10, sort: {_id: 1}, skip: skip, transform: null}).fetch()
+    matches = Airports.find(query, {transform: null}).fetch()
+
+  matches = _floatMatchingAirport(search, matches)
+
+  matches = matches.slice(skip, skip + 10)
   if _profile
     recordProfile('typeaheadAirport', new Date() - start)
   return matches
+
+# moves the airport with a code matching the search term to the beginning of the
+# returned array
+#
+# @param [String] search, the string to search for matches
+# @param [Array] airports, an array of airport documents
+# @return [Array] airports, an array of airport documents searched code first if found
+_floatMatchingAirport = (search, airports) ->
+  exactMatchIndex = null
+  i = 0
+  while i <= airports.length
+    if _.isUndefined(airports[i])
+      i++
+      continue
+    else if airports[i]["_id"].toUpperCase() is search.toUpperCase()
+      exactMatchIndex = i
+      break
+    i++
+  if exactMatchIndex isnt null
+    matchElement = [airports[exactMatchIndex]]
+    airports.splice(exactMatchIndex, 1)
+    airports = matchElement.concat(airports)
+  return airports
+
 # counts the number of airports that match the search
 #
 # @param [String] search, the string to search for matches
@@ -421,7 +446,7 @@ countTypeaheadAirports = (search) ->
     fields.push(field)
 
   query = { $or: fields }
-  count = Airports.find(query, {sort: {_id: 1}, transform: null}).count()
+  count = Airports.find(query, {transform: null}).count()
 
   if _profile
     recordProfile('countTypeaheadAirports', new Date() - start)
