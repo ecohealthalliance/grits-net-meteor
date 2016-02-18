@@ -1,16 +1,16 @@
 # shows the path tab
 showPath = () ->
-  $('.element-details').show()
+  $('#element-details').show()
   $('.element-details-nav a[href="#pathDetails"]').tab('show')
 
 # shows the node tab
 showNode = () ->
-  $('.element-details').show()
+  $('#element-details').show()
   $('.element-details-nav a[href="#nodeDetails"]').tab('show')
 
 Template.gritsElementDetails.events
   'click .element-details-close': (e) ->
-    $('.element-details').hide()
+    $('#element-details').hide()
 
 Template.gritsElementDetails.helpers({
   node: () ->
