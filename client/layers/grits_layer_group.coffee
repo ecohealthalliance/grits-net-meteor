@@ -136,7 +136,6 @@ _resetPreviousLayer = (newLayerGroup) ->
   if _previousLayerGroup != null
     if _previousLayerGroup._id != newLayerGroup._id
       _previousLayerGroup.reset()
-      Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress()
   _previousLayerGroup = newLayerGroup
   return
 
