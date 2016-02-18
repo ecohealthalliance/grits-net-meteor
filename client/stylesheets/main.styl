@@ -65,17 +65,11 @@ body
   overflow-x hidden
   overflow-y auto
 
-#filter
-  width 100%
-  .tab-content
-    min-height 300px
-
 .nav-tabs > li.active > a
 .nav-tabs > li.active > a:hover
 .nav-tabs > li.active > a:focus
   background-color $blue
   color white
-
 
 .filter-tab-pane
   padding 20px
@@ -92,7 +86,6 @@ body
   background-color $blue
   border-left solid #ddd 1px
 
-
 .date > span.input-group-addon
   background-color #ddd
 
@@ -106,11 +99,6 @@ body
 #filterLoading
   display none
 
-#filter
-  // font-size small
-  margin-top 0
-  filter-container-width()
-
 #sidebar-layer
   layer-container-width()
   box-shadow 0 0px 0px rgba(0,0,0,0)
@@ -122,67 +110,18 @@ body
   padding .3em
   margin-bottom 0
 
-.filter-heading
-  font-size 1.2em
-  font-weight bold
-  margin 0
-  color #333
-
-.filter-header
-  background-color #eee
-  padding 5px
-  min-width initial
-  border-radius 2px
-
-.filter-first-row
-  margin-bottom 5px
-
-.filter-title
-  display inline
-  vertical-align middle
-  font-weight bold
-  margin 0 0 0 5px
-
-.filter-label
-  font-size 1.1em
-  font-weight bold
-
-.filter-group
-  white-space nowrap
-  padding 2px
-
-.filter-footer
-  @extend .sidebar-footer
-  position relative
-  bottom 0
-  height 98px
-  width $sidebar-width
-  padding-top 10px
-  padding-bottom 20px
-  font-size .8em
-
 .dow
   padding 0
 
 .applyFilter
-	padding 5px
+  padding 5px
 
 .tokenized
   word-wrap normal
 
 .tokenized.main
-  max-width 410px
+  max-width 300px
   background $ll-gray
-
-.tokenized.departure
-  max-height 60px
-  overflow-x hidden
-  overflow-y auto
-
-.tokenized.arrival
-  max-height 60px
-  overflow-x hidden
-  overflow-y auto
 
 .token-input
   font-size 1em
@@ -200,34 +139,21 @@ body
     padding-right 0
     padding-top 5px
 
+.status-bar
+  border-top solid 2px #b7b7b7
+  background-color #d7d7d7
+  line-height 42px
+  height 42px
+  margin-bottom: 0px
+
 .status-bar-text
   padding-right 0
   padding-left 0
   color #333
-  width 80%
-  font-style italic
-  text-align right
 
 .status-bar-val
-  padding-left 2px
-  width 20%
-
-.filter-status
-  position relative
-  margin-right 5px
-  left -2px
-  bottom 8px
-  vertical-align middle
-  color darkorange
-
-.filter-status-message
-  position relative
-  left -2px
-  bottom 8px
-  font-size smaller
   font-weight bold
-  color #333
-  margin 0 3px 0 3px
+  padding-left 2px
 
 .spinner
   position absolute
@@ -422,10 +348,11 @@ p.intro
   display inline
 
 .slider.slider-horizontal
-  width 250px
+  width 225px
   cursor pointer
 
 .slider-wrapper
+  max-width 225px
   margin-bottom 50px
 
 .slider
@@ -482,10 +409,11 @@ p.intro
   background url("/packages/grits_grits-net-meteor/client/images/flirt-logo-inline.png")
   background-size 250px 49px
   background-position center center
-  width 250px
-  height 49px
-  margin 30px 0 30px 20px
+  width 300px
+  height 100px
+  margin 0px
   text-indent -9999px
+  background-repeat no-repeat
 
 #flirtTitleText
   float right
@@ -512,24 +440,6 @@ p.intro
 #sidebar-layer-tab
   position absolute
   top 260px
-
-.include-nearby
-  margin-top 10px
-  margin-bottom 20px
-  padding 0px 20px 0px 20px
-  text-align center
-  > div
-  input
-    display inline-block
-    vertical-align middle
-  input[type=checkbox]
-    margin 0 3px 0 0
-
-#includeNearbyAirportsRadius
-  text-align center
-
-#milesInput
-  margin 0 2px
 
 .tt-input
   height 30px
@@ -585,7 +495,7 @@ p.intro
 
 .limitSearchTitle
   padding 0
-  margin 0px 15px 0px 15px
+  margin 0px 10px 0px 0px
 
 .limitInput
   width 75px
@@ -664,3 +574,123 @@ p.intro
 
 canvas
   z-index -1
+
+.datatable-container
+  background-color white
+
+.datatable-row
+  margin-top 2px
+  margin-bottom 2px
+  display inline-block
+  width 100%
+
+.datatable-heading
+  padding 5px
+  font-size 18px
+  color $blue
+  font-weight bold
+
+.risk-analysis-container
+  background-color white
+  margin-bottom 20px
+
+.datatable-hr
+  border-bottom 2px solid $blue
+
+.progress
+  border-radius 0
+
+.filter
+  display table;
+  height 100%
+
+.filter-header
+  background-color #eee
+  padding 5px
+  min-width initial
+  border-radius 2px
+
+.filter-label
+  font-size 1.1em
+  font-weight bold
+
+.filter-group
+  white-space nowrap
+  padding 2px
+
+.filter-footer
+  @extend .sidebar-footer
+  width 305px /* the Flirt logo is 305px so setting to filter-container-width() will leave 5px white space between footer and blue sidebar */
+  display table-footer-group
+  padding-top 10px
+  font-size .8em
+
+.filter-wrapper
+  margin-left 25px
+  margin-right 25px
+
+.filter-row
+  display inline-block
+  width 100%
+  margin-top 10px
+  margin-bottom 10px
+
+.limit-bar
+  display inline-block
+  width 100%
+  margin-top 10px
+  margin-bottom 10px
+
+.btn-filter
+  width 100%
+  border-radius 0px
+  color #333
+  background-color #b4e0b4
+  border-color #318f80
+  font-weight bold
+
+.btn-filter:hover
+  color #eee
+
+#element-details
+  display none
+  position relative
+  right 15px
+  font-size smaller
+
+.leaflet-control-layers
+  box-shadow none
+  border-radius 0px
+  background none
+
+.layers-wrapper
+  padding 40px 40px 40px 35px
+
+.layers-title
+  margin-bottom 8px
+  font-weight 600
+  font-size 20px
+
+#mode-toggle
+  display none /* hide until i18n loads in startup.coffee */
+
+.btn-mode
+  color #eee
+  border-color #537994
+  background-color #537994
+  padding-top 3px
+  padding-bottom 3px
+  width 100px
+  opacity .8
+  font-weight bold
+
+.btn-mode.active
+  border-color #537994
+  background-color #449d44
+
+.btn-mode:hover, .btn-mode.active:hover
+  border-color #537994
+  background-color #449d44
+
+.dataTable th
+  text-align center
