@@ -261,6 +261,10 @@ class GritsNodeLayer extends GritsLayer
         return self._getNormalizedColor(node)
       )
       .attr('fill-opacity', .8)
+      .attr('stroke-width', (node) ->
+        return (self._getNormalizedWidth(node)) / 6 / projection.scale
+      )
+      .attr("stroke", "white")
       .sort((a,b) ->
         return d3.descending(a.latLng[0], b.latLng[0])
       )
@@ -279,6 +283,10 @@ class GritsNodeLayer extends GritsLayer
       .attr('fill', (node) ->
         return self._getNormalizedColor(node)
       )
+      .attr('stroke-width', (node) ->
+        return (self._getNormalizedWidth(node)) / 6 / projection.scale
+      )
+      .attr("stroke", "white")
       .attr('fill-opacity', .8)
       .attr('class', (node) ->
         return 'destination marker-icon'
