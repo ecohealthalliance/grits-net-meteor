@@ -7,5 +7,5 @@ Meteor.gritsUtil =
       else
         toastr.error(err)
         console.error(err)
-    Session.set('grits-net-meteor:isUpdating', false)
+    Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
     return
