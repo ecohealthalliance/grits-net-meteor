@@ -4,14 +4,14 @@ _eventHandlers = {
     map = Template.gritsMap.getInstance()
     layerGroup = GritsLayerGroup.getCurrentLayerGroup()
     nodeLayer = layerGroup.getNodeLayer()
-    if not Session.get('grits-net-meteor:isUpdating')
+    if not Session.get(GritsConstants.SESSION_KEY_IS_UPDATING)
       # set nodeLayer previous/current node
       nodeLayer.currentNode.set(self)
 
   click: (element, selection, projection) ->
     self = this
-    if not Session.get('grits-net-meteor:isUpdating')
-      departureSearch = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
+    if not Session.get(GritsConstants.SESSION_KEY_IS_UPDATING)
+      departureSearch = Template.gritsSearch.getDepartureSearchMain()
       if typeof departureSearch != 'undefined'
         rawTokens =  departureSearch.tokenfield('getTokens')
         tokens = _.pluck(rawTokens, 'label')
@@ -23,7 +23,7 @@ _eventHandlers = {
           # erase any previous departures
           GritsFilterCriteria.setDepartures(null)
           # set the clicked element as the new origin
-          departureSearchMain = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
+          departureSearchMain = Template.gritsSearch.getDepartureSearchMain()
           departureSearchMain.tokenfield('setTokens', [self._id])
           map = Template.gritsMap.getInstance()
           layerGroup = GritsLayerGroup.getCurrentLayerGroup()
@@ -234,7 +234,6 @@ class GritsAllNodesLayer extends GritsLayer
     self._map.on(
       overlayadd: (e) ->
         if e.name == self._displayName
-          Template.gritsOverlay.hide()
           if !self.hasLoaded.get()
             toastr.warning('The layer has not finished loading')
           if Meteor.gritsUtil.debug
