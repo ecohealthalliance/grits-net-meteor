@@ -121,9 +121,7 @@ class GritsMap extends L.Map
   addOverlayControl: (layerName, layerGroup) ->
     @_gritsOverlays[layerName] = layerGroup
     @_drawOverlayControls()
-    $("#sidebar-layer").empty()
-    $("#sidebar-layer").append($(".leaflet-control-layers-list"))
-    $(".leaflet-control-layers-toggle").hide()
+    window.dispatchEvent(new Event('mapper.addOverlayControl'))
     return
 
   # removes overlay control from the map
