@@ -663,9 +663,12 @@ class GritsNodeLayer extends GritsLayer
         destinationNode = new GritsNode(destination, marker)
         destinationNode.setEventHandlers(_eventHandlers)
         self._data[destination._id] = destinationNode
+        destinationNode.incomingThroughput = 1
       catch e
         console.error(e.message)
         return [null, null]
+    else
+      destinationNode.incomingThroughput += 1
 
     return [originNode, destinationNode]
 
