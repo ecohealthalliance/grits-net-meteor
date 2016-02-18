@@ -138,6 +138,10 @@ class GritsAllNodesLayer extends GritsLayer
         return self._projectCY(projection, node)
       )
       .attr('r', (node) ->
+        if projection.scale is 1
+          return (node.marker.width) / 4
+        if projection.scale is 2
+          return (node.marker.width) / 3.8
         return (node.marker.width) / projection.scale
       )
       .attr('fill', (node) ->
@@ -157,10 +161,10 @@ class GritsAllNodesLayer extends GritsLayer
         return self._projectCY(projection, node)
       )
       .attr('r', (node) ->
-        return (node.marker.width) / projection.scale
+        return (node.marker.width) / 3
       )
       .attr('fill', (node) ->
-        return '#333333';
+        return '#333333'
       )
       .attr('fill-opacity', .5)
       .attr('class', (node) ->
@@ -174,7 +178,7 @@ class GritsAllNodesLayer extends GritsLayer
         return d3.descending(a.latLng[0], b.latLng[0])
       )
       .on('click', (node) ->
-        d3.event.stopPropagation();
+        d3.event.stopPropagation()
         # manual trigger node click handler
         if node.hasOwnProperty('eventHandlers')
           if node.eventHandlers.hasOwnProperty('click')
@@ -182,7 +186,7 @@ class GritsAllNodesLayer extends GritsLayer
         return
       )
       .on('mouseover', (node) ->
-        d3.event.stopPropagation();
+        d3.event.stopPropagation()
         # manual trigger node mouseover handler
         if node.hasOwnProperty('eventHandlers')
           if node.eventHandlers.hasOwnProperty('mouseover')
@@ -194,12 +198,12 @@ class GritsAllNodesLayer extends GritsLayer
 
   _projectCX: (projection, node) ->
     x = projection.latLngToLayerPoint(node.latLng).x
-    r = (1/projection.scale)
+    r = (1 / projection.scale)
     return x - r
 
   _projectCY: (projection, node) ->
     y = projection.latLngToLayerPoint(node.latLng).y
-    r = (1/projection.scale)
+    r = (1 / projection.scale)
     return y - r
 
   # populates all nodes from the database
