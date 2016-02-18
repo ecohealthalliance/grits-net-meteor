@@ -2,10 +2,10 @@ Meteor.startup ->
   # NOTE: *the gritsOverlay indicator will be showing by default*
 
   # initialize Session variables
-  Session.set 'grits-net-meteor:isUpdating', false
-  Session.set 'grits-net-meteor:loadedRecords', 0
-  Session.set 'grits-net-meteor:totalRecords', 0
-  Session.set 'grits-net-meteor:isReady', false # the map will not be displayed until isReady is set to true
+  Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
+  Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, 0)
+  Session.set(GritsConstants.SESSION_KEY_TOTAL_RECORDS, 0)
+  Session.set(GritsConstants.SESSION_KEY_IS_READY, false) # the map will not be displayed until isReady is set to true
 
   # async flow control so we can set grits-net-meteor:isReady true when done
   if Meteor.gritsUtil.debug
@@ -65,6 +65,6 @@ Meteor.startup ->
     # Hide the gritsOverlay indicator
     Template.gritsOverlay.hide()
     # Mark the app ready
-    Session.set 'grits-net-meteor:isReady', true
+    Session.set GritsConstants.SESSION_KEY_IS_READY, true
     Session.set GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_EXPLORE
   )

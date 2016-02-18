@@ -2,7 +2,7 @@ _previousPath = new ReactiveVar(null) # placeholder for a previously selected pa
 
 _eventHandlers = {
   mouseout: (element, selection, projection) ->
-    if not Session.get('grits-net-meteor:isUpdating')
+    if not Session.get(GritsConstants.SESSION_KEY_IS_UPDATING)
       previousPath = _previousPath.get()
       if previousPath isnt null
         if element is previousPath
@@ -14,7 +14,7 @@ _eventHandlers = {
       else
         d3.select(element).style('stroke', @color).style("cursor": "pointer")
   mouseover: (element, selection, projection) ->
-    if not Session.get('grits-net-meteor:isUpdating')
+    if not Session.get(GritsConstants.SESSION_KEY_IS_UPDATING)
       previousPath = _previousPath.get()
       if previousPath isnt null
         if element is previousPath
@@ -27,7 +27,7 @@ _eventHandlers = {
         d3.select(element).style('stroke', 'black').style("cursor": "pointer")
   click: (element, selection, projection) ->
     self = this
-    if not Session.get('grits-net-meteor:isUpdating')
+    if not Session.get(GritsConstants.SESSION_KEY_IS_UPDATING)
       # attach the svg dom element to the GritsPath model
       self.element = element
       self.clicked = true

@@ -1,12 +1,12 @@
 _previousNode = new ReactiveVar(null) # placeholder for a previously selected node
 _eventHandlers = {
   mouseover: (element, selection, projection) ->
-    if not Session.get('grits-net-meteor:isUpdating')
+    if not Session.get(GritsConstants.SESSION_KEY_IS_UPDATING)
       _previousNode.set(this)
   click: (element, selection, projection) ->
     self = this
-    if not Session.get('grits-net-meteor:isUpdating')
-      departureSearch = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
+    if not Session.get(GritsConstants.SESSION_KEY_IS_UPDATING)
+      departureSearch = Template.gritsSearch.getDepartureSearchMain()
       if typeof departureSearch != 'undefined'
         rawTokens =  departureSearch.tokenfield('getTokens')
         tokens = _.pluck(rawTokens, 'label')
@@ -19,7 +19,7 @@ _eventHandlers = {
           # erase any previous departures
           GritsFilterCriteria.setDepartures(null)
           # set the clicked element as the new origin
-          departureSearchMain = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
+          departureSearchMain = Template.gritsSearch.getDepartureSearchMain()
           departureSearchMain.tokenfield('setTokens', [self._id])
 
           async.nextTick(() ->
