@@ -11,9 +11,14 @@
           <thead>
             <tr>
               <th>{{_ "gritsDataTable.tab-1.origin-heading"}}</th>
+              <th class="dtHidden">Origin State</th>
+              <th class="dtHidden">Origin Name</th>
               <th>{{_ "gritsDataTable.tab-1.destination-heading"}}</th>
+              <th class="dtHidden">Destination State</th>
+              <th class="dtHidden">Destination Name</th>
               <th>{{_ "gritsDataTable.tab-1.occurrances-heading"}}</th>
               <th>{{_ "gritsDataTable.tab-1.throughput-heading"}}</th>
+
             </tr>
           </thead>
           <tbody>
@@ -23,8 +28,20 @@
                   <td>
                     {{this.origin._id}}
                   </td>
+                  <td class="dtHidden">
+                    {{this.origin.metadata.state}}
+                  </td>
+                  <td class="dtHidden">
+                    {{this.origin.metadata.name}}
+                  </td>
                   <td>
                     {{this.destination._id}}
+                  </td>
+                  <td class="dtHidden">
+                    {{this.destination.metadata.state}}
+                  </td>
+                  <td class="dtHidden">
+                    {{this.destination.metadata.name}}
                   </td>
                   <td>
                     {{this.occurrances}}
