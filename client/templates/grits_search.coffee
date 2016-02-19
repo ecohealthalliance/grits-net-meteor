@@ -12,6 +12,7 @@ _discontinuedDatePicker = null # onRendered will set this to a datetime picker o
 _simIds = new ReactiveVar([]) # set during _startSimulation eventHandler
 _matchSkip = null # the amount to skip during typeahead pagination
 _simulationProgress = new ReactiveVar(0)
+_disableLimit = new ReactiveVar(false) # toggle if we will allow limit/skip
 _suggestionTemplate = _.template('
   <span class="airport-code"><%= raw._id %></span>
   <span class="airport-info">
@@ -264,6 +265,7 @@ Template.gritsSearch.onCreated ->
   Template.gritsSearch.getDiscontinuedDatePicker = getDiscontinuedDatePicker
   Template.gritsSearch.simIds = _simIds
   Template.gritsSearch.simulationProgress = _simulationProgress
+  Template.gritsSearch.disableLimit = _disableLimit
 
 # triggered when the 'filter' template is rendered
 Template.gritsSearch.onRendered ->
@@ -348,39 +350,12 @@ Template.gritsSearch.onRendered ->
     if departures.length == 0
       _resetSimulationProgress()
 
-# smooth out the rate at which the given function is called by queuing up calls
-# and spreading them out over time.
-_smoothRate = (func)->
-  BASE_CALLS_PER_SECOND = 10
-  queue = []
-  active = false
-  MAX_DELAY_SECONDS = 5
-  callsPerSecond = BASE_CALLS_PER_SECOND
-  timeoutFunc = ->
-    callsToDo = callsPerSecond
-    while callsToDo > 0
-      callsToDo--
-      queuedCall = queue.shift()
-      if not queuedCall
-        break
-      [self, args] = queuedCall
-      func.apply(self, args)
-    # calls required to keep up with the queue without going over the max delay
-    requiredCallsPerSecond = queue.length / MAX_DELAY_SECONDS
-    callsPerSecond = Math.max(requiredCallsPerSecond, callsPerSecond)
-    if queue.length > 0
-      setTimeout(
-        timeoutFunc,
-        900 # less than 1000 because we assume the calls take 100ms
-      )
+  Tracker.autorun ->
+    disabled = _disableLimit.get()
+    if disabled
+      $('#limitBar').hide()
     else
-      callsPerSecond = BASE_CALLS_PER_SECOND
-      active = false
-  (args...)->
-    queue.push([this, args])
-    if not active
-      active = true
-      setTimeout(timeoutFunc, 900)
+      $('#limitBar').show()
 
 _changeSimulatedPassengersHandler = (e) ->
   val = parseInt($("#simulatedPassengersInputSlider").val(), 10)
@@ -416,117 +391,22 @@ _changeDateHandler = (e) ->
     GritsFilterCriteria.operatingDateRangeEnd.set(date)
     return
 _changeLimitHandler = (e) ->
-  val = $("#limit").val()
+  val = parseInt($("#limit").val(), 10)
   GritsFilterCriteria.limit.set(val)
   return
 _startSimulation = (e) ->
   simPas = parseInt($('#simulatedPassengersInputSlider').slider('getValue'), 10)
   startDate = _discontinuedDatePicker.data('DateTimePicker').date().format("DD/MM/YYYY")
   endDate = _effectiveDatePicker.data('DateTimePicker').date().format("DD/MM/YYYY")
-  departures = GritsFilterCriteria.departures.get()
-  if departures.length == 0
-    toastr.error('The simulator requires at least one Departure')
-    return
-  # switch mode
-  Session.set(GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_ANALYZE)
-
-  # let the user know the simulation started
-  _simulationProgress.set(1)
-
-  # split the passengers into a simulation for each origin.
-  # results of the simulations are combined by the app.
-  originIds = _.chain(departures)
-    .map (originId)->
-      if originId.startsWith(GritsMetaNode.PREFIX)
-        return GritsMetaNode.find(originId).getAirportIds()
-      else
-        [originId]
-    .flatten()
-    .uniq()
-    .value()
-  simulations = _.map originIds, (origin)->
-    new Promise (resolve, reject)->
-      Meteor.call('startSimulation', Math.ceil(simPas / originIds.length), startDate, endDate, origin, (err, res) ->
-        if err then return reject(err)
-        resolve(res)
-      )
-  Promise.all(simulations)
-  .catch (err)->
-    Meteor.gritsUtil.errorHandler(err)
-    console.error err
-  .then ([simulationResults...])->
-    for res in simulationResults
-      if res.hasOwnProperty('error')
-        Meteor.gritsUtil.errorHandler(res)
-        console.error(res)
-        return
-
-    # get the current mode groupLayer
-    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
-    if layerGroup == null
-      return
-    layerGroup.reset()
-    heatmapLayerGroup = Template.gritsMap.getInstance().getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
-    heatmapLayerGroup.reset()
-
-    loaded = 0
-    airportCounts = {}
-    itinCount = 0
-    # set the totalRecords session counter to simPas count
-    Session.set(GritsConstants.SESSION_KEY_TOTAL_RECORDS, simPas)
-    # set the loadedRecords to loaded count
-    Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, loaded)
-
-    _updateHeatmap = _.throttle(->
-      Heatmaps.remove({})
-      # map the airportCounts object to one with percentage values
-      airportPercentages = _.object([key, val / itinCount] for key, val of airportCounts)
-      # key the heatmap to the departure airports so it can be filtered
-      # out if the query changes.
-      airportPercentages._id = originIds.sort().join("")
-      Heatmap.createFromDoc(airportPercentages, Meteor.gritsUtil.airportsToLocations)
-    , 500)
-
-    _throttledDraw = _.throttle(->
-      layerGroup.draw()
-      heatmapLayerGroup.draw()
-    , 500)
-
-    simIds = _.pluck(simulationResults, 'simId')
-    _simIds.set(simIds)
-    Meteor.subscribe('SimulationItineraries', simIds)
-    Itineraries.find('simulationId': { $in: simIds }).observeChanges({
-      added: _smoothRate (id, fields) ->
-        itinCount++
-        if airportCounts[fields.destination]
-          airportCounts[fields.destination]++
-        else
-          airportCounts[fields.destination] = 1
-        loaded += 1
-        layerGroup.convertItineraries(fields, fields.origin)
-        # update the simulatorProgress bar
-        if simPas > 0
-          progress = Math.ceil((loaded / simPas) * 100)
-          _simulationProgress.set(progress)
-          Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, loaded)
-        if loaded == simPas
-          #finaldraw
-          _simulationProgress.set(100)
-          Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, loaded)
-          _updateHeatmap()
-          layerGroup.finish()
-          heatmapLayerGroup.finish()
-        else
-          _updateHeatmap()
-          _throttledDraw()
-    })
+  GritsFilterCriteria.startSimulation(simPas, startDate, endDate)
+  return
 _showThroughput = (e) ->
   departures = GritsFilterCriteria.departures.get()
   if departures.length == 0
     toastr.error('The simulator requires at least one Departure')
     return
   GritsFilterCriteria.apply()
-
+  return
 # events
 #
 # Event handlers for the grits_filter.html template
@@ -592,6 +472,11 @@ Template.gritsSearch.events
     return
   'click #loadMore': () ->
     GritsFilterCriteria.setOffset()
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    if mode == GritsConstants.MODE_EXPLORE
+      GritsFilterCriteria.more()
+    else
+      GritsFilterCriteria.continueSimulation()
     return
   'tokenfield:initialize': (e) ->
     $target = $(e.target)
