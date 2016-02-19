@@ -138,6 +138,8 @@ class GritsAllNodesLayer extends GritsLayer
         return self._projectCY(projection, node)
       )
       .attr('r', (node) ->
+        if projection.scale < 1
+          return (node.marker.width) / 2
         if projection.scale is 1
           return (node.marker.width) / 4
         if projection.scale is 2
