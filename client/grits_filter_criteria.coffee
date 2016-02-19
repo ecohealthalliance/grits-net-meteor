@@ -69,6 +69,11 @@ class GritsFilterCriteria
 
     #   offset
     self.offset = new ReactiveVar(0)
+
+    # airportCounts
+    # during a simulation the airports are counted to update the heatmap
+    self.airportCounts = {}
+
     return
   # initialize the start date of the filter 'discontinuedDate'
   #
@@ -577,7 +582,168 @@ class GritsFilterCriteria
       self.offset.set(loadedRecords)
     else
       self.offset.set(0)
-    self.more()
     return
+  # returns a unique list of tokens from the search bar
+  getOriginIds: () ->
+    self = this
+    return _.chain(self.departures.get())
+      .map (originId)->
+        if originId.startsWith(GritsMetaNode.PREFIX)
+          return GritsMetaNode.find(originId).getAirportIds()
+        else
+          [originId]
+      .flatten()
+      .uniq()
+      .value()
+  # handle setup of subscription to SimulatedIteneraries and process the results
+  processSimulation: (simPas, simIds, limit, skip) ->
+    self = this
+    # get the heatmapLayerGroup
+    heatmapLayerGroup = Template.gritsMap.getInstance().getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
+    # get the current mode groupLayer
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+    if layerGroup == null
+      return
+
+    # reset the layers/counters if a new simulation (skip == 0)
+    if skip == 0
+      layerGroup.reset()
+      heatmapLayerGroup.reset()
+      loaded = 0
+      # initialize the status-bar counter
+      Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, loaded)
+      # reset the airportCounts
+      self.airportCounts = {}
+    else
+      loaded = skip
+
+    originIds = self.getOriginIds()
+    _updateHeatmap = _.throttle(->
+      Heatmaps.remove({})
+      # map the airportCounts object to one with percentage values
+      airportPercentages = _.object([key, val / loaded] for key, val of self.airportCounts)
+      # key the heatmap to the departure airports so it can be filtered
+      # out if the query changes.
+      airportPercentages._id = originIds.sort().join("")
+      Heatmap.createFromDoc(airportPercentages, Meteor.gritsUtil.airportsToLocations)
+    , 500)
+
+    _throttledDraw = _.throttle(->
+      layerGroup.draw()
+      heatmapLayerGroup.draw()
+    , 500)
+
+    # subscribe to simulation itineraries
+    if Template.gritsSearch.disableLimit.get()
+      limit = 0
+      skip = 0
+
+    Meteor.subscribe('SimulationItineraries', simIds, limit, skip)
+    options =
+      limit: limit
+      skip: skip
+      transform: null
+
+    _doWork = (id, fields) ->
+      if self.airportCounts[fields.destination]
+        self.airportCounts[fields.destination]++
+      else
+        self.airportCounts[fields.destination] = 1
+      loaded += 1
+      layerGroup.convertItineraries(fields, fields.origin)
+      # update the simulatorProgress bar
+      if simPas > 0
+        progress = Math.ceil((loaded / simPas) * 100)
+        Template.gritsSearch.simulationProgress.set(progress)
+        Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, loaded)
+      if loaded == simPas
+        #finaldraw
+        Template.gritsSearch.simulationProgress.set(100)
+        Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, loaded)
+        _updateHeatmap()
+        layerGroup.finish()
+        heatmapLayerGroup.finish()
+      else
+        _updateHeatmap()
+        _throttledDraw()
+
+    # observe changes to local minimongo collection
+    if Template.gritsSearch.disableLimit.get()
+      Itineraries.find('simulationId': { $in: simIds }, options).observeChanges({
+        # UI freeze does not occur
+        added: Meteor.gritsUtil.smoothRate (id, fields) ->
+        #added: (id, fields) ->
+          _doWork(id, fields)
+      })
+    else
+      Itineraries.find('simulationId': { $in: simIds }, options).observeChanges({
+        # https://github.com/meteor/meteor/issues/2766#issuecomment-58974000
+        # enabling this does seem to work, however it will freeze the UI until
+        # the entire collection has sync'd
+        # note: required for limit, skip to work
+        addedBefore: Meteor.gritsUtil.smoothRate (id, fields) ->
+        #addedBefore: (id, fields) ->
+          _doWork(id, fields)
+      })
+    return
+  # when the users has limit set that is less than simPas
+  continueSimulation: () ->
+    self = this
+    simIds = Template.gritsSearch.simIds.get()
+    simPas = parseInt($('#simulatedPassengersInputSlider').slider('getValue'), 10)
+    limit = self.limit.get()
+    skip = Session.get(GritsConstants.SESSION_KEY_LOADED_RECORDS)
+    self.processSimulation(simPas, simIds, limit, skip)
+  # starting a simulation
+  startSimulation: (simPas, startDate, endDate) ->
+    self = this
+    departures = self.departures.get()
+    if departures.length == 0
+      toastr.error('The simulator requires at least one Departure')
+      return
+
+    # switch mode
+    Session.set(GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_ANALYZE)
+
+    # let the user know the simulation started
+    Template.gritsSearch.simulationProgress.set(1)
+
+    originIds = self.getOriginIds()
+    # async to the server a simulation request for each originIds
+    # TODO: create a single server method to handle multiple originIds to
+    # reduce network traffic
+    simulations = _.map originIds, (origin)->
+      new Promise (resolve, reject)->
+        Meteor.call('startSimulation', Math.ceil(simPas / originIds.length), startDate, endDate, origin, (err, res) ->
+          if err then return reject(err)
+          resolve(res)
+        )
+
+    # when the network requests have returned, join the results and process
+    Promise.all(simulations)
+      .catch (err)->
+        Meteor.gritsUtil.errorHandler(err)
+        console.error err
+      .then ([simulationResults...])->
+        for res in simulationResults
+          # handle any errors
+          if res.hasOwnProperty('error')
+            Meteor.gritsUtil.errorHandler(res)
+            console.error(res)
+            return
+
+        # pluck the simId's from the results
+        simIds = _.pluck(simulationResults, 'simId')
+        # set the reactive var on the template
+        Template.gritsSearch.simIds.set(simIds)
+
+        # set the status-bar total counter
+        Session.set(GritsConstants.SESSION_KEY_TOTAL_RECORDS, simPas)
+
+        # setup parameters for the subscription to SimulationItineraries
+        limit = self.limit.get()
+        skip = 0 # clicking on start risk analysis always starts with zero
+        self.processSimulation(simPas, simIds, limit, skip)
+        return
 
 GritsFilterCriteria = new GritsFilterCriteria() # exports as a singleton
