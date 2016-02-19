@@ -300,20 +300,32 @@ countTypeaheadAirports = (search) ->
     recordProfile('countTypeaheadAirports', new Date() - start)
   return count
 
-Meteor.publish 'SimulationItineraries', (simIds) ->
-  console.log("Subscribed to SimulationItineraries")
-  if not _.isArray(simIds)
-    check(simIds, String)
-    simIds = [simIds]
-  return Itineraries.find({
-    simulationId:
-      $in: simIds
-  }, {
+Meteor.publish 'SimulationItineraries', (simIds, limit, skip) ->
+  # query options
+  options = {
     fields:
       simulationId: 1
       origin: 1
       destination: 1
-  })
+    transform:
+      null
+  }
+  if !(_.isUndefined(limit) or _.isNull(limit))
+    limitClause =
+      limit: parseInt(limit, 10)
+    _.extend options, limitClause
+  if !(_.isUndefined(skip) or _.isNull(skip))
+    skipClause =
+      skip: parseInt(skip, 10)
+    _.extend options, skipClause
+  if not _.isArray(simIds)
+    check(simIds, String)
+    simIds = [simIds]
+  console.log('Subscribed SimulationItineraries -- simIds:%j --options: %j', simIds, options)
+  return Itineraries.find({
+    simulationId:
+      $in: simIds
+  }, options)
 
 # find a simulation by simId
 #
