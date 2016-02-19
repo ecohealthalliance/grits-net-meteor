@@ -189,18 +189,17 @@ Template.gritsDataTable.onRendered ->
     simIds = Template.gritsSearch.simIds.get()
     if simIds.length == 0
       return
-    if self.simId != simIds[0]
-      Meteor.call('findSimulationBySimId', simIds[0], (err, simulation) ->
-        if err
-          console.error(err)
-          return
-        self.simPas.set(simulation.get('numberPassengers'))
-        self.startDate.set(moment(simulation.get('startDate')).format('MM/DD/YYYY'))
-        self.endDate.set(moment(simulation.get('endDate')).format('MM/DD/YYYY'))
-        token = simulation.get('departureNode')
-        self.departures.set([_.find(Meteor.gritsUtil.airports, (a) -> a._id == token)])
-        self.simId = simulation.get('simId')
-      )
+    Meteor.call('findSimulationBySimId', simIds[0], (err, simulation) ->
+      if err
+        console.error(err)
+        return
+      self.simPas.set(simulation.get('numberPassengers'))
+      self.startDate.set(moment(simulation.get('startDate')).format('MM/DD/YYYY'))
+      self.endDate.set(moment(simulation.get('endDate')).format('MM/DD/YYYY'))
+      token = simulation.get('departureNode')
+      self.departures.set([_.find(Meteor.gritsUtil.airports, (a) -> a._id == token)])
+      self.simId = simulation.get('simId')
+    )
 
   Tracker.autorun ->
     if _tablesChanged.get()
