@@ -224,6 +224,24 @@ _resetSimulationProgress = () ->
 
 # sets an object to be used by Meteors' Blaze templating engine (views)
 Template.gritsSearch.helpers({
+  isExploreMode: () ->
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    if _.isUndefined(mode)
+      return false
+    else
+      if mode == GritsConstants.MODE_EXPLORE
+        return true
+      else
+        return false
+  isAnalyzeMode: () ->
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    if _.isUndefined(mode)
+      return false
+    else
+      if mode == GritsConstants.MODE_ANALYZE
+        return true
+      else
+        return false
   loadedRecords: () ->
     return Session.get(GritsConstants.SESSION_KEY_LOADED_RECORDS)
   totalRecords: () ->
@@ -344,18 +362,17 @@ Template.gritsSearch.onRendered ->
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     if mode == GritsConstants.MODE_EXPLORE
       _resetSimulationProgress()
+      _disableLimit.set(false)
+    else
+      # initialize the bootstrap slider (this is not rendered by default in grits_search.html)
+      # it is done using nextTick to give Blaze template time to render
+      async.nextTick(-> $('#simulatedPassengersInputSlider').slider())
+      _disableLimit.set(true)
 
   Tracker.autorun ->
     departures = GritsFilterCriteria.departures.get()
     if departures.length == 0
       _resetSimulationProgress()
-
-  Tracker.autorun ->
-    disabled = _disableLimit.get()
-    if disabled
-      $('#limitBar').hide()
-    else
-      $('#limitBar').show()
 
 _changeSimulatedPassengersHandler = (e) ->
   val = parseInt($("#simulatedPassengersInputSlider").val(), 10)
