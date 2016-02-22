@@ -43,7 +43,7 @@
               <span class="filter-label">{{_ "gritsElementDetails.tab-1.origin-label" }}:</span>
             </div>
             <div class="col-xs-7">
-              {{origin.metadata.city}}
+              {{getNodeCity origin}}
             </div>
           </div>
           <div class="row path-detail-row">
@@ -51,7 +51,7 @@
               <span class="filter-label">{{_ "gritsElementDetails.tab-1.destination-label" }}:</span>
             </div>
             <div class="col-xs-7">
-              {{destination.metadata.city}}
+              {{getNodeCity destination}}
             </div>
           </div>
           <div class="row path-detail-row">
@@ -109,7 +109,7 @@
               <span class="filter-label">{{_ "gritsElementDetails.tab-2.name-label" }}:</span>
             </div>
             <div class="col-xs-7">
-              {{node.metadata.name}}
+              {{getNodeName node}}
             </div>
           </div>
           <div class="row node-detail-row">
@@ -117,7 +117,7 @@
               <span class="filter-label">{{_ "gritsElementDetails.tab-2.city-label" }}:</span>
             </div>
             <div class="col-xs-7">
-              {{node.metadata.city}}
+              {{getNodeCity node}}
             </div>
           </div>
           <div class="row node-detail-row">
@@ -125,7 +125,7 @@
               <span class="filter-label">{{_ "gritsElementDetails.tab-2.country-label" }}:</span>
             </div>
             <div class="col-xs-7">
-              {{node.metadata.countryName}}
+              {{getNodeCountry node}}
             </div>
           </div>
           <div class="row node-detail-row">
@@ -133,7 +133,7 @@
               <span class="filter-label">{{_ "gritsElementDetails.tab-2.region-label" }}:</span>
             </div>
             <div class="col-xs-7">
-              {{node.metadata.globalRegion}}
+              {{getNodeGlobalRegion node}}
             </div>
           </div>
           <div class="row node-detail-row">
