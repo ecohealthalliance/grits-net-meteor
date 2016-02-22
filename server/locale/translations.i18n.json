@@ -90,7 +90,7 @@
             },
             "country-label": {
                 "en": "Country"
-            },
+            }
         },
         "tab-3": {
             "title" : {
@@ -107,7 +107,19 @@
             },
             "intensity-heading": {
                 "en": "Intensity"
-            }
+            },
+            "name-label": {
+                "en": "Name"
+            },
+            "city-label": {
+                "en": "City"
+            },
+            "state-label": {
+                "en": "State"
+            },
+            "country-label": {
+                "en": "Country"
+            },
         }
     },
     "gritsFilter": {

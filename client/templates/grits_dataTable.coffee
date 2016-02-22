@@ -185,5 +185,12 @@ Template.gritsDataTable.onRendered ->
           return data[2] * -1
         )
         heatmaps = _formatHeatmapData(sorted)
-        self.heatmaps.set(heatmaps)
+        hmms = []
+        for heatmap in heatmaps
+          for airport in Meteor.gritsUtil.airports
+            if heatmap.code is airport._id
+              hmm = heatmap
+              hmm.node = airport
+              hmms.push(hmm)
+        self.heatmaps.set(hmms)
     _tablesChanged = true

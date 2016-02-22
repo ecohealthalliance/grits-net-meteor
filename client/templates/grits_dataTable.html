@@ -139,6 +139,10 @@
         <thead>
           <tr>
             <th>{{_ "gritsDataTable.tab-3.code-heading"}}</th>
+            <th class="dtHidden">{{_ "gritsDataTable.tab-3.name-label"}}</th>
+            <th class="dtHidden">{{_ "gritsDataTable.tab-3.city-label"}}</th>
+            <th class="dtHidden">{{_ "gritsDataTable.tab-3.state-label"}}</th>
+            <th class="dtHidden">{{_ "gritsDataTable.tab-3.country-label"}}</th>
             <th>{{_ "gritsDataTable.tab-3.latitude-heading"}}</th>
             <th>{{_ "gritsDataTable.tab-3.longitude-heading"}}</th>
             <th>{{_ "gritsDataTable.tab-3.intensity-heading"}}</th>
@@ -150,6 +154,18 @@
               <tr class="heatmapTableRow" data-id="{{this._id}}">
                 <td>
                   {{this.code}}
+                </td>
+                <td class="dtHidden">
+                  {{this.node.name}}
+                </td>
+                <td class="dtHidden">
+                  {{this.node.city}}
+                </td>
+                <td class="dtHidden">
+                  {{this.node.stateName}}
+                </td>
+                <td class="dtHidden">
+                  {{this.node.countryName}}
                 </td>
                 <td>
                   {{this.latitude}}
