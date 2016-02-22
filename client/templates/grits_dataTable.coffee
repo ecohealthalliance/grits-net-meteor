@@ -192,5 +192,6 @@ Template.gritsDataTable.onRendered ->
               heatmapWithNode = heatmap
               heatmapWithNode.node = airport
               heatmapsWithNode.push(heatmapWithNode)
+              break
         self.heatmaps.set(heatmapsWithNode)
     _tablesChanged = true
