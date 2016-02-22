@@ -219,8 +219,8 @@ class GritsPathLayer extends GritsLayer
     #work on existing nodes
     lines
       .attr('stroke-width', (path) ->
-        weight = self._getWeight(path)
-        return weight / projection.scale
+        self._getWeight(path)
+        return 3 / projection.scale
       ).attr("stroke", (path) ->
         if path.clicked
           return '#EEA66C'
@@ -249,8 +249,8 @@ class GritsPathLayer extends GritsLayer
         newLine = newLineFunction(d)
         return newLine
       ).attr('stroke-width', (path) ->
-        weight = self._getWeight(path)
-        return weight / projection.scale
+        self._getWeight(path)
+        return 3 / projection.scale
       ).attr("stroke", (path) ->
         if path.clicked
           return '#EEA66C'

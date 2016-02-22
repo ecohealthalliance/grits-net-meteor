@@ -5,19 +5,19 @@
 # @param [Object] colorScale, an object containing keys as integer values from
 #  0 - 9 with HTML color codes associated as the value.
 class GritsMarker
-  constructor: (width, height, colorScale) ->
+  constructor: (width, height, colorScale, widthScale) ->
     @_name = 'GritsMarker'
-    
+
     if typeof width == 'undefined'
       @height = 25
     else
       @height = height
-  
+
     if typeof height == 'undefined'
       @width = 15
     else
       @width = width
-  
+
     if typeof colorScale == 'undefined'
       @colorScale =
         9: '282828'
@@ -32,5 +32,20 @@ class GritsMarker
         0: 'B8B8B8'
     else
       @colorScale = colorScale
-  
+
+    if typeof widthScale == 'undefined'
+      @widthScale =
+        9: '16'
+        8: '15'
+        7: '14'
+        6: '13'
+        5: '12'
+        4: '11'
+        3: '10'
+        2: '9'
+        1: '8'
+        0: '7'
+    else
+      @widthScale = widthScale
+
     return
