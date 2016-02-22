@@ -90,10 +90,12 @@ Template.gritsDataTable.events({
     path.eventHandlers.click(element)
     return
   'click .exportData': (event) ->
+    $('.dtHidden').show()
     fileType = $(event.currentTarget).attr("data-type")
     activeTable = $('.dataTableContent').find('.active').find('.table.dataTable')
     if activeTable.length
       activeTable.tableExport({type: fileType})
+    $('.dtHidden').hide()
     return
 })
 

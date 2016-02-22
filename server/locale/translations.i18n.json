@@ -29,8 +29,32 @@
             "origin-heading": {
                 "en": "Origin"
             },
+            "origin-name": {
+                "en": "Origin Name"
+            },
+            "origin-city": {
+                "en": "Origin City"
+            },
+            "origin-state": {
+                "en": "Origin State"
+            },
+            "origin-country": {
+                "en": "Origin Country"
+            },
             "destination-heading": {
                 "en": "Destination"
+            },
+            "destination-name": {
+                "en": "Destination Name"
+            },
+            "destination-city": {
+                "en": "Destination City"
+            },
+            "destination-state": {
+                "en": "Destination State"
+            },
+            "destination-country": {
+                "en": "Destination Country"
             },
             "occurrances-heading": {
                 "en": "Occurrences"
@@ -54,7 +78,19 @@
             },
             "total-heading": {
                 "en": "Total Seats"
-            }
+            },
+            "name-label": {
+                "en": "Name"
+            },
+            "city-label": {
+                "en": "City"
+            },
+            "state-label": {
+                "en": "State"
+            },
+            "country-label": {
+                "en": "Country"
+            },
         },
         "tab-3": {
             "title" : {
