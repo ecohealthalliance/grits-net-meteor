@@ -11,11 +11,15 @@
           <thead>
             <tr>
               <th>{{_ "gritsDataTable.tab-1.origin-heading"}}</th>
-              <th class="dtHidden">Origin State</th>
-              <th class="dtHidden">Origin Name</th>
+              <th class="dtHidden">{{_ "gritsDataTable.tab-1.origin-name"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.tab-1.origin-city"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.tab-1.origin-state"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.tab-1.origin-country"}}</th>
               <th>{{_ "gritsDataTable.tab-1.destination-heading"}}</th>
-              <th class="dtHidden">Destination State</th>
-              <th class="dtHidden">Destination Name</th>
+              <th class="dtHidden">{{_ "gritsDataTable.tab-1.destination-name"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.tab-1.destination-city"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.tab-1.destination-state"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.tab-1.destination-country"}}</th>
               <th>{{_ "gritsDataTable.tab-1.occurrances-heading"}}</th>
               <th>{{_ "gritsDataTable.tab-1.throughput-heading"}}</th>
 
@@ -29,19 +33,31 @@
                     {{this.origin._id}}
                   </td>
                   <td class="dtHidden">
-                    {{this.origin.metadata.state}}
+                    {{this.origin.metadata.name}}
                   </td>
                   <td class="dtHidden">
-                    {{this.origin.metadata.name}}
+                    {{this.origin.metadata.city}}
+                  </td>
+                  <td class="dtHidden">
+                    {{this.origin.metadata.stateName}}
+                  </td>
+                  <td class="dtHidden">
+                    {{this.origin.metadata.countryName}}
                   </td>
                   <td>
                     {{this.destination._id}}
                   </td>
                   <td class="dtHidden">
-                    {{this.destination.metadata.state}}
+                    {{this.destination.metadata.name}}
                   </td>
                   <td class="dtHidden">
-                    {{this.destination.metadata.name}}
+                    {{this.destination.metadata.city}}
+                  </td>
+                  <td class="dtHidden">
+                    {{this.destination.metadata.stateName}}
+                  </td>
+                  <td class="dtHidden">
+                    {{this.destination.metadata.countryName}}
                   </td>
                   <td>
                     {{this.occurrances}}
@@ -68,6 +84,10 @@
         <thead>
           <tr>
             <th>{{_ "gritsDataTable.tab-2.code-heading"}}</th>
+            <th class="dtHidden">{{_ "gritsDataTable.tab-2.name-label"}}</th>
+            <th class="dtHidden">{{_ "gritsDataTable.tab-2.city-label"}}</th>
+            <th class="dtHidden">{{_ "gritsDataTable.tab-2.state-label"}}</th>
+            <th class="dtHidden">{{_ "gritsDataTable.tab-2.country-label"}}</th>
             <th>{{_ "gritsDataTable.tab-2.incoming-heading"}}</th>
             <th>{{_ "gritsDataTable.tab-2.outgoing-heading"}}</th>
             <th>{{_ "gritsDataTable.tab-2.total-heading"}}</th>
@@ -79,6 +99,18 @@
               <tr class="nodeTableRow" data-id="{{this._id}}">
                 <td>
                   {{this._id}}
+                </td>
+                <td class="dtHidden">
+                  {{this.metadata.name}}
+                </td>
+                <td class="dtHidden">
+                  {{this.metadata.city}}
+                </td>
+                <td class="dtHidden">
+                  {{this.metadata.stateName}}
+                </td>
+                <td class="dtHidden">
+                  {{this.metadata.countryName}}
                 </td>
                 <td>
                   {{this.incomingThroughput}}
