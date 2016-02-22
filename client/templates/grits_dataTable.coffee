@@ -35,6 +35,26 @@ _updateSimulationProgress = (progress) ->
   $('.simulation-progress').css({width: progress})
   return progress
 
+# throttle how many time we call sort during reactive changes to the dataTable
+_throttleTablesChanged = _.throttle(->
+  mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+  if mode == GritsConstants.MODE_ANALYZE
+    if $('#analyzeTable').hasOwnProperty('tablesorter')
+      # the tablesorter has already been applies, tritter an update
+      $("#analyzeTable").trigger('update')
+    else
+      # init a new tablesorter, default sort is zero-base array (third column)
+      $("#analyzeTable").tablesorter({sortList:[[2,1]]})
+  else
+    if $("#exploreTable").hasOwnProperty('tablesorter')
+      # the tablesorter has already been applies, tritter an update
+      $("#exploreTable").trigger('update')
+    else
+      # init a new tablesorter, default sort is zero-base array (fourth column)
+      $("#exploreTable").tablesorter({sortList:[[3,1]]})
+  _tablesChanged.set(false)
+, 250)
+
 Template.gritsDataTable.events({
   'click .pathTableRow': (event, template) ->
     # get the clicked row
@@ -203,6 +223,4 @@ Template.gritsDataTable.onRendered ->
 
   Tracker.autorun ->
     if _tablesChanged.get()
-      _tablesChanged.set(false)
-      $("#analyzeTable").tablesorter().trigger('update')
-      $("#exploreTable").tablesorter().trigger('update')
+      _throttleTablesChanged()
