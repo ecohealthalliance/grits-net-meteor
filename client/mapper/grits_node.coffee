@@ -34,8 +34,10 @@ class GritsNode
     @outgoingThroughput = 0
     @level = 0
 
-    @metadata = {}
-    _.extend(@metadata, obj)
+    # to save on memory, the node details is stored in a global object `Meteor.gritsUtil.airports`
+    # and not embedded into each node displayed on the map.
+    #@metadata = {}
+    #_.extend(@metadata, obj)
 
     @eventHandlers = {}
 
