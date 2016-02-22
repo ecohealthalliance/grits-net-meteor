@@ -251,7 +251,7 @@ class GritsFilterCriteria
       # update the counter
       Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS , ++count)
       # done processing
-      callback()
+      async.nextTick(-> callback())
     ), 4)
 
     # final method for when all items within the queue are processed
