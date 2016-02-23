@@ -3,7 +3,8 @@
 # When another meteor app adds grits:grits-net-meteor as a package
 # Template.gritsDataTable will be available globally.
 _previousPath = null # placeholder for the last clicked path
-
+_previousMode = null # placeholder for thet last mode
+_simId = new ReactiveVar(null)
 _tablesChanged = new ReactiveVar(false)
 
 # highlights the path table row
@@ -153,8 +154,18 @@ Template.gritsDataTable.onCreated ->
   this.endDate = new ReactiveVar(null)
   this.departures = new ReactiveVar([])
 
+  this._reset = () ->
+    this.paths.set([])
+    this.simPas.set(0)
+    this.startDate.set('')
+    this.endDate.set('')
+    this.departures.set([])
+    _tablesChanged.set(true)
+
   # Public API
   Template.gritsDataTable.highlightPathTableRow = highlightPathTableRow
+  Template.gritsDataTable.simId = _simId
+  Template.gritsDataTable.reset = this._reset
 
 Template.gritsDataTable.onRendered ->
   self = this
@@ -170,17 +181,6 @@ Template.gritsDataTable.onRendered ->
     # determine the current layer group
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     layerGroup = GritsLayerGroup.getCurrentLayerGroup()
-    departures = GritsFilterCriteria.departures.get()
-    # clear the datatable if departures == 0
-    if departures.length == 0
-      self.paths.set([])
-      self.simPas.set(0)
-      self.startDate.set('')
-      self.endDate.set('')
-      self.departures.set([])
-      _tablesChanged.set(true)
-      return
-
     # update the table reactively to the current visible paths
     if mode == GritsConstants.MODE_ANALYZE
       # if analyze mode; default sort by occurrances
@@ -205,19 +205,37 @@ Template.gritsDataTable.onRendered ->
     _tablesChanged.set(true)
 
   Tracker.autorun ->
-    # what is the current simId
-    simIds = Template.gritsSearch.simIds.get()
-    if simIds.length == 0
+    # determine the current layer group
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+
+    # clear the datatable if mode has changed
+    if _previousMode != null
+      if _previousMode != mode
+        self._reset()
+    _previousMode = mode
+
+  Tracker.autorun ->
+    departures = GritsFilterCriteria.departures.get()
+    # clear the datatable if departures == 0
+    if departures.length == 0
+      self._reset()
       return
-    Meteor.call('findSimulationBySimId', simIds[0], (err, simulation) ->
+
+  Tracker.autorun ->
+    # what is the current simId
+    simId = _simId.get()
+    if _.isEmpty(simId)
+      return
+    Meteor.call('findSimulationBySimId', simId, (err, simulation) ->
       if err
         console.error(err)
         return
       self.simPas.set(simulation.get('numberPassengers'))
       self.startDate.set(moment(simulation.get('startDate')).format('MM/DD/YYYY'))
       self.endDate.set(moment(simulation.get('endDate')).format('MM/DD/YYYY'))
-      token = simulation.get('departureNode')
-      self.departures.set([_.find(Meteor.gritsUtil.airports, (a) -> a._id == token)])
+      tokens = simulation.get('departureNodes')
+      airports = _.filter(Meteor.gritsUtil.airports, (a) -> _.indexOf(tokens, a._id) >= 0)
+      self.departures.set(airports)
       self.simId = simulation.get('simId')
     )
 
