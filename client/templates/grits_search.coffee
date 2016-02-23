@@ -9,7 +9,6 @@ _initLimit = null # onCreated will initialize the limt through GritsFilterCriter
 _departureSearchMain = null # onRendered will set this to a typeahead object
 _effectiveDatePicker = null # onRendered will set this to a datetime picker object
 _discontinuedDatePicker = null # onRendered will set this to a datetime picker object
-_simIds = new ReactiveVar([]) # set during _startSimulation eventHandler
 _matchSkip = null # the amount to skip during typeahead pagination
 _simulationProgress = new ReactiveVar(0)
 _disableLimit = new ReactiveVar(false) # toggle if we will allow limit/skip
@@ -281,7 +280,6 @@ Template.gritsSearch.onCreated ->
   Template.gritsSearch.getDepartureSearchMain = getDepartureSearchMain
   Template.gritsSearch.getEffectiveDatePicker = getEffectiveDatePicker
   Template.gritsSearch.getDiscontinuedDatePicker = getDiscontinuedDatePicker
-  Template.gritsSearch.simIds = _simIds
   Template.gritsSearch.simulationProgress = _simulationProgress
   Template.gritsSearch.disableLimit = _disableLimit
 
@@ -492,8 +490,6 @@ Template.gritsSearch.events
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     if mode == GritsConstants.MODE_EXPLORE
       GritsFilterCriteria.more()
-    else
-      GritsFilterCriteria.continueSimulation()
     return
   'tokenfield:initialize': (e) ->
     $target = $(e.target)
