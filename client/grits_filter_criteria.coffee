@@ -423,7 +423,7 @@ class GritsFilterCriteria
     Tracker.autorun ->
       obj = self.operatingDateRangeStart.get()
       self.setOperatingDateRangeStart(obj)
-      async.nextTick(()->
+      async.nextTick(() ->
         self.compareStates()
       )
     return
@@ -462,7 +462,7 @@ class GritsFilterCriteria
     Tracker.autorun ->
       obj = self.operatingDateRangeEnd.get()
       self.setOperatingDateRangeEnd(obj)
-      async.nextTick(()->
+      async.nextTick(() ->
         self.compareStates()
       )
     return
@@ -523,7 +523,7 @@ class GritsFilterCriteria
             if layerGroup != null
               layerGroup.reset()
       self.setDepartures(obj)
-      async.nextTick(()->
+      async.nextTick(() ->
         self.compareStates()
       )
     return
@@ -559,7 +559,7 @@ class GritsFilterCriteria
       obj = self.limit.get()
       try
         self.setLimit(obj)
-        async.nextTick(()->
+        async.nextTick(() ->
           self.compareStates()
         )
       catch e

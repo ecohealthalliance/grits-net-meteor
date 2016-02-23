@@ -37,6 +37,30 @@
             },
             "col4-heading": {
                 "en": "Total Seats"
+            },
+            "hidden-col1": {
+                "en": "Origin Name"
+            },
+            "hidden-col2": {
+                "en": "Origin City"
+            },
+            "hidden-col3": {
+                "en": "Origin State"
+            },
+            "hidden-col4": {
+                "en": "Origin Country"
+            },
+            "hidden-col5": {
+                "en": "Destination Name"
+            },
+            "hidden-col6": {
+                "en": "Destination City"
+            },
+            "hidden-col7": {
+                "en": "Destination State"
+            },
+            "hidden-col8": {
+                "en": "Destination Country"
             }
         },
         "analyze": {

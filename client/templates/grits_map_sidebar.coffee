@@ -10,6 +10,9 @@ Template.gritsMapSidebar.helpers
 
 Template.gritsMapSidebar.events
   'change #mode-toggle': (event) ->
+    # reset counters and heatmap
+    Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, 0)
+    Session.set(GritsConstants.SESSION_KEY_TOTAL_RECORDS, 0)
     Template.gritsMap.getInstance()._layers.heatmap.reset()
     mode = $(event.target).data('mode')
     if _lastMode == mode

@@ -73,14 +73,36 @@ Template.gritsDataTable.events({
     path.eventHandlers.click(element)
     return
   'click .exportData': (event) ->
+    $('.dtHidden').show()
     fileType = $(event.currentTarget).attr("data-type")
     activeTable = $('.dataTableContent').find('.active').find('.table.dataTable')
     if activeTable.length
       activeTable.tableExport({type: fileType})
+    $('.dtHidden').hide()
     return
 })
 
 Template.gritsDataTable.helpers({
+  getNodeName: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.name
+  getNodeCity: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.city
+  getNodeState: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.state
+  getNodeCountry: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.countryName
   simulationProgress: () ->
     progress = Template.gritsSearch.simulationProgress.get() + '%'
     return _updateSimulationProgress(progress)
@@ -160,6 +182,7 @@ Template.gritsDataTable.onCreated ->
     this.startDate.set('')
     this.endDate.set('')
     this.departures.set([])
+    _simId.set(null)
     _tablesChanged.set(true)
 
   # Public API

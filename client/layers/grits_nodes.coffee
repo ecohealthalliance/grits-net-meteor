@@ -54,9 +54,20 @@ _colorScale =
   80: '#F6D595'
   90: '#FAE6A8'
   100: '#FFF7BC'
+# custom width scale for each marker
+_widthScale =
+  0: '7'
+  1: '8'
+  2: '9'
+  3: '10'
+  4: '11'
+  5: '12'
+  6: '13'
+  7: '14'
+  8: '15'
+  9: '16'
 # custom [width, height] size for each marker
 _size = [7, 7]
-
 
 # Creates an instance of a GritsNodeLayer, extends  GritsLayer
 #
@@ -244,12 +255,16 @@ class GritsNodeLayer extends GritsLayer
         return self._projectCY(projection, node)
       )
       .attr('r', (node) ->
-        return (node.marker.width) / projection.scale
+        return (self._getNormalizedWidth(node)) / projection.scale
       )
       .attr('fill', (node) ->
         return self._getNormalizedColor(node)
       )
       .attr('fill-opacity', .8)
+      .attr('stroke-width', (node) ->
+        return (self._getNormalizedWidth(node)) / 6 / projection.scale
+      )
+      .attr("stroke", "white")
       .sort((a,b) ->
         return d3.descending(a.latLng[0], b.latLng[0])
       )
@@ -263,11 +278,15 @@ class GritsNodeLayer extends GritsLayer
         return self._projectCY(projection, node)
       )
       .attr('r', (node) ->
-        return (node.marker.width) / projection.scale
+        return (self._getNormalizedWidth(node)) / projection.scale
       )
       .attr('fill', (node) ->
         return self._getNormalizedColor(node)
       )
+      .attr('stroke-width', (node) ->
+        return (self._getNormalizedWidth(node)) / 6 / projection.scale
+      )
+      .attr("stroke", "white")
       .attr('fill-opacity', .8)
       .attr('class', (node) ->
         return 'destination marker-icon'
@@ -323,14 +342,14 @@ class GritsNodeLayer extends GritsLayer
     originMarkers
       .attr('x', (node) ->
         x = projection.latLngToLayerPoint(node.latLng).x
-        return x - (node.marker.width / projection.scale)
+        return x - (self._getNormalizedWidth(node) / projection.scale)
       )
       .attr('y', (node) ->
         y = projection.latLngToLayerPoint(node.latLng).y
         return y - (node.marker.height / projection.scale)
       )
       .attr('width', (node) ->
-        return (node.marker.width * 2) / projection.scale
+        return (self._getNormalizedWidth(node) * 2) / projection.scale
       )
       .attr('height', (node) ->
         return (node.marker.height * 2) / projection.scale
@@ -577,7 +596,7 @@ class GritsNodeLayer extends GritsLayer
         originNode = self._data[origin._id]
         if (typeof originNode == 'undefined' or originNode == null)
           try
-            marker = new GritsMarker(_size[0], _size[1], _colorScale)
+            marker = new GritsMarker(_size[0], _size[1], _colorScale, _widthScale)
             originNode = new GritsNode(origin, marker)
             originNode.level = level
             originNode.setEventHandlers(_eventHandlers)
@@ -597,7 +616,7 @@ class GritsNodeLayer extends GritsLayer
       destinationNode = self._data[destination._id]
       if (typeof destinationNode == "undefined" or destinationNode == null)
         try
-          marker = new GritsMarker(_size[0], _size[1], _colorScale)
+          marker = new GritsMarker(_size[0], _size[1], _colorScale, _widthScale)
           destinationNode = new GritsNode(destination, marker)
 
           # if the originNode is a metaNode, check the destination to be within
@@ -620,6 +639,7 @@ class GritsNodeLayer extends GritsLayer
 
   convertItineraries: (itinerary, originToken) ->
     self = this
+
     originNode = null
     destinationNode = null
 
@@ -630,7 +650,7 @@ class GritsNodeLayer extends GritsLayer
     originNode = self._data[origin._id]
     if (typeof originNode == 'undefined' or originNode == null)
       try
-        marker = new GritsMarker(_size[0], _size[1], _colorScale)
+        marker = new GritsMarker(_size[0], _size[1], _colorScale, _widthScale)
         originNode = new GritsNode(origin, marker)
         originNode.setEventHandlers(_eventHandlers)
         self._data[origin._id] = originNode
@@ -647,13 +667,16 @@ class GritsNodeLayer extends GritsLayer
     destinationNode = self._data[destination._id]
     if (typeof destinationNode == 'undefined' or destinationNode == null)
       try
-        marker = new GritsMarker(_size[0], _size[1], _colorScale)
+        marker = new GritsMarker(_size[0], _size[1], _colorScale, _widthScale)
         destinationNode = new GritsNode(destination, marker)
         destinationNode.setEventHandlers(_eventHandlers)
         self._data[destination._id] = destinationNode
+        destinationNode.incomingThroughput = 1
       catch e
         console.error(e.message)
         return [null, null]
+    else
+      destinationNode.incomingThroughput += 1
 
     return [originNode, destinationNode]
 
@@ -670,6 +693,33 @@ class GritsNodeLayer extends GritsLayer
       return maxAllowed
     node.normalizedPercent = +(r).toFixed(0)
     return node.normalizedPercent
+
+  _getNormalizedWidth: (node) ->
+    self = this
+    np = self._getNormalizedThroughput(node)
+    if np < 10
+      node.width = node.marker.widthScale[0]
+    else if np < 20
+      node.width = node.marker.widthScale[1]
+    else if np < 30
+      node.width = node.marker.widthScale[2]
+    else if np < 40
+      node.width = node.marker.widthScale[3]
+    else if np < 50
+      node.width = node.marker.widthScale[4]
+    else if np < 60
+      node.width = node.marker.widthScale[5]
+    else if np < 70
+      node.width = node.marker.widthScale[6]
+    else if np < 80
+      node.width = node.marker.widthScale[7]
+    else if np < 90
+      node.width = node.marker.widthScale[8]
+    else if np <= 100
+      node.width = node.marker.widthScale[9]
+    else
+      node.width = node.marker.widthScale[9]
+    return node.width
 
   # returns the color to use as the marker fill
   #
@@ -759,5 +809,6 @@ class GritsNodeLayer extends GritsLayer
             console.log("#{self._displayName} layer was removed")
     )
 
-# Static reference to the colorScale
+# Static reference to the colorScale and widthScale
 GritsNodeLayer.colorScale = _colorScale
+GritsNodeLayer.widthScale = _widthScale

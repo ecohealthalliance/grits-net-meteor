@@ -147,8 +147,6 @@ _determineFieldMatchesByWeight = (input, res) ->
             match.display = matcher.display
   if Meteor.gritsUtil.debug
     console.log('matches:', matches)
-  if matches.length > 0
-    return matches.sort(compare)
   return matches
 
 # method to generate suggestions and drive the pagination feature

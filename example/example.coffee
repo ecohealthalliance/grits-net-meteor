@@ -60,19 +60,15 @@ if Meteor.isClient
           # min zoom is limited and hard bounds are set because the heatmap
           # will start shifting when the map is panned beyond it's top bound.
           minZoom: 2
-          maxBounds: L.latLngBounds(L.latLng(-85, -180), L.latLng(85, 180))
+          maxBounds: L.latLngBounds(L.latLng(-360, -360), L.latLng(360, 360))
           maxBoundsViscosity: 1.0
-          zoom: 2
-          center: L.latLng(30,-70)
+          zoom: 3
+          center: L.latLng(30, -60)
           layers: baseLayers
         }
 
         # the map instance
         map = new GritsMap(element, options, baseLayers)
-
-        map.setMaxBounds([
-          [360, -360],[-360, 360]
-        ])
 
         # Add the default controls to the map.
         Template.gritsMap.addDefaultControls(map)
