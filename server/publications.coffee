@@ -169,14 +169,14 @@ findAirportById = (id) ->
     return []
   return Airports.findOne({'_id': id})
 
-startSimulation = (simPas, startDate, endDate, origin) ->
+startSimulation = (simPas, startDate, endDate, origins) ->
   future = new Future();
   HTTP.post(_FLIRT_SIMULATOR_URL, {
     params: {
       submittedBy: 'robo@noreply.io',
       startDate: startDate,
       endDate: endDate,
-      departureNode: origin,
+      departureNodes: origins,
       numberPassengers: simPas
     }
   }, (err, res) ->
@@ -300,7 +300,7 @@ countTypeaheadAirports = (search) ->
     recordProfile('countTypeaheadAirports', new Date() - start)
   return count
 
-Meteor.publish 'SimulationItineraries', (simIds, limit, skip) ->
+Meteor.publish 'SimulationItineraries', (simId) ->
   # query options
   options = {
     fields:
@@ -310,22 +310,10 @@ Meteor.publish 'SimulationItineraries', (simIds, limit, skip) ->
     transform:
       null
   }
-  if !(_.isUndefined(limit) or _.isNull(limit))
-    limitClause =
-      limit: parseInt(limit, 10)
-    _.extend options, limitClause
-  if !(_.isUndefined(skip) or _.isNull(skip))
-    skipClause =
-      skip: parseInt(skip, 10)
-    _.extend options, skipClause
-  if not _.isArray(simIds)
-    check(simIds, String)
-    simIds = [simIds]
-  console.log('Subscribed SimulationItineraries -- simIds:%j --options: %j', simIds, options)
-  return Itineraries.find({
-    simulationId:
-      $in: simIds
-  }, options)
+  if _.isEmpty(simId)
+    return []
+  console.log('Subscribed SimulationItineraries -- simId:%j --options: %j', simId, options)
+  return Itineraries.find({simulationId: simId}, options)
 
 # find a simulation by simId
 #

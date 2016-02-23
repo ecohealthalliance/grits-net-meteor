@@ -5,7 +5,7 @@ Simulation = Astro.Class(
   transform: true
   fields:
     'simId': 'string'
-    'departureNode': 'string'
+    'departureNodes': 'array'
     'numberPassengers': 'number'
     'startDate': 'date'
     'endDate': 'date'
