@@ -52,12 +52,12 @@ do ->
       @client.click id
 
     @Then /^I should see ([^"]*) map markers$/, (numMarkers) ->
-      @client.waitForVisible('.marker-icon', 20000)
+      @client.waitForExist('.marker-icon', 20000)
       elements = @client.elements('.marker-icon')
       expect(elements.value.length).toEqual(parseInt(numMarkers, 10))
 
     @Then /^I should see some map markers$/, ->
-      @client.waitForVisible('.marker-icon', 20000)
+      @client.waitForExist('.marker-icon', 20000)
       elements = @client.elements('.marker-icon')
       expect(elements.value.length > 0).toEqual(true)
 
