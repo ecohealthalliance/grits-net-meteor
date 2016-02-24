@@ -15,13 +15,6 @@ Feature: Map display
     Then I should see the title "FLIRT"
 
   @watch
-  Scenario: Clicking on module a should give us some paths
-    When I navigate to "/"
-    And I click on #moduleA
-    Then I should see 4 map markers
-    And I should see paths between them
-
-  @watch
   Scenario: Entering an airport code should give us some paths
     When I navigate to "/"
     And I search for JFK
