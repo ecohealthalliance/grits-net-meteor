@@ -43,6 +43,7 @@ do ->
     @When /^I enter ([^"]*) into the startDate$/, (startDate) ->
       @client.waitForVisible('#discontinuedDate')
       @client.setValue('#discontinuedDate .form-control', startDate)
+      @client.keys('Enter')
 
     @When /^I click on module ([^"]*)$/, (module) ->
       @client.waitForVisible('#moduleA').click('#moduleA')
@@ -59,6 +60,11 @@ do ->
     @Then /^I should see some map markers$/, ->
       @client.waitForExist('.marker-icon', 20000)
       elements = @client.elements('.marker-icon')
+      expect(elements.value.length > 0).toEqual(true)
+
+    @Then /^I should see a toast message$/, ->
+      @client.waitForExist('.toast-message', 20000)
+      elements = @client.elements('.toast-message')
       expect(elements.value.length > 0).toEqual(true)
 
     @Then /^I should see paths between them$/, ->
