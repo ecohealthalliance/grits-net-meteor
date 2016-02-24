@@ -58,7 +58,7 @@ do ->
       expect(elements.value.length).toEqual(parseInt(numMarkers, 10))
 
     @Then /^I should see some map markers$/, ->
-      @client.waitForExist('.marker-icon', 20000)
+      @client.waitForExist('.marker-icon', 200000)
       elements = @client.elements('.marker-icon')
       expect(elements.value.length > 0).toEqual(true)
 

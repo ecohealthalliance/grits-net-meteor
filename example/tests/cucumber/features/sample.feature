@@ -24,7 +24,8 @@ Feature: Map display
   Scenario: Entering an airport code should give us some paths
     When I navigate to "/"
     And I search for JST
-    Then I should see a toast message
+    Then I should see some map markers
+    And I should see paths between them
 
   @watch
   Scenario: Entering an airport code and date range should give us some paths
