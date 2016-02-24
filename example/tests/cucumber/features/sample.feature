@@ -18,12 +18,14 @@ Feature: Map display
   Scenario: Entering an unmatched search string should give us toast message
     When I navigate to "/"
     And I search for UnmatchedSearchString
+    Then I should see the filter loading screen
     Then I should see a toast message
 
   @watch
   Scenario: Entering an airport code should give us some paths
     When I navigate to "/"
     And I search for JST
+    Then I should see the filter loading screen
     Then I should see some map markers
     And I should see paths between them
 
@@ -32,5 +34,6 @@ Feature: Map display
     When I navigate to "/"
     And I enter 02/8/16 into the startDate
     And I search for JST
+    Then I should see the filter loading screen
     Then I should see some map markers
     And I should see paths between them
