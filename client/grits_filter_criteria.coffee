@@ -641,7 +641,12 @@ class GritsFilterCriteria
         self.remove('departure')
         return
       if _.isArray(code)
-        self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: code})
+        capsCodes = []
+        for _id in code
+          capsCodes.push _id.toUpperCase()
+        if !_.isEqual(capsCodes, code)
+          Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain().tokenfield('setTokens', capsCodes)
+        self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: capsCodes})
       else
         self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: [code]})
     else
