@@ -30,6 +30,7 @@ Template.gritsMapSidebar.events
     if _isDrawing
       $('#sidebar-draw-rectangle-tool').addClass('sidebar-highlight')
       _boundingBox = new GritsBoundingBox($('.sidebar-tabs'), map)
+      $("#action-menu-Select").click()
     else
       $('#sidebar-draw-rectangle-tool').removeClass('sidebar-highlight')
       if _boundingBox != null
