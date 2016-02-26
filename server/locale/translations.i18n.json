@@ -64,6 +64,9 @@
             }
         },
         "analyze": {
+            "title" : {
+               "en": "Risk Analysis"
+            },
             "col1-heading": {
                 "en": "Origin"
             },

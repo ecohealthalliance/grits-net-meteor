@@ -16,26 +16,36 @@ Template.gritsElementDetails.helpers({
   getNodeName: (n) ->
     if _.isUndefined(n)
       return
+    if n._id.indexOf(GritsMetaNode.PREFIX) >= 0
+      return n._id
     node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
     return node.name
   getNodeCity: (n) ->
     if _.isUndefined(n)
       return
+    if n._id.indexOf(GritsMetaNode.PREFIX) >= 0
+      return 'N/A'
     node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
     return node.city
   getNodeState: (n) ->
     if _.isUndefined(n)
       return
+    if n._id.indexOf(GritsMetaNode.PREFIX) >= 0
+      return 'N/A'
     node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
     return node.state
   getNodeCountry: (n) ->
     if _.isUndefined(n)
       return
+    if n._id.indexOf(GritsMetaNode.PREFIX) >= 0
+      return 'N/A'
     node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
     return node.countryName
   getNodeGlobalRegion: (n) ->
     if _.isUndefined(n)
       return
+    if n._id.indexOf(GritsMetaNode.PREFIX) >= 0
+      return 'N/A'
     node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
     return node.globalRegion
   node: () ->

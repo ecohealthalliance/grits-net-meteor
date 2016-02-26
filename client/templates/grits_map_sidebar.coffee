@@ -13,14 +13,14 @@ Template.gritsMapSidebar.events
     # reset counters and heatmap
     Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, 0)
     Session.set(GritsConstants.SESSION_KEY_TOTAL_RECORDS, 0)
-    Template.gritsMap.getInstance()._layers.heatmap.reset()
+    # the trigger to toggle the mode can happen before the map is initialized
+    # check that its not undefined or null
+    map = Template.gritsMap.getInstance()
+    if !(_.isUndefined(map) || _.isNull(map))
+      map._layers.heatmap.reset()
     mode = $(event.target).data('mode')
     if _lastMode == mode
       return
-    if mode == GritsConstants.MODE_ANALYZE
-      $('#startSimulation').click()
-    else
-      $('#showThroughput').click()
     Session.set(GritsConstants.SESSION_KEY_MODE, mode)
     return
   'click #sidebar-plus-button': (event) ->

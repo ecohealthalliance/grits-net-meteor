@@ -1,6 +1,6 @@
 Meteor.startup ->
   # NOTE: *the gritsOverlay indicator will be showing by default*
-
+  
   # initialize Session variables
   Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
   Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, 0)
@@ -64,7 +64,14 @@ Meteor.startup ->
       console.log('end sync [i18n, airports, effectiveDateMinMax, discontinuedDateMinMax] (ms): ', new Date() - start)
     # Hide the gritsOverlay indicator
     Template.gritsOverlay.hide()
+
+    # Determine if the router set the simId in the url
+    simId = Session.get(GritsConstants.SESSION_KEY_SHARED_SIMID)
+    if !_.isUndefined(simId)
+      Session.set GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_ANALYZE
+    else
+      Session.set GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_EXPLORE
+
     # Mark the app ready
     Session.set GritsConstants.SESSION_KEY_IS_READY, true
-    Session.set GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_EXPLORE
   )
