@@ -5,6 +5,7 @@ GritsConstants.SESSION_KEY_IS_UPDATING = 'grits-net-meteor:isUpdating'
 GritsConstants.SESSION_KEY_IS_READY = 'grits-net-meteor:isReady'
 GritsConstants.SESSION_KEY_TOTAL_RECORDS = 'grits-net-meteor:totalRecords'
 GritsConstants.SESSION_KEY_LOADED_RECORDS = 'grits-net-meteor:loadedRecords'
+GritsConstants.SESSION_KEY_SHARED_SIMID = 'grits-net-meteor:simId'
 # map modes
 GritsConstants.MODE_EXPLORE = 'EXPLORE'
 GritsConstants.MODE_ANALYZE = 'ANALYZE'
