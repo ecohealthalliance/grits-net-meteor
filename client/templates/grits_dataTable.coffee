@@ -57,6 +57,10 @@ _throttleTablesChanged = _.throttle(->
 , 250)
 
 Template.gritsDataTable.events({
+  'click .share-btn': (event, template) ->
+    # toggle the display of the share-link-container
+    $('.share-link-container').slideToggle('fast')
+    return
   'click .pathTableRow': (event, template) ->
     # get the clicked row
     $row = $(event.currentTarget)
@@ -83,24 +87,34 @@ Template.gritsDataTable.events({
 })
 
 Template.gritsDataTable.helpers({
+  getCurrentURL: () ->
+    return FlowRouter.currentURL.get()
   getNodeName: (n) ->
     if _.isUndefined(n)
       return
+    if n._id.indexOf(GritsMetaNode.PREFIX) >= 0
+      return n._id
     node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
     return node.name
   getNodeCity: (n) ->
     if _.isUndefined(n)
       return
+    if n._id.indexOf(GritsMetaNode.PREFIX) >= 0
+      return 'N/A'
     node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
     return node.city
   getNodeState: (n) ->
     if _.isUndefined(n)
       return
+    if n._id.indexOf(GritsMetaNode.PREFIX) >= 0
+      return 'N/A'
     node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
     return node.state
   getNodeCountry: (n) ->
     if _.isUndefined(n)
       return
+    if n._id.indexOf(GritsMetaNode.PREFIX) >= 0
+      return 'N/A'
     node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
     return node.countryName
   simulationProgress: () ->
@@ -193,12 +207,21 @@ Template.gritsDataTable.onCreated ->
 Template.gritsDataTable.onRendered ->
   self = this
 
+  # setup the clipboard for share-btn-link
+  self.clip = new Clipboard('.share-copy-btn')
+  self.clip.on('success', ->
+    toastr.info('The URL has been copied to your clipboard')
+    $('.share-link-container').hide()
+    return
+  )
+
   # get the map instance
   self.map = Template.gritsMap.getInstance()
 
   # get the heatmap layer
   heatmapLayerGroup = self.map.getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
   self.heatmapLayer = heatmapLayerGroup.find(GritsConstants.HEATMAP_LAYER_ID)
+
 
   Tracker.autorun ->
     # determine the current layer group
