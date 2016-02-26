@@ -1,4 +1,3 @@
-_previousDepartures = [] # array to track state of the heatmap
 HEATMAP_INTENSITY_MULTIPLIER = 30
 # Creates an instance of a GritsHeatmapLayer, extends  GritsLayer
 #
@@ -86,10 +85,6 @@ class GritsHeatmapLayer extends GritsLayer
         self.draw()
         return
 
-      if _.isEqual(_previousDepartures, departures)
-        # don't run if the departures haven't changed
-        return
-
       # handle any metaNodes
       modifiedDepartures = []
       _.each(departures, (token) ->
@@ -106,11 +101,8 @@ class GritsHeatmapLayer extends GritsLayer
 
       # update the heatmap data
       heatmap = Heatmaps.findOne({'_id': departures.sort().join("") })
-      self.clear()
       self._data = heatmap?.data or []
-      self.draw()
 
-      _previousDepartures = departures
     return
   # get the heatmap data
   #
