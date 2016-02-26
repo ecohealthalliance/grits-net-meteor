@@ -33,6 +33,8 @@ Package.on_use(function(api){
     'tsega:bootstrap3-datetimepicker@4.17.37_1',
     'halunka:i18n@1.1.1',
     'momentjs:moment@2.10.6',
+    'kadira:flow-router@2.10.1',
+    'zenorocha:clipboard@1.5.8',
     'grits:flirt-sidebar@0.0.1'
   ]);
   // client only packages
@@ -108,7 +110,8 @@ Package.on_use(function(api){
     'models/flights.coffee',
     'models/heatmaps.coffee',
     'models/itineraries.coffee',
-    'models/simulations.coffee'
+    'models/simulations.coffee',
+    'lib/routes.coffee'
   ],['client', 'server']);
   //server-side only files
   api.add_files([
@@ -118,6 +121,7 @@ Package.on_use(function(api){
   ], 'server');
   //public API, client and server
   api.export([
+    'FlowRouter',
     'Airport',
     'Airports',
     'Flight',
