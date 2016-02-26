@@ -15,23 +15,25 @@ Feature: Map display
     Then I should see the title "FLIRT"
 
   @watch
-  Scenario: Clicking on module a should give us some paths
+  Scenario: Entering an unmatched search string should give us toast message
     When I navigate to "/"
-    And I click on #moduleA
-    Then I should see 4 map markers
-    And I should see paths between them
+    And I search for UnmatchedSearchString
+    Then I should see the filter loading screen
+    Then I should see a toast message
 
   @watch
   Scenario: Entering an airport code should give us some paths
     When I navigate to "/"
-    And I search for JFK
+    And I search for JST
+    Then I should see the filter loading screen
     Then I should see some map markers
     And I should see paths between them
 
   @watch
   Scenario: Entering an airport code and date range should give us some paths
     When I navigate to "/"
-    And I search for JFK
-    And I enter 2/8/2016 into the startDate
+    And I enter 02/8/16 into the startDate
+    And I search for JST
+    Then I should see the filter loading screen
     Then I should see some map markers
     And I should see paths between them
