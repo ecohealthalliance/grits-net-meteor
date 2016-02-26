@@ -74,12 +74,8 @@ if Meteor.isClient
         Template.gritsMap.addDefaultControls(map)
 
         # initialize the sidebar-v2
-        sidebar = L.control.sidebar('sidebar').addTo(map)
-        tableSidebar = L.control.sidebar('tableSidebar').addTo(map)
-
-        $("#pathsTable").tablesorter()
-        $("#nodesTable").tablesorter()
-        $("#heatmapTable").tablesorter()
+        L.control.sidebar('sidebar').addTo(map)
+        L.control.sidebar('tableSidebar').addTo(map)
 
         # Add test control
         Meteor.call('isTestEnvironment', (err, result) ->
