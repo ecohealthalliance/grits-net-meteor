@@ -1,4 +1,4 @@
-_previousOrigins = [] # array to track state of the heatmap
+_previousDepartures = [] # array to track state of the heatmap
 HEATMAP_INTENSITY_MULTIPLIER = 30
 # Creates an instance of a GritsHeatmapLayer, extends  GritsLayer
 #
@@ -82,9 +82,12 @@ class GritsHeatmapLayer extends GritsLayer
 
       if _.isEmpty(departures)
         # if a departure airport is not specified, clear the heatmap
-        _previousOrigins = null
         self.clear()
         self.draw()
+        return
+
+      if _.isEqual(_previousDepartures, departures)
+        # don't run if the departures haven't changed
         return
 
       # handle any metaNodes
@@ -107,7 +110,7 @@ class GritsHeatmapLayer extends GritsLayer
       self._data = heatmap?.data or []
       self.draw()
 
-      _previousOrigins = departures
+      _previousDepartures = departures
     return
   # get the heatmap data
   #
