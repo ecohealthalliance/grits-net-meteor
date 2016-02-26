@@ -1,21 +1,17 @@
-# Template.gritsSearchAndAdvancedFiltration
+# Template.gritsSearch
 #
 # When another meteor app adds grits:grits-net-meteor as a package
-# Template.gritsSearchAndAdvancedFiltration will be available globally.
-_levelsStartVal = "1"
-_seatsStartVal = [0,900]
-_stopsStartVal = [0,5]
-_wfStartVal = 1
+# Template.gritsSearch will be available globally.
 _init = true # flag, set to false when initialization is done
 _initStartDate = null # onCreated will initialize the date through GritsFilterCriteria
 _initEndDate = null # onCreated will initialize the date through GritsFilterCriteria
 _initLimit = null # onCreated will initialize the limt through GritsFilterCriteria
-_initLevels = null # onCreated will initialize the limt through GritsFilterCriteria
 _departureSearchMain = null # onRendered will set this to a typeahead object
 _effectiveDatePicker = null # onRendered will set this to a datetime picker object
 _discontinuedDatePicker = null # onRendered will set this to a datetime picker object
-_sharedTokens = [] # container for tokens that are shared from departureSearchMain input
+_matchSkip = null # the amount to skip during typeahead pagination
 _simulationProgress = new ReactiveVar(0)
+_disableLimit = new ReactiveVar(false) # toggle if we will allow limit/skip
 _suggestionTemplate = _.template('
   <span class="airport-code"><%= raw._id %></span>
   <span class="airport-info">
@@ -153,25 +149,100 @@ _determineFieldMatchesByWeight = (input, res) ->
     console.log('matches:', matches)
   return matches
 
-# resets the simuationProgress
-resetSimulationProgress = () ->
-  _simulationProgress.set(0)
+# method to generate suggestions and drive the pagination feature
+_suggestionGenerator = (query, skip, callback) ->
+  _matchSkip = skip
+  Meteor.call('typeaheadAirport', query, skip, (err, res) ->
+    Meteor.call('countTypeaheadAirports', query, (err, count) ->
+
+      if res.length > 0
+        matches = _determineFieldMatchesByWeight(query, res)
+        # expects an array of objects with keys [label, value]
+        callback(matches)
+
+      # keep going to update the _typeaheadFooter via jQuery
+      # update the record count
+      if count > 1
+        if (_matchSkip + 10) > count
+          diff = (_matchSkip + 10) - count
+          $('#suggestionCount').html("<span>Matches #{_matchSkip+1}-#{_matchSkip+(10-diff)} of #{count}</span>")
+        else
+          $('#suggestionCount').html("<span>Matches #{_matchSkip+1}-#{_matchSkip+10} of #{count}</span>")
+      else if count == 1
+        $('#suggestionCount').html("<span>#{count} match found</span>")
+      else
+        $('.tt-suggestions').empty()
+        $('#suggestionCount').html("<span>No matches found</span>")
+
+      # enable/disable the pager elements
+      if count <= 10
+        $('.next-suggestions').addClass('disabled')
+        $('.previous-suggestions').addClass('disabled')
+      if count > 10
+        # edge case min
+        if _matchSkip == 0
+          $('.previous-suggestions').addClass('disabled')
+        # edge case max
+        if (count - _matchSkip) <= 10
+          $('.next-suggestions').addClass('disabled')
+
+      # bind click handlers
+      if !$('.previous-suggestions').hasClass('disabled')
+        $('#previousSuggestions').bind('click', (e) ->
+          e.preventDefault()
+          e.stopPropagation()
+          if count <= 10 || _matchSkip <= 10
+            _matchSkip = 0
+          else
+            _matchSkip -= 10
+          _suggestionGenerator(query, _matchSkip, callback)
+        )
+      if !$('.next-suggestions').hasClass('disabled')
+        $('#forwardSuggestions').bind('click', (e) ->
+          e.preventDefault()
+          e.stopPropagation()
+          if count <= 10
+            _matchSkip 0
+          else
+            _matchSkip += 10
+          _suggestionGenerator(query, _matchSkip, callback)
+          return
+        )
+      return
+    )
+    return
+  )
   return
 
-# update the simulationProgress bar
-_updateSimulationProgress = (progress) ->
-  $('#simulationProgress').css({width: progress})
-  return progress
+# resets the simulation-progress bars
+_resetSimulationProgress = () ->
+  _simulationProgress.set(0)
+  $('.simulation-progress').css({width: '0%'})
 
 # sets an object to be used by Meteors' Blaze templating engine (views)
-Template.gritsSearchAndAdvancedFiltration.helpers({
-  simulationProgress: () ->
-    progress = _simulationProgress.get() + '%'
-    return _updateSimulationProgress(progress)
+Template.gritsSearch.helpers({
+  isExploreMode: () ->
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    if _.isUndefined(mode)
+      return false
+    else
+      if mode == GritsConstants.MODE_EXPLORE
+        return true
+      else
+        return false
+  isAnalyzeMode: () ->
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    if _.isUndefined(mode)
+      return false
+    else
+      if mode == GritsConstants.MODE_ANALYZE
+        return true
+      else
+        return false
   loadedRecords: () ->
-    return Session.get 'grits-net-meteor:loadedRecords'
+    return Session.get(GritsConstants.SESSION_KEY_LOADED_RECORDS)
   totalRecords: () ->
-    return Session.get 'grits-net-meteor:totalRecords'
+    return Session.get(GritsConstants.SESSION_KEY_TOTAL_RECORDS)
   state: () ->
     # GritsFilterCriteria.stateChanged is a reactive-var
     state = GritsFilterCriteria.stateChanged.get()
@@ -185,13 +256,6 @@ Template.gritsSearchAndAdvancedFiltration.helpers({
     return _initStartDate
   end: () ->
     return _initEndDate
-  levels: () ->
-    if _init
-      # set inital level
-      return _initLevels
-    else
-      # reactive var
-      return GritsFilterCriteria.levels.get()
   limit: () ->
     if _init
       # set inital limit
@@ -199,112 +263,26 @@ Template.gritsSearchAndAdvancedFiltration.helpers({
     else
       # reactive var
       return GritsFilterCriteria.limit.get()
-  stops: () ->
-    # reactive var
-    obj = GritsFilterCriteria.stops.get()
-    if _.isNull(obj)
-      return ''
-    else
-      return obj.value
-  seats: () ->
-    # reactive var
-    obj = GritsFilterCriteria.seats.get()
-    if _.isNull(obj)
-      return ''
-    else
-      return obj.value
-  weeklyFrequency: () ->
-    # reactive var
-    obj = GritsFilterCriteria.weeklyFrequency.get()
-    if _.isNull(obj)
-      return ''
-    else
-      return obj.value
 })
 
-Template.gritsSearchAndAdvancedFiltration.onCreated ->
+Template.gritsSearch.onCreated ->
   _initStartDate = GritsFilterCriteria.initStart()
   _initEndDate = GritsFilterCriteria.initEnd()
   _initLimit = GritsFilterCriteria.initLimit()
-  _initLevels = GritsFilterCriteria.initLevels()
   _init = false # done initializing initial input values
 
   # Public API
   # Currently we declare methods above for documentation purposes then assign
-  # to the Template.gritsSearchAndAdvancedFiltration as a global export
-  Template.gritsSearchAndAdvancedFiltration.getOrigin = getOrigin
-  Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain = getDepartureSearchMain
-  Template.gritsSearchAndAdvancedFiltration.getEffectiveDatePicker = getEffectiveDatePicker
-  Template.gritsSearchAndAdvancedFiltration.getDiscontinuedDatePicker = getDiscontinuedDatePicker
-  Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress = resetSimulationProgress
+  # to the Template.gritsSearch as a global export
+  Template.gritsSearch.getOrigin = getOrigin
+  Template.gritsSearch.getDepartureSearchMain = getDepartureSearchMain
+  Template.gritsSearch.getEffectiveDatePicker = getEffectiveDatePicker
+  Template.gritsSearch.getDiscontinuedDatePicker = getDiscontinuedDatePicker
+  Template.gritsSearch.simulationProgress = _simulationProgress
+  Template.gritsSearch.disableLimit = _disableLimit
 
 # triggered when the 'filter' template is rendered
-Template.gritsSearchAndAdvancedFiltration.onRendered ->
-  _matchSkip = null
-  _suggestionGenerator = (query, skip, callback) ->
-    _matchSkip = skip
-    Meteor.call('typeaheadAirport', query, skip, (err, res) ->
-      Meteor.call('countTypeaheadAirports', query, (err, count) ->
-
-        if res.length > 0
-          matches = _determineFieldMatchesByWeight(query, res)
-          # expects an array of objects with keys [label, value]
-          callback(matches)
-
-        # keep going to update the _typeaheadFooter via jQuery
-        # update the record count
-        if count > 1
-          if (_matchSkip + 10) > count
-            diff = (_matchSkip + 10) - count
-            $('#suggestionCount').html("<span>Matches #{_matchSkip+1}-#{_matchSkip+(10-diff)} of #{count}</span>")
-          else
-            $('#suggestionCount').html("<span>Matches #{_matchSkip+1}-#{_matchSkip+10} of #{count}</span>")
-        else if count == 1
-          $('#suggestionCount').html("<span>#{count} match found</span>")
-        else
-          $('.tt-suggestions').empty()
-          $('#suggestionCount').html("<span>No matches found</span>")
-
-        # enable/disable the pager elements
-        if count <= 10
-          $('.next-suggestions').addClass('disabled')
-          $('.previous-suggestions').addClass('disabled')
-        if count > 10
-          # edge case min
-          if _matchSkip == 0
-            $('.previous-suggestions').addClass('disabled')
-          # edge case max
-          if (count - _matchSkip) <= 10
-            $('.next-suggestions').addClass('disabled')
-
-        # bind click handlers
-        if !$('.previous-suggestions').hasClass('disabled')
-          $('#previousSuggestions').bind('click', (e) ->
-            e.preventDefault()
-            e.stopPropagation()
-            if count <= 10 || _matchSkip <= 10
-              _matchSkip = 0
-            else
-              _matchSkip -= 10
-            _suggestionGenerator(query, _matchSkip, callback)
-          )
-        if !$('.next-suggestions').hasClass('disabled')
-          $('#forwardSuggestions').bind('click', (e) ->
-            e.preventDefault()
-            e.stopPropagation()
-            if count <= 10
-              _matchSkip 0
-            else
-              _matchSkip += 10
-            _suggestionGenerator(query, _matchSkip, callback)
-            return
-          )
-        return
-      )
-      return
-    )
-    return
-
+Template.gritsSearch.onRendered ->
   departureSearchMain = $('#departureSearchMain').tokenfield({
     typeahead: [{hint: false, highlight: true}, {
       display: (match) ->
@@ -354,10 +332,10 @@ Template.gritsSearchAndAdvancedFiltration.onRendered ->
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
   # apply button and filterLoading indicator.
-  this.autorun ->
+  Tracker.autorun ->
     # update the disabled status of the [More] button based loadedRecords
-    loadedRecords = Session.get 'grits-net-meteor:loadedRecords'
-    totalRecords = Session.get 'grits-net-meteor:totalRecords'
+    loadedRecords = Session.get(GritsConstants.SESSION_KEY_LOADED_RECORDS)
+    totalRecords = Session.get(GritsConstants.SESSION_KEY_TOTAL_RECORDS)
     if loadedRecords < totalRecords
       # enable the [More] button when loaded is less than total
       $('#loadMore').prop('disabled', false)
@@ -365,8 +343,9 @@ Template.gritsSearchAndAdvancedFiltration.onRendered ->
       # disable the [More] button
       $('#loadMore').prop('disabled', true)
 
+  Tracker.autorun ->
     # update the ajax-loader
-    isUpdating = Session.get 'grits-net-meteor:isUpdating'
+    isUpdating = Session.get(GritsConstants.SESSION_KEY_IS_UPDATING)
     # do not show the filter spinner if the overlay isLoading
     if isUpdating && !Template.gritsOverlay.isLoading()
       $('#applyFilter').prop('disabled', true)
@@ -375,51 +354,22 @@ Template.gritsSearchAndAdvancedFiltration.onRendered ->
       $('#applyFilter').prop('disabled', false)
       $('#filterLoading').hide()
 
-# smooth out the rate at which the given function is called by queuing up calls
-# and spreading them out over time.
-smoothRate = (func)->
-  BASE_CALLS_PER_SECOND = 10
-  queue = []
-  active = false
-  MAX_DELAY_SECONDS = 5
-  callsPerSecond = BASE_CALLS_PER_SECOND
-  timeoutFunc = ->
-    callsToDo = callsPerSecond
-    while callsToDo > 0
-      callsToDo--
-      queuedCall = queue.shift()
-      if not queuedCall
-        break
-      [self, args] = queuedCall
-      func.apply(self, args)
-    # calls required to keep up with the queue without going over the max delay
-    requiredCallsPerSecond = queue.length / MAX_DELAY_SECONDS
-    callsPerSecond = Math.max(requiredCallsPerSecond, callsPerSecond)
-    if queue.length > 0
-      setTimeout(
-        timeoutFunc,
-        900 # less than 1000 because we assume the calls take 100ms
-      )
+  Tracker.autorun ->
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    if mode == GritsConstants.MODE_EXPLORE
+      _resetSimulationProgress()
+      _disableLimit.set(false)
     else
-      callsPerSecond = BASE_CALLS_PER_SECOND
-      active = false
-  (args...)->
-    queue.push([this, args])
-    if not active
-      active = true
-      setTimeout(timeoutFunc, 900)
+      # initialize the bootstrap slider (this is not rendered by default in grits_search.html)
+      # it is done using nextTick to give Blaze template time to render
+      async.nextTick(-> $('#simulatedPassengersInputSlider').slider())
+      _disableLimit.set(true)
 
-_changeWeeklyFrequencyHandler = (e) ->
-  val = parseInt($("#weeklyFrequencyInputSlider").val(), 10)
-  if val isnt _wfStartVal
-    _wfStartVal = val
-    $('#filterLoading').show()
-    if _.isNaN(val)
-      val = null
-    $('#weeklyFrequencySliderValIndicator').empty().html(val)
-    op = '$lte'
-    GritsFilterCriteria.weeklyFrequency.set({'value': val, 'operator': op})
-  return
+  Tracker.autorun ->
+    departures = GritsFilterCriteria.departures.get()
+    if departures.length == 0
+      _resetSimulationProgress()
+
 _changeSimulatedPassengersHandler = (e) ->
   val = parseInt($("#simulatedPassengersInputSlider").val(), 10)
   if val isnt _wfStartVal
@@ -427,30 +377,6 @@ _changeSimulatedPassengersHandler = (e) ->
     if _.isNaN(val)
       val = null
     $('#simulatedPassengersInputSliderValIndicator').empty().html(val)
-  return
-_changeStopsSliderHandler = (e) ->
-  val = $("#stopsInputSlider").val().split(',')
-  val[0] = parseInt(val[0], 10)
-  val[1] = parseInt(val[1], 10)
-  if val[0] isnt _stopsStartVal[0] or val[1] isnt _stopsStartVal[1]
-    _stopsStartVal = val
-    $('#filterLoading').show()
-    $('#stopsSliderValIndicator').empty().html(val[0] + " : " + val[1])
-    if _.isNaN(val[0]) || _.isNaN(val[1])
-      val = null
-    GritsFilterCriteria.stops.set({'value': val[0], 'operator': '$gte', 'value2': val[1], 'operator2': '$lte'})
-  return
-_changeSeatsSliderHandler = (e) ->
-  val = $("#seatsInputSlider").val().split(',')
-  val[0] = parseInt(val[0], 10)
-  val[1] = parseInt(val[1], 10)
-  if val[0] isnt _seatsStartVal[0] or val[1] isnt _seatsStartVal[1]
-    _seatsStartVal = val
-    $('#filterLoading').show()
-    $('#seatsSliderValIndicator').empty().html(val[0] + " : " + val[1])
-    if _.isNaN(val[0]) || _.isNaN(val[1])
-      val = null
-    GritsFilterCriteria.seats.set({'value': val[0], 'operator': '$gte', 'value2': val[1], 'operator2': '$lte'})
   return
 _changeDepartureHandler = (e) ->
   combined = []
@@ -461,14 +387,6 @@ _changeDepartureHandler = (e) ->
     # do nothing
     return
   GritsFilterCriteria.departures.set(combined)
-  return
-_changeArrivalHandler = (e) ->
-  tokens =  _arrivalSearch.tokenfield('getTokens')
-  codes = _.pluck(tokens, 'label')
-  if _.isEqual(codes, GritsFilterCriteria.arrivals.get())
-    # do nothing
-    return
-  GritsFilterCriteria.arrivals.set(codes)
   return
 _changeDateHandler = (e) ->
   $target = $(e.target)
@@ -485,144 +403,40 @@ _changeDateHandler = (e) ->
     date = _effectiveDatePicker.data('DateTimePicker').date()
     GritsFilterCriteria.operatingDateRangeEnd.set(date)
     return
-_changeLevelsHandler = (e) ->
-  val = $("#levelsInputSlider").val()
-  if val isnt _levelsStartVal
-    _levelsStartVal = val
-    $('#filterLoading').show()
-    $('#levelsSliderValIndicator').empty().html(val)
-    GritsFilterCriteria.levels.set(val)
-  return
 _changeLimitHandler = (e) ->
-  val = $("#limit").val()
+  val = parseInt($("#limit").val(), 10)
   GritsFilterCriteria.limit.set(val)
   return
-_setWFStartVal = (e) ->
-  _startVal = $("#weeklyFrequencyInputSlider").val().split(',')
-# _setStopsStartVal = (e) ->
-#   _startVal = $("#stopsInputSlider").val().split(',')
-_setSeatsStartVal = (e) ->
-  _startVal = $("#seatsInputSlider").val().split(',')
-_setLevelsStartVal = (e) ->
-  _startVal = $("#levelsInputSlider").val()
 _startSimulation = (e) ->
   simPas = parseInt($('#simulatedPassengersInputSlider').slider('getValue'), 10)
   startDate = _discontinuedDatePicker.data('DateTimePicker').date().format("DD/MM/YYYY")
   endDate = _effectiveDatePicker.data('DateTimePicker').date().format("DD/MM/YYYY")
+  GritsFilterCriteria.startSimulation(simPas, startDate, endDate)
+  return
+_showThroughput = (e) ->
   departures = GritsFilterCriteria.departures.get()
   if departures.length == 0
     toastr.error('The simulator requires at least one Departure')
     return
-  # switch mode
-  Session.set(GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_ANALYZE)
-  # split the passengers into a simulation for each origin.
-  # results of the simulations are combined by the app.
-  originIds = _.chain(departures)
-    .map (originId)->
-      if originId.startsWith(GritsMetaNode.PREFIX)
-        return GritsMetaNode.find(originId).getAirportIds()
-      else
-        [originId]
-    .flatten()
-    .uniq()
-    .value()
-  simulations = _.map originIds, (origin)->
-    new Promise (resolve, reject)->
-      Meteor.call('startSimulation', Math.ceil(simPas / originIds.length), startDate, endDate, origin, (err, res) ->
-        if err then return reject(err)
-        resolve(res)
-      )
-  Promise.all(simulations)
-  .catch (err)->
-    Meteor.gritsUtil.errorHandler(err)
-    console.error err
-  .then ([simulationResults...])->
-    for res in simulationResults
-      if res.hasOwnProperty('error')
-        Meteor.gritsUtil.errorHandler(res)
-        console.error(res)
-        return
-
-    # let the user know the simulation started
-    _simulationProgress.set(1)
-
-    # get the current mode groupLayer
-    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
-    if layerGroup == null
-      return
-    layerGroup.reset()
-    heatmapLayerGroup = Template.gritsMap.getInstance().getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
-    heatmapLayerGroup.reset()
-
-    loaded = 0
-    airportCounts = {}
-    itinCount = 0
-
-    _updateHeatmap = _.throttle(->
-      Heatmaps.remove({})
-      # map the airportCounts object to one with percentage values
-      airportPercentages = _.object([key, val / itinCount] for key, val of airportCounts)
-      # key the heatmap to the departure airports so it can be filtered
-      # out if the query changes.
-      airportPercentages._id = originIds.sort().join("")
-      Heatmap.createFromDoc(airportPercentages, Meteor.gritsUtil.airportsToLocations)
-    , 500)
-
-    _throttledDraw = _.throttle(->
-      layerGroup.draw()
-      heatmapLayerGroup.draw()
-    , 500)
-
-    simIds = _.pluck(simulationResults, 'simId')
-    Meteor.subscribe('SimulationItineraries', simIds)
-    Itineraries.find('simulationId': { $in: simIds }).observeChanges({
-      added: smoothRate (id, fields) ->
-        itinCount++
-        if airportCounts[fields.destination]
-          airportCounts[fields.destination]++
-        else
-          airportCounts[fields.destination] = 1
-        loaded += 1
-        layerGroup.convertItineraries(fields, fields.origin)
-        # update the simulatorProgress bar
-        if simPas > 0
-          progress = Math.ceil((loaded / simPas) * 100)
-          _simulationProgress.set(progress)
-        if loaded == simPas
-          #finaldraw
-          _simulationProgress.set(100)
-          _updateHeatmap()
-          layerGroup.finish()
-          heatmapLayerGroup.finish()
-        else
-          _updateHeatmap()
-          _throttledDraw()
-    })
+  GritsFilterCriteria.apply()
+  return
 # events
 #
 # Event handlers for the grits_filter.html template
-Template.gritsSearchAndAdvancedFiltration.events
-  'slideStop #weeklyFrequencyInputSlider': _changeWeeklyFrequencyHandler
-  'slideStop #simulatedPassengersInputSlider': _changeSimulatedPassengersHandler
-  'slideStop #stopsInputSlider': _changeStopsSliderHandler
-  'slideStop #seatsInputSlider': _changeSeatsSliderHandler
-  'slideStop #levelsInputSlider': _changeLevelsHandler
-  'slideStart #weeklyFrequencyInputSlider': _setWFStartVal
-  #'slideStart #stopsInputSlider': _setStopsStartVal
-  'slideStart #seatsInputSlider': _setSeatsStartVal
-  'slideStart #levelsInputSlider': _setLevelsStartVal
-  'click #startSimulation': _startSimulation
-  'change #departureSearch': _changeDepartureHandler
-  'change #arrivalSearch': _changeArrivalHandler
-  'change #limit': _changeLimitHandler
-  'change #departureSearchMain': _changeDepartureHandler
+Template.gritsSearch.events
   'keyup #departureSearchMain-tokenfield': (event) ->
     if event.keyCode == 13
-      if GritsFilterCriteria.departures.get() <= 0
-        # do not apply without any departures
+      departures = GritsFilterCriteria.departures.get()
+      if departures.length == 0
+        toastr.error('The simulator requires at least one Departure')
         return
       GritsFilterCriteria.apply()
     return
+  'slideStop #simulatedPassengersInputSlider': _changeSimulatedPassengersHandler
+  'click #startSimulation': _startSimulation
+  'click #showThroughput': _showThroughput
+  'change #limit': _changeLimitHandler
+  'change #departureSearchMain': _changeDepartureHandler
   'dp.change': _changeDateHandler
   'dp.show': (event) ->
     # in order to not be contained within the scrolling div, the style of the
@@ -647,20 +461,20 @@ Template.gritsSearchAndAdvancedFiltration.events
       return false
 
     if $('#includeNearbyAirports').is(':checked')
-      Session.set('grits-net-meteor:isUpdating', true)
+      Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, true)
       Meteor.call('findNearbyAirports', departures[0], miles, (err, airports) ->
         if err
           Meteor.gritsUtil.errorHandler(err)
           return
 
         nearbyTokens = _.pluck(airports, '_id')
-        union = _.union(_sharedTokens, nearbyTokens)
+        union = _.union(departures, nearbyTokens)
         _departureSearchMain.tokenfield('setTokens', union)
-        Session.set('grits-net-meteor:isUpdating', false)
+        Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
       )
     else
       departureSearch = getDepartureSearchMain()
-      departureSearch.tokenfield('setTokens', _sharedTokens)
+      departureSearch.tokenfield('setTokens', departures)
     return
   'click #toggleFilter': (e) ->
     $self = $(e.currentTarget)
@@ -671,13 +485,16 @@ Template.gritsSearchAndAdvancedFiltration.events
     return
   'click #loadMore': () ->
     GritsFilterCriteria.setOffset()
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    if mode == GritsConstants.MODE_EXPLORE
+      GritsFilterCriteria.more()
     return
   'tokenfield:initialize': (e) ->
     $target = $(e.target)
     $container = $target.closest('.tokenized')
     #the typeahead menu should be as wide as the filter at a minimum
     $menu = $container.find('.tt-dropdown-menu')
-    $menu.css('min-width', $('#filter').width())
+    $menu.css('max-width', $('.tokenized.main').width())
     id = $target.attr('id')
     $container.find('.tt-dropdown-menu').css('z-index', 999999)
     $container.find('.token-input.tt-input').css('height', '30px')
@@ -708,7 +525,7 @@ Template.gritsSearchAndAdvancedFiltration.events
     tokens = $target.tokenfield('getTokens')
     # determine if the remaining tokens is empty, then show the placeholder text
     if tokens.length == 0
-      if $target.attr('id') in ['departureSearch', 'departureSearchMain']
+      if $target.attr('id') in ['departureSearchMain']
         $('#includeNearbyAirports').prop('checked', false)
 
     token = e.attrs.label

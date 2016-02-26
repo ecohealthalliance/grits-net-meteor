@@ -88,7 +88,6 @@ arrangeQueryKeys = (query) ->
     keys.unshift('discontinuedDate')
   return keys
 
-
 # find flights with an optional limit and offset
 #
 # @param [Object] query, a mongodb query object
@@ -131,122 +130,6 @@ flightsByQuery = (query, limit, skip) ->
     recordProfile('flightsByQuery', new Date() - start)
   return matches
 
-Meteor.methods
-  getFlightsByLevel: (query, levels, origin, limit) ->
-    if _.isUndefined(query) or _.isEmpty(query)
-      return 'query is empty'
-    if levels < 2
-      return 'levels is less than two: ' + levels
-    extendQuery(query, null)
-    ctr = 1
-    flightsByLevel = []
-    originsByLevel = []
-    allOrigins = []
-    origin = [origin]
-    originsByLevel[1] = origin
-    while ctr < levels
-      flights = Flights.find(query, buildOptions(null)).fetch()
-      flightsByLevel[ctr] = flights
-      originsByLevel[ctr + 1] = []
-      for flight of flights
-        addtoObl = true
-        addtoAll = true
-        for origin of originsByLevel
-          for oid of originsByLevel[origin]
-            if originsByLevel[origin][oid] is flights[flight].arrivalAirport._id
-              addtoObl = false
-              break
-        if addtoObl
-          originsByLevel[ctr  +1].push(flights[flight].arrivalAirport._id)
-      query['departureAirport._id'] = {'$in': originsByLevel[ctr + 1]}
-      ctr++
-    for origins of originsByLevel
-      Array::push.apply allOrigins, originsByLevel[origins]
-    query['departureAirport._id'] = {'$in': allOrigins}
-    nullOpts = buildOptions(null)
-    allFlights = Flights.find(query, nullOpts).fetch()
-    if limit is null or limit is 0 #no limit specified
-      return [allFlights, allFlights.length]
-    else
-      retFlightCount = 0  # number of flights currently to return
-      retFlightByLevIndex = 1 #level of returned flights based on index
-      for flights of flightsByLevel
-        if flightsByLevel[flights].length <= (limit - retFlightCount)
-          retFlightCount += flightsByLevel[flights].length
-          retFlightByLevIndex++
-          continue
-        else
-          break
-      limitRemainder = limit - retFlightCount
-      flightsToReturn = []
-      for flights of flightsByLevel
-        if flights < retFlightByLevIndex
-          Array::push.apply flightsToReturn, flightsByLevel[flights]
-      lastId = null
-      if limitRemainder > 0
-        trailingFlights = []
-        remainderOPTS = buildOptions(limitRemainder)
-        cpol = originsByLevel[retFlightByLevIndex]
-        query['departureAirport._id'] = {'$in': cpol}
-        trailingFlights = Flights.find(query, remainderOPTS).fetch()
-        Array::push.apply flightsToReturn, trailingFlights
-        lastId = flightsToReturn[flightsToReturn.length - 1]._id
-      return [flightsToReturn, allFlights.length, lastId]
-
-Meteor.methods
-  getMoreFlightsByLevel: (query, levels, origin, limit, lastId) ->
-    if _.isUndefined(query) or _.isEmpty(query)
-      return 'query is empty'
-    if levels < 2
-      return 'levels is less than two: ' + levels
-    extendQuery(query, null)
-    ctr = 1
-    flightsByLevel = []
-    originsByLevel = []
-    allOrigins = []
-    originsByLevel[1] = origin
-    totalFlights = 0
-    while ctr <= levels
-      flights = Flights.find(query, buildOptions(null)).fetch()
-      totalFlights += flights.length
-      flightsByLevel[ctr] = flights
-      originsByLevel[ctr + 1] = []
-      for flight of flights
-        addtoObl = true
-        addtoAll = true
-        for origin of originsByLevel
-          for oid of originsByLevel[origin]
-            if originsByLevel[origin][oid] is flights[flight].arrivalAirport._id
-              addtoObl = false
-              break
-        if addtoObl
-          originsByLevel[ctr + 1].push(flights[flight].arrivalAirport._id)
-      query['departureAirport._id'] = {'$in': originsByLevel[ctr + 1]}
-      ctr++
-    limitReached = false
-    addToReturn = false
-    flightsToReturn = []
-    skipped = 0
-    for flights of flightsByLevel
-      if limit is flightsToReturn.length
-        break
-      for flight of flightsByLevel[flights]
-        skipped++
-        if flightsByLevel[flights][flight]._id is lastId
-          addToReturn = true
-          continue
-        else
-          if addToReturn
-            if limit is flightsToReturn.length
-              break
-            else
-              flightsToReturn.push(flightsByLevel[flights][flight])
-    newLastId = null
-    if flightsToReturn.length > 0
-      if _.isUndefined(flightsToReturn[flightsToReturn.length - 1]._id) is false
-        newLastId = flightsToReturn[flightsToReturn.length - 1]._id
-    return [flightsToReturn, totalFlights, newLastId]
-
 # count the total flights for the specified query
 #
 # @param [Object] query, a mongodb query object
@@ -265,16 +148,6 @@ countFlightsByQuery = (query) ->
   if _profile
     recordProfile('countFlightsByQuery', new Date() - start)
   return count
-# finds all airport documents
-#
-# @return [Array] airports, an array of airport document
-findAirports = () ->
-  if _profile
-    start = new Date()
-  airports = Airports.find({}, {transform: null}).fetch()
-  if _profile
-    recordProfile('findAirports', new Date() - start)
-  return airports
 
 # finds airports that have flights
 #
@@ -296,14 +169,14 @@ findAirportById = (id) ->
     return []
   return Airports.findOne({'_id': id})
 
-startSimulation = (simPas, startDate, endDate, origin) ->
-  future = new Future()
+startSimulation = (simPas, startDate, endDate, origins) ->
+  future = new Future();
   HTTP.post(_FLIRT_SIMULATOR_URL, {
     params: {
       submittedBy: 'robo@noreply.io',
       startDate: startDate,
       endDate: endDate,
-      departureNode: origin,
+      departureNodes: origins,
       numberPassengers: simPas
     }
   }, (err, res) ->
@@ -452,27 +325,35 @@ countTypeaheadAirports = (search) ->
     recordProfile('countTypeaheadAirports', new Date() - start)
   return count
 
-Meteor.publish 'SimulationItineraries', (simIds) ->
-  console.log("Subscribed to SimulationItineraries")
-  if not _.isArray(simIds)
-    check(simIds, String)
-    simIds = [simIds]
-  return Itineraries.find({
-    simulationId:
-      $in: simIds
-  }, {
+Meteor.publish 'SimulationItineraries', (simId) ->
+  # query options
+  options = {
     fields:
       simulationId: 1
       origin: 1
       destination: 1
-  })
+    transform:
+      null
+  }
+  if _.isEmpty(simId)
+    return []
+  console.log('Subscribed SimulationItineraries -- simId:%j --options: %j', simId, options)
+  return Itineraries.find({simulationId: simId}, options)
+
+# find a simulation by simId
+#
+# @param [String] simId
+# @return [Object] simulations, a simulation documents
+findSimulationBySimId = (simId) ->
+  if _.isUndefined(simId) or _.isEmpty(simId)
+    return {}
+  return Simulations.findOne({'simId': simId})
 
 # Public API
 Meteor.methods
   startSimulation: startSimulation
   flightsByQuery: flightsByQuery
   countFlightsByQuery: countFlightsByQuery
-  findAirports: findAirports
   findActiveAirports: findActiveAirports
   findAirportById: findAirportById
   findNearbyAirports: findNearbyAirports
@@ -480,3 +361,4 @@ Meteor.methods
   isTestEnvironment: isTestEnvironment
   typeaheadAirport: typeaheadAirport
   countTypeaheadAirports: countTypeaheadAirports
+  findSimulationBySimId: findSimulationBySimId

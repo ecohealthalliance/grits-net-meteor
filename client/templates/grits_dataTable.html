@@ -1,28 +1,26 @@
 <template name="gritsDataTable">
+  {{#if isExploreMode}}
   <ul class="nav nav-tabs table-tabs">
-    <li class="active"><a href="#paths" data-toggle="tab" id="pathTab">{{_ "gritsDataTable.tab-1.title"}}</a></li>
-    <li><a href="#nodes" data-toggle="tab" id="nodeTab">{{_ "gritsDataTable.tab-2.title"}}</a></li>
-    <li><a href="#heatmap" data-toggle="tab" id="heatmapTab">{{_ "gritsDataTable.tab-3.title"}}</a></li>
+    <li class="active"><a href="#paths" data-toggle="tab" id="pathTab">{{_ "gritsDataTable.explore.title"}}</a></li>
   </ul>
   <div class="tab-content dataTableContent">
     <div class="tab-pane active" id="paths">
       <div class="pathsTableContainer">
-        <table id="pathsTable" class="table dataTable">
+        <table id="exploreTable" class="table dataTable">
           <thead>
             <tr>
-              <th>{{_ "gritsDataTable.tab-1.origin-heading"}}</th>
-              <th class="dtHidden">{{_ "gritsDataTable.tab-1.origin-name"}}</th>
-              <th class="dtHidden">{{_ "gritsDataTable.tab-1.origin-city"}}</th>
-              <th class="dtHidden">{{_ "gritsDataTable.tab-1.origin-state"}}</th>
-              <th class="dtHidden">{{_ "gritsDataTable.tab-1.origin-country"}}</th>
-              <th>{{_ "gritsDataTable.tab-1.destination-heading"}}</th>
-              <th class="dtHidden">{{_ "gritsDataTable.tab-1.destination-name"}}</th>
-              <th class="dtHidden">{{_ "gritsDataTable.tab-1.destination-city"}}</th>
-              <th class="dtHidden">{{_ "gritsDataTable.tab-1.destination-state"}}</th>
-              <th class="dtHidden">{{_ "gritsDataTable.tab-1.destination-country"}}</th>
-              <th>{{_ "gritsDataTable.tab-1.occurrances-heading"}}</th>
-              <th>{{_ "gritsDataTable.tab-1.throughput-heading"}}</th>
-
+              <th>{{_ "gritsDataTable.explore.col1-heading"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col1"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col2"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col3"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col4"}}</th>
+              <th>{{_ "gritsDataTable.explore.col2-heading"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col5"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col6"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col7"}}</th>
+              <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col8"}}</th>
+              <th>{{_ "gritsDataTable.explore.col3-heading"}}</th>
+              <th>{{_ "gritsDataTable.explore.col4-heading"}}</th>
             </tr>
           </thead>
           <tbody>
@@ -33,31 +31,31 @@
                     {{this.origin._id}}
                   </td>
                   <td class="dtHidden">
-                    {{this.origin.metadata.name}}
+                    {{getNodeName this.origin}}
                   </td>
                   <td class="dtHidden">
-                    {{this.origin.metadata.city}}
+                    {{getNodeCity this.origin}}
                   </td>
                   <td class="dtHidden">
-                    {{this.origin.metadata.stateName}}
+                    {{getNodeState this.origin}}
                   </td>
                   <td class="dtHidden">
-                    {{this.origin.metadata.countryName}}
+                    {{getNodeCountry this.origin}}
                   </td>
                   <td>
                     {{this.destination._id}}
                   </td>
                   <td class="dtHidden">
-                    {{this.destination.metadata.name}}
+                    {{getNodeName this.destination}}
                   </td>
                   <td class="dtHidden">
-                    {{this.destination.metadata.city}}
+                    {{getNodeCity this.destination}}
                   </td>
                   <td class="dtHidden">
-                    {{this.destination.metadata.stateName}}
+                    {{getNodeState this.destination}}
                   </td>
                   <td class="dtHidden">
-                    {{this.destination.metadata.countryName}}
+                    {{getNodeCountry this.destination}}
                   </td>
                   <td>
                     {{this.occurrances}}
@@ -70,7 +68,7 @@
               {{/each}}
             {{else}}
               <tr>
-                <td colspan="4">
+                <td colspan="12">
                   <span style="font-style: italic;">No data</span>
                 </td>
               </tr>
@@ -79,100 +77,109 @@
         </table>
       </div>
     </div>
-    <div class="tab-pane" id="nodes">
-      <table id="nodesTable" class="table dataTable">
-        <thead>
-          <tr>
-            <th>{{_ "gritsDataTable.tab-2.code-heading"}}</th>
-            <th class="dtHidden">{{_ "gritsDataTable.tab-2.name-label"}}</th>
-            <th class="dtHidden">{{_ "gritsDataTable.tab-2.city-label"}}</th>
-            <th class="dtHidden">{{_ "gritsDataTable.tab-2.state-label"}}</th>
-            <th class="dtHidden">{{_ "gritsDataTable.tab-2.country-label"}}</th>
-            <th>{{_ "gritsDataTable.tab-2.incoming-heading"}}</th>
-            <th>{{_ "gritsDataTable.tab-2.outgoing-heading"}}</th>
-            <th>{{_ "gritsDataTable.tab-2.total-heading"}}</th>
-          </tr>
-        </thead>
-        <tbody class="dataTableBody">
-          {{#with nodes}}
-            {{#each nodes}}
-              <tr class="nodeTableRow" data-id="{{this._id}}">
-                <td>
-                  {{this._id}}
-                </td>
-                <td class="dtHidden">
-                  {{this.metadata.name}}
-                </td>
-                <td class="dtHidden">
-                  {{this.metadata.city}}
-                </td>
-                <td class="dtHidden">
-                  {{this.metadata.stateName}}
-                </td>
-                <td class="dtHidden">
-                  {{this.metadata.countryName}}
-                </td>
-                <td>
-                  {{this.incomingThroughput}}
-                </td>
-                <td>
-                  {{this.outgoingThroughput}}
-                </td>
-                <td>
-                  {{this.total}}
-                  <div class="circle" style="background-color: {{getNodeThroughputColor this}}"></div>
-                </td>
-              </tr>
+  </div>
+  {{/if}} <!-- end if isExploreMode -->
+  {{#if isAnalyzeMode}}
+  <ul class="nav nav-tabs table-tabs">
+    <li class="active"><a href="#analysis" data-toggle="tab" id="analysisTab"> Risk Analysis </a></li>
+  </ul>
+  <div class="tab-content dataTableContent">
+    <div class="tab-pane active" id="analysis">
+      <div class="tab-content pathsTableContainer">
+        <div class="risk-analysis-container">
+          <div class="progress" style="margin-bottom: 0px;">
+            <div class="simulation-progress progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em;">
+              <span class="progress-font">{{ simulationProgress }}</span>
+            </div>
+          </div>
+          <div class="datatable-heading datatable-row">
+            Originations
+          </div>
+          <div class="datatable-hr"></div>
+          {{#with departures}}
+            {{#each departures}}
+              <div class="datatable-row">
+                <div class="col col-xs-2">
+                  <span class="airport-code">{{this._id}}</span>
+                </div>
+                <div class="col col-xs-10">
+                  <div class="datatable-row">
+                    <span class="airport-info">
+                      {{this.name}}
+                    </span>
+                  </div>
+                  <div class="datatable-row">
+                    <span class="additional-info">
+                      {{ getAdditionalInfo this}}
+                    </span>
+                  </div>
+                </div>
+              </div>
             {{/each}}
           {{else}}
-            <tr>
-              <td colspan="4">
+            <div class="datatable-row">
+              <div class="col col-xs-12">
                 <span style="font-style: italic;">No data</span>
-              </td>
-            </tr>
+              </div>
+            </div>
           {{/with}}
-        </tbody>
-      </table>
-    </div>
-    <div class="tab-pane" id="heatmap">
-      <table id="heatmapTable" class="table dataTable">
-        <thead>
-          <tr>
-            <th>{{_ "gritsDataTable.tab-3.code-heading"}}</th>
-            <th>{{_ "gritsDataTable.tab-3.latitude-heading"}}</th>
-            <th>{{_ "gritsDataTable.tab-3.longitude-heading"}}</th>
-            <th>{{_ "gritsDataTable.tab-3.intensity-heading"}}</th>
-          </tr>
-        </thead>
+          <div class="datatable-heading datatable-row">
+            Details
+          </div>
+          <div class="datatable-hr"></div>
+          <div class="datatable-row">
+            <div class="datatable-row">
+              <div class="col col-xs-6">
+                Start Date: {{ startDate }}
+              </div>
+              <div class="col col-xs-6">
+                End Date: {{ endDate }}
+              </div>
+            </div>
+            <div class="datatable-row">
+              <div class="col col-xs-12">
+                Number of Passengers: {{ simPas }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="datatable-hr"></div>
+        <table id="analyzeTable" class="table dataTable">
+          <thead>
+            <tr>
+              <th>{{_ "gritsDataTable.analyze.col1-heading"}}</th>
+              <th>{{_ "gritsDataTable.analyze.col2-heading"}}</th>
+              <th>{{_ "gritsDataTable.analyze.col3-heading"}}</th>
+            </tr>
+          </thead>
           <tbody>
-          {{#with heatmaps}}
-            {{#each heatmaps}}
-              <tr class="heatmapTableRow" data-id="{{this._id}}">
-                <td>
-                  {{this.code}}
-                </td>
-                <td>
-                  {{this.latitude}}
-                </td>
-                <td>
-                  {{this.longitude}}
-                </td>
-                <td>
-                  {{this.intensity}}
+            {{#with paths}}
+              {{#each paths}}
+                <tr class="pathTableRow" data-id="{{this._id}}" >
+                  <td>
+                    {{this.origin._id}}
+                  </td>
+                  <td>
+                    {{this.destination._id}}
+                  </td>
+                  <td>
+                    {{this.occurrances}}
+                  </td>
+                </tr>
+              {{/each}}
+            {{else}}
+              <tr>
+                <td colspan="3">
+                  <span style="font-style: italic;">No data</span>
                 </td>
               </tr>
-            {{/each}}
-          {{else}}
-            <tr>
-              <td colspan="4">
-                <span style="font-style: italic;">No data</span>
-              </td>
-            </tr>
-          {{/with}}
-        </tbody>
-      </table>
+            {{/with}}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
+  {{/if}} <!-- end if isAnalyzeMode -->
   <div class="sidebarRightFooter">
     <div class="export">
       <i class="fa fa-cloud-download downloadIcon"></i>

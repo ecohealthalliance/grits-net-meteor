@@ -1,18 +1,43 @@
 # shows the path tab
 showPath = () ->
-  $('.element-details').show()
+  $('#element-details').show()
   $('.element-details-nav a[href="#pathDetails"]').tab('show')
 
 # shows the node tab
 showNode = () ->
-  $('.element-details').show()
+  $('#element-details').show()
   $('.element-details-nav a[href="#nodeDetails"]').tab('show')
 
 Template.gritsElementDetails.events
   'click .element-details-close': (e) ->
-    $('.element-details').hide()
+    $('#element-details').hide()
 
 Template.gritsElementDetails.helpers({
+  getNodeName: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.name
+  getNodeCity: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.city
+  getNodeState: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.state
+  getNodeCountry: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.countryName
+  getNodeGlobalRegion: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.globalRegion
   node: () ->
     if _.isUndefined(Template.instance().node)
       return {}
@@ -75,7 +100,7 @@ Template.gritsElementDetails.onRendered ->
     n2 = self.node.get()
     if _.isEqual(n1, n2)
       return
-    self.node.set(n1)
     if !_.isNull(n1)
+      self.node.set(n1)
       showNode()
     return

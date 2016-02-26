@@ -1,4 +1,4 @@
-Heatmaps = new (Mongo.Collection)()
+Heatmaps = new (Mongo.Collection)(null)
 Heatmap = Astro.Class(
   name: 'Heatmap'
   collection: Heatmaps

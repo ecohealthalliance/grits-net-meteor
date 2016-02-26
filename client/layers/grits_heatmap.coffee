@@ -73,9 +73,8 @@ class GritsHeatmapLayer extends GritsLayer
     self.hasLoaded.set(false)
     return
 
-  # setup a Meteor Tracker.autorun function to watch the global Session object
-  # 'grits-net-meteor:query' to contain departures.  If so, make a server side
-  # call to get the heatmap data.  Do this everytime the global query changes.
+  # setup a Meteor Tracker.autorun function to watch the global reactive var
+  # departures.
   _trackDepartures: () ->
     self = this
     Tracker.autorun () ->

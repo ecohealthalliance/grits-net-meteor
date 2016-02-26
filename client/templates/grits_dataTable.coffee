@@ -3,8 +3,9 @@
 # When another meteor app adds grits:grits-net-meteor as a package
 # Template.gritsDataTable will be available globally.
 _previousPath = null # placeholder for the last clicked path
-
-_tablesChanged = false
+_previousMode = null # placeholder for thet last mode
+_simId = new ReactiveVar(null)
+_tablesChanged = new ReactiveVar(false)
 
 # highlights the path table row
 #
@@ -30,48 +31,30 @@ highlightPathTableRow = (path) ->
     _previousPath = null
   return
 
-# formats the heatmap data for display in the template
-#
-# @param [Array] an Array of heatmap data
-# @return [Array] an Array of objects
-_formatHeatmapData = (data) ->
-  heatmaps = []
-  if _.isEmpty(data)
-    return heatmaps
-  count = 0
-  _.each(data, (a) ->
-    heat = {
-      _id: 'heatmapRow' + ++count
-      code: a[3]
-      latitude: +(a[0]).toFixed(5)
-      longitude: +(a[1]).toFixed(5)
-      intensity: +(a[2]).toFixed(3)
-    }
-    heatmaps.push(heat)
-  )
-  return heatmaps
+# update the simulationProgress bar
+_updateSimulationProgress = (progress) ->
+  $('.simulation-progress').css({width: progress})
+  return progress
 
-# formats the node data for display in the template
-#
-# @param [Array] an Array of GritsNode
-# @return [Array] an Array of objects
-_formatNodeData = (data) ->
-  nodes = []
-  if _.isEmpty(data)
-    return nodes
-  count = 0
-  _.each(data, (n) ->
-    node = _.extend(n, {total: n.incomingThroughput + n.outgoingThroughput})
-    nodes.push(node)
-  )
-  return nodes
-
-_refreshTables = () ->
-  if _tablesChanged
-    _tablesChanged = false
-    $("#pathsTable").trigger('update')
-    $("#nodesTable").trigger('update')
-    $("#heatmapTable").trigger('update')
+# throttle how many time we call sort during reactive changes to the dataTable
+_throttleTablesChanged = _.throttle(->
+  mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+  if mode == GritsConstants.MODE_ANALYZE
+    if $('#analyzeTable').hasOwnProperty('tablesorter')
+      # the tablesorter has already been applies, tritter an update
+      $("#analyzeTable").trigger('update')
+    else
+      # init a new tablesorter, default sort is zero-base array (third column)
+      $("#analyzeTable").tablesorter({sortList:[[2,1]]})
+  else
+    if $("#exploreTable").hasOwnProperty('tablesorter')
+      # the tablesorter has already been applies, tritter an update
+      $("#exploreTable").trigger('update')
+    else
+      # init a new tablesorter, default sort is zero-base array (fourth column)
+      $("#exploreTable").tablesorter({sortList:[[3,1]]})
+  _tablesChanged.set(false)
+, 250)
 
 Template.gritsDataTable.events({
   'click .pathTableRow': (event, template) ->
@@ -100,49 +83,119 @@ Template.gritsDataTable.events({
 })
 
 Template.gritsDataTable.helpers({
+  getNodeName: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.name
+  getNodeCity: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.city
+  getNodeState: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.state
+  getNodeCountry: (n) ->
+    if _.isUndefined(n)
+      return
+    node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
+    return node.countryName
+  simulationProgress: () ->
+    progress = Template.gritsSearch.simulationProgress.get() + '%'
+    return _updateSimulationProgress(progress)
+  getAdditionalInfo: (airport) ->
+    additionalInfo = ''
+    if airport.hasOwnProperty('city') && airport.city != ''
+      additionalInfo += airport.city
+    if airport.hasOwnProperty('state') && airport.state != ''
+      additionalInfo += ', ' + airport.state
+    if airport.hasOwnProperty('countryName') && airport.countryName != ''
+      additionalInfo += ', ' + airport.countryName
+    return additionalInfo
+  isExploreMode: () ->
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    if _.isUndefined(mode)
+      return false
+    else
+      if mode == GritsConstants.MODE_EXPLORE
+        return true
+      else
+        return false
+  isAnalyzeMode: () ->
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    if _.isUndefined(mode)
+      return false
+    else
+      if mode == GritsConstants.MODE_ANALYZE
+        return true
+      else
+        return false
+  simPas: () ->
+    if _.isUndefined(Template.instance().simPas)
+      return 0
+    else
+      return Template.instance().simPas.get()
+  startDate: () ->
+    if _.isUndefined(Template.instance().startDate)
+      return ''
+    else
+      return Template.instance().startDate.get()
+  endDate: () ->
+    if _.isUndefined(Template.instance().endDate)
+      return ''
+    else
+      return Template.instance().endDate.get()
+  departures: () ->
+    if _.isUndefined(Template.instance().departures)
+      return []
+    else
+      return Template.instance().departures.get()
   paths: () ->
     if _.isUndefined(Template.instance().paths)
       return []
     else
+      paths = Template.instance().paths.get()
       return Template.instance().paths.get()
-  nodes: () ->
-    if _.isUndefined(Template.instance().nodes)
-      return []
-    else
-      return Template.instance().nodes.get()
-  heatmaps: () ->
-    if _.isUndefined(Template.instance().heatmaps)
-      return []
-    else
-      return Template.instance().heatmaps.get()
   getPathThroughputColor: (path) ->
     if _.isUndefined(path)
       return ''
-    if _.isUndefined(Template.instance().pathsLayer)
-      return ''
-    return Template.instance().pathsLayer._getNormalizedColor(path)
-  getNodeThroughputColor: (node) ->
-    if _.isUndefined(node)
-      return ''
-    if _.isUndefined(Template.instance().nodesLayer)
-      return ''
-    return Template.instance().nodesLayer._getNormalizedColor(node)
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+    return layerGroup.getPathLayer()._getNormalizedColor(path)
 })
 
 Template.gritsDataTable.onCreated ->
   # initialize reactive-var to hold reference to the paths, nodes, and heatmap data
   this.paths = new ReactiveVar([])
-  this.nodes = new ReactiveVar([])
   this.heatmaps = new ReactiveVar([])
+  this.simId = null
+  this.simPas = new ReactiveVar(null)
+  this.startDate = new ReactiveVar(null)
+  this.endDate = new ReactiveVar(null)
+  this.departures = new ReactiveVar([])
+
+  this._reset = () ->
+    this.paths.set([])
+    this.simPas.set(0)
+    this.startDate.set('')
+    this.endDate.set('')
+    this.departures.set([])
+    _simId.set(null)
+    _tablesChanged.set(true)
+
   # Public API
   Template.gritsDataTable.highlightPathTableRow = highlightPathTableRow
+  Template.gritsDataTable.simId = _simId
+  Template.gritsDataTable.reset = this._reset
 
 Template.gritsDataTable.onRendered ->
   self = this
 
-  _dataTableUpdateInterval = setInterval _refreshTables, 1000
   # get the map instance
   self.map = Template.gritsMap.getInstance()
+
   # get the heatmap layer
   heatmapLayerGroup = self.map.getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
   self.heatmapLayer = heatmapLayerGroup.find(GritsConstants.HEATMAP_LAYER_ID)
@@ -151,39 +204,64 @@ Template.gritsDataTable.onRendered ->
     # determine the current layer group
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     layerGroup = GritsLayerGroup.getCurrentLayerGroup()
-
     # update the table reactively to the current visible paths
-    data = layerGroup.getPathLayer().visiblePaths.get()
-    if _.isEmpty(data)
-      self.paths.set([])
+    if mode == GritsConstants.MODE_ANALYZE
+      # if analyze mode; default sort by occurrances
+      data = layerGroup.getPathLayer().visiblePaths.get()
+      if _.isEmpty(data)
+        self.paths.set([])
+      else
+        sorted = _.sortBy(data, (path) ->
+          return path.occurrances * -1
+        )
+        self.paths.set(sorted)
     else
-      sorted = _.sortBy(data, (path) ->
-        return path.throughput * -1
-      )
-      self.paths.set(sorted)
-
-    # update the table reactively to the current visible nodes
-    data = layerGroup.getNodeLayer().visibleNodes.get()
-    if _.isEmpty(data)
-      self.nodes.set([])
-    else
-      sorted = _.sortBy(data, (node) ->
-        return (node.incomingThroughput + node.outgoingThroughput) * -1
-      )
-      nodes = _formatNodeData(sorted)
-      self.nodes.set(nodes)
+      # default sort by throughput
+      data = layerGroup.getPathLayer().visiblePaths.get()
+      if _.isEmpty(data)
+        self.paths.set([])
+      else
+        sorted = _.sortBy(data, (path) ->
+          return path.throughput * -1
+        )
+        self.paths.set(sorted)
+    _tablesChanged.set(true)
 
   Tracker.autorun ->
-    # when the heatmap is finished loading, set the template data to the result
-    heatmapLoaded = self.heatmapLayer.hasLoaded.get()
-    if heatmapLoaded
-      data = self.heatmapLayer.getData()
-      if _.isEmpty(data)
-        self.heatmaps.set([])
-      else
-        sorted = _.sortBy(data, (data) ->
-          return data[2] * -1
-        )
-        heatmaps = _formatHeatmapData(sorted)
-        self.heatmaps.set(heatmaps)
-    _tablesChanged = true
+    # determine the current layer group
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+
+    # clear the datatable if mode has changed
+    if _previousMode != null
+      if _previousMode != mode
+        self._reset()
+    _previousMode = mode
+
+  Tracker.autorun ->
+    departures = GritsFilterCriteria.departures.get()
+    # clear the datatable if departures == 0
+    if departures.length == 0
+      self._reset()
+      return
+
+  Tracker.autorun ->
+    # what is the current simId
+    simId = _simId.get()
+    if _.isEmpty(simId)
+      return
+    Meteor.call('findSimulationBySimId', simId, (err, simulation) ->
+      if err
+        console.error(err)
+        return
+      self.simPas.set(simulation.get('numberPassengers'))
+      self.startDate.set(moment(simulation.get('startDate')).format('MM/DD/YYYY'))
+      self.endDate.set(moment(simulation.get('endDate')).format('MM/DD/YYYY'))
+      tokens = simulation.get('departureNodes')
+      airports = _.filter(Meteor.gritsUtil.airports, (a) -> _.indexOf(tokens, a._id) >= 0)
+      self.departures.set(airports)
+      self.simId = simulation.get('simId')
+    )
+
+  Tracker.autorun ->
+    if _tablesChanged.get()
+      _throttleTablesChanged()

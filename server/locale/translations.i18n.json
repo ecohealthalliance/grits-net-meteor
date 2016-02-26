@@ -4,10 +4,10 @@
     },
     "mode": {
         "explore": {
-            "en": "EXPLORE"
+            "en": "Explore"
         },
         "analyze": {
-            "en": "ANALYZE"
+            "en": "Analyze"
         }
     },
     "gritsLegend": {
@@ -22,95 +22,60 @@
         }
     },
     "gritsDataTable": {
-        "tab-1": {
+        "explore": {
             "title" : {
                "en": "Flights"
             },
-            "origin-heading": {
+            "col1-heading": {
                 "en": "Origin"
             },
-            "origin-name": {
-                "en": "Origin Name"
-            },
-            "origin-city": {
-                "en": "Origin City"
-            },
-            "origin-state": {
-                "en": "Origin State"
-            },
-            "origin-country": {
-                "en": "Origin Country"
-            },
-            "destination-heading": {
+            "col2-heading": {
                 "en": "Destination"
             },
-            "destination-name": {
-                "en": "Destination Name"
-            },
-            "destination-city": {
-                "en": "Destination City"
-            },
-            "destination-state": {
-                "en": "Destination State"
-            },
-            "destination-country": {
-                "en": "Destination Country"
-            },
-            "occurrances-heading": {
+            "col3-heading": {
                 "en": "Occurrences"
             },
-            "throughput-heading": {
+            "col4-heading": {
                 "en": "Total Seats"
+            },
+            "hidden-col1": {
+                "en": "Origin Name"
+            },
+            "hidden-col2": {
+                "en": "Origin City"
+            },
+            "hidden-col3": {
+                "en": "Origin State"
+            },
+            "hidden-col4": {
+                "en": "Origin Country"
+            },
+            "hidden-col5": {
+                "en": "Destination Name"
+            },
+            "hidden-col6": {
+                "en": "Destination City"
+            },
+            "hidden-col7": {
+                "en": "Destination State"
+            },
+            "hidden-col8": {
+                "en": "Destination Country"
             }
         },
-        "tab-2": {
-            "title" : {
-               "en": "Airports"
+        "analyze": {
+            "col1-heading": {
+                "en": "Origin"
             },
-            "code-heading": {
-                "en": "Code"
+            "col2-heading": {
+                "en": "Terminal Desgination"
             },
-            "incoming-heading": {
-                "en": "Incoming People"
-            },
-            "outgoing-heading": {
-                "en": "Outgoing People"
-            },
-            "total-heading": {
-                "en": "Total Seats"
-            },
-            "name-label": {
-                "en": "Name"
-            },
-            "city-label": {
-                "en": "City"
-            },
-            "state-label": {
-                "en": "State"
-            },
-            "country-label": {
-                "en": "Country"
-            },
-        },
-        "tab-3": {
-            "title" : {
-               "en": "Heatmap"
-            },
-            "code-heading": {
-                "en": "Code"
-            },
-            "latitude-heading": {
-                "en": "Latitude"
-            },
-            "longitude-heading": {
-                "en": "Longitude"
-            },
-            "intensity-heading": {
-                "en": "Intensity"
+            "col3-heading": {
+                "en": "Occurrances"
             }
         }
     },
-    "gritsFilter": {
+    "gritsSearch": {
         "tokenfield-placeholder": {
             "en": "Type to search originations"
         },
@@ -121,66 +86,52 @@
             "en": "Limit search"
         },
         "more-button": {
-            "en": "More..."
+            "en": "Show More Records"
         },
         "apply-button": {
             "en": "Apply"
         },
         "loaded-records": {
-            "en": "Loaded Records"
+            "en": "Loaded:"
         },
         "total-records": {
-            "en": "Total Records"
+            "en": "Total:"
+        },
+        "status-bar-label": {
+            "en": "Results"
         },
         "recent-changes": {
             "en": "Recent changes have not been applied"
         },
-        "tab-1": {
-            "title": {
-                "en": "Flight Details"
-            },
-            "origin-label": {
-                "en": "Origin"
-            },
-            "destination-label": {
-                "en": "Destination"
-            },
-            "include-nearby-label": {
-                "en": "Include nearby airports within "
-            },
-            "miles-label": {
-                "en": "miles"
-            },
-            "stops-label": {
-                "en": "Number of Stops"
-            },
-            "seats-label": {
-                "en": "Number of Seats"
-            },
-            "levels-label": {
-                "en": "Number of Levels"
-            }
+        "include-nearby-label": {
+            "en": "Include nearby airports within "
         },
-        "tab-2": {
-            "title": {
-                "en": "Date & Time"
-            },
-            "operating-date-range" : {
-                "en": "Operating Date Range"
-            },
-            "start-label": {
-                "en": "Start"
-            },
-            "end-label": {
-                "en": "End"
-            },
-            "weekly-frequency-label": {
-                "en": "Weekly Frequency"
-            },
-            "simulated-passengers-label": {
-                "en": "# Simulated Passengers"
-            }
+        "miles-label": {
+            "en": "miles"
+        },
+        "levels-label": {
+            "en": "Number of Levels"
+        },
+        "start-label": {
+            "en": "Start"
+        },
+        "end-label": {
+            "en": "End"
+        },
+        "simulated-passengers-label": {
+            "en": "Number of Passengers"
+        },
+        "startSimulationButton": {
+            "en": "Start Risk Analysis"
+        },
+        "showThroughputButton": {
+            "en": "Show Throughput"
         }
+    },
+    "gritsLayerSelector": {
+      "layers-title" : {
+        "en": "Layers"
+      }
     },
     "gritsElementDetails": {
         "tab-1": {

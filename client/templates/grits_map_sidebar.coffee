@@ -10,10 +10,17 @@ Template.gritsMapSidebar.helpers
 
 Template.gritsMapSidebar.events
   'change #mode-toggle': (event) ->
+    # reset counters and heatmap
+    Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, 0)
+    Session.set(GritsConstants.SESSION_KEY_TOTAL_RECORDS, 0)
     Template.gritsMap.getInstance()._layers.heatmap.reset()
     mode = $(event.target).data('mode')
     if _lastMode == mode
       return
+    if mode == GritsConstants.MODE_ANALYZE
+      $('#startSimulation').click()
+    else
+      $('#showThroughput').click()
     Session.set(GritsConstants.SESSION_KEY_MODE, mode)
     return
   'click #sidebar-plus-button': (event) ->
@@ -23,8 +30,6 @@ Template.gritsMapSidebar.events
     Template.gritsMap.getInstance().zoomOut()
     return
   'click #sidebar-draw-rectangle-tool': (event) ->
-    if Template.gritsOverlay.isLoading()
-      return
     map = Template.gritsMap.getInstance()
     _isDrawing = !_isDrawing # toggle
     if _isDrawing
@@ -42,3 +47,8 @@ Template.gritsMapSidebar.onRendered ->
   Tracker.autorun ->
     _lastMode = Session.get(GritsConstants.SESSION_KEY_MODE)
     $('#mode-toggle :input[data-mode="' + _lastMode + '"]').click()
+
+  Tracker.autorun ->
+    isReady = Session.get(GritsConstants.SESSION_KEY_IS_READY)
+    if isReady
+      $('#mode-toggle').show()

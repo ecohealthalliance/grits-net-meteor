@@ -1,5 +1,5 @@
-_ignoreFields = ['levels', 'limit', 'offset'] # fields that are used for maintaining state but will be ignored when sent to the server
-_validFields = ['weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels', 'effectiveDate', 'discontinuedDate', 'levels', 'limit']
+_ignoreFields = ['limit', 'offset'] # fields that are used for maintaining state but will be ignored when sent to the server
+_validFields = ['departure', 'effectiveDate', 'discontinuedDate', 'limit', 'offset']
 _validOperators = ['$gte', '$gt', '$lte', '$lt', '$eq', '$ne', '$in', '$near', null]
 _state = null # keeps track of the query string state
 # local/private minimongo collection
@@ -9,7 +9,7 @@ _Filter = Astro.Class(
   name: 'FilterCriteria'
   collection: _Collection
   transform: true
-  fields: ['key', 'operator', 'value', 'operator2', 'value2']
+  fields: ['key', 'operator', 'value']
   validators: {
     key: [
         Validators.required(),
@@ -34,9 +34,6 @@ class GritsFilterCriteria
   constructor: () ->
     self = this
 
-    # lastFlightId used for query with more than one level
-    self.lastFlightId = null
-
     # reactive var used to update the UI when the query state has changed
     self.stateChanged = new ReactiveVar(null)
 
@@ -58,33 +55,25 @@ class GritsFilterCriteria
     #   departures
     self.departures = new ReactiveVar([])
     self.trackDepartures()
-    #   arrivals
-    self.arrivals = new ReactiveVar([])
-    self.trackArrivals()
-    #   weeklyFrequency
-    self.weeklyFrequency = new ReactiveVar(null)
-    self.trackWeeklyFrequency()
-    #   stops
-    # self.stops = new ReactiveVar(null)
-    # self.trackStops()
-    #   seats
-    self.seats = new ReactiveVar(null)
-    self.trackSeats()
+
     #   operatingDateRangeStart
     self.operatingDateRangeStart = new ReactiveVar(null)
     self.trackOperatingDateRangeStart()
     #   operatingDateRangeEnd
     self.operatingDateRangeEnd = new ReactiveVar(null)
     self.trackOperatingDateRangeEnd()
-    #   levels
-    self.levels = new ReactiveVar(1)
-    self.trackLevels()
+
     #   limit
     self.limit = new ReactiveVar(1000)
     self.trackLimit()
 
     #   offset
     self.offset = new ReactiveVar(0)
+
+    # airportCounts
+    # during a simulation the airports are counted to update the heatmap
+    self.airportCounts = {}
+
     return
   # initialize the start date of the filter 'discontinuedDate'
   #
@@ -122,15 +111,6 @@ class GritsFilterCriteria
     yearStr = year.toString().slice(2,4)
     self.operatingDateRangeEnd.set(new Date(year, month, date))
     return "#{month}/#{date}/#{yearStr}"
-  # initialize the end date through the 'effectiveDate' filter
-  #
-  # @return [Integer] level
-  initLevels: () ->
-    self = this
-    initLevels = self.levels.get()
-    self.setLevels(initLevels)
-    self._baseState = JSON.stringify(self.getQueryObject())
-    return initLevels
   # initialize the limit through the 'effectiveDate' filter
   #
   # @return [Integer] limit
@@ -144,7 +124,6 @@ class GritsFilterCriteria
   # the collection if it already exists
   #
   # @param [String] id, the name of the filter criteria
-  # @note must be one of 'day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels'
   # @return [Object] Astronomy model 'FilterCriteria'
   createOrUpdate: (id, fields) ->
     self = this
@@ -167,7 +146,6 @@ class GritsFilterCriteria
   # removes a FilterCriteria from the collection
   #
   # @param [String] id, the name of the filter criteria
-  # @note must be one of 'day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'day7', 'weeklyFrequency', 'stops', 'seats', 'departure', 'arrival', 'levels'
   # @optional [Function] cb, the callback method if removing async
   remove: (id, cb) ->
     self = this
@@ -191,14 +169,10 @@ class GritsFilterCriteria
       k = filter.get('key')
       o = filter.get('operator')
       v = filter.get('value')
-      o2 = filter.get('operator2')
-      v2 = filter.get('value2')
       if _.indexOf(['$eq'], o) >= 0
         value = v
       else
         value[o] = v
-        if o2 isnt null
-          value[o2] = v2
       result[k] = value
     )
     return result
@@ -262,7 +236,7 @@ class GritsFilterCriteria
       layerGroup.reset()
       heatmapLayerGroup.reset()
 
-    count = Session.get('grits-net-meteor:loadedRecords')
+    count = Session.get(GritsConstants.SESSION_KEY_LOADED_RECORDS)
 
     throttleDraw = _.throttle(->
       layerGroup.draw()
@@ -275,17 +249,17 @@ class GritsFilterCriteria
       # update the layer
       throttleDraw()
       # update the counter
-      Session.set('grits-net-meteor:loadedRecords', ++count)
+      Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS , ++count)
       # done processing
-      callback()
+      async.nextTick(-> callback())
     ), 4)
 
     # final method for when all items within the queue are processed
     self._queue.drain = ->
       layerGroup.finish()
       heatmapLayerGroup.finish()
-      Session.set('grits-net-meteor:loadedRecords', count)
-      Session.set('grits-net-meteor:isUpdating', false)
+      Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, count)
+      Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
 
     # add the flights to thet queue which will start processing
     self._queue.push(flights)
@@ -302,12 +276,12 @@ class GritsFilterCriteria
     query = self.getQueryObject()
     if _.isUndefined(query) or _.isEmpty(query)
       toastr.error('The filter requires at least one Departure')
-      Session.set('grits-net-meteor:isUpdating', false)
+      Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
       return
 
     if !query.hasOwnProperty('departureAirport._id')
       toastr.error('The filter requires at least one Departure')
-      Session.set('grits-net-meteor:isUpdating', false)
+      Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
       return
 
     # set the state
@@ -315,9 +289,7 @@ class GritsFilterCriteria
     self.compareStates()
 
     # set the arguments
-    levels = query.levels
     limit = query.limit
-    lastId = self.lastFlightId
     offset = self.offset.get()
 
     # remove the ignoreFields from the query
@@ -341,34 +313,8 @@ class GritsFilterCriteria
     )
     query['departureAirport._id']['$in'] = modifiedTokens
 
-    if levels > 1
-      origin = Template.gritsSearchAndAdvancedFiltration.getOrigin()
-      if !_.isNull(origin)
-        # show the loading indicator and call the server-side method
-        Session.set 'grits-net-meteor:isUpdating', true
-        if _.isNull(self.lastFlightId)
-          Meteor.call('getFlightsByLevel', query, levels, origin, limit, (err, res) ->
-            if Meteor.gritsUtil.debug
-              console.log('levels:res: ', res)
-            Session.set 'grits-net-meteor:totalRecords', res[1]
-            if !_.isUndefined(res[2]) and !_.isEmpty(res[2])
-              self.lastFlightId = res[2]
-            self.process(res[0], offset)
-          )
-        else
-          Meteor.call('getMoreFlightsByLevel', query, levels, origin, limit, self.lastFlightId, (err, res) ->
-            if Meteor.gritsUtil.debug
-              console.log('levels:res: ', res)
-            Session.set 'grits-net-meteor:totalRecords', res[1]
-            if !_.isUndefined(res[2]) and !_.isEmpty(res[2])
-              self.lastFlightId = res[2]
-            self.process(res[0], offset)
-          )
-        return
-      return
-
     # show the loading indicator and call the server-side method
-    Session.set 'grits-net-meteor:isUpdating', true
+    Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, true)
     async.auto({
       # get the totalRecords count first
       'getCount': (callback, result) ->
@@ -380,9 +326,7 @@ class GritsFilterCriteria
           if Meteor.gritsUtil.debug
             console.log 'totalRecords: ', totalRecords
 
-          if levels <= 1
-            Session.set 'grits-net-meteor:totalRecords', totalRecords
-
+          Session.set(GritsConstants.SESSION_KEY_TOTAL_RECORDS, totalRecords)
           callback(null, totalRecords)
         )
       # when count is finished, get the flights if greater than 0
@@ -391,7 +335,7 @@ class GritsFilterCriteria
 
         if totalRecords.length <= 0
           toastr.info('The filter did not return any results')
-          Session.set('grits-net-meteor:isUpdating', false)
+          Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
           callback(null)
           return
 
@@ -402,7 +346,7 @@ class GritsFilterCriteria
 
           if _.isUndefined(flights) || flights.length <= 0
             toastr.info('The filter did not return any results')
-            Session.set('grits-net-meteor:isUpdating', false)
+            Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
             callback(null, [])
             return
 
@@ -429,13 +373,12 @@ class GritsFilterCriteria
   # @param [Function] cb, the callback function
   apply: (cb) ->
     self = this
-    self.lastFlightId = null
     self.offset.set(0)
     # allow the reactive var to be set before continue
     async.nextTick(() ->
       # reset the loadedRecords and totalRecords
-      Session.set('grits-net-meteor:loadedRecords', 0)
-      Session.set('grits-net-meteor:totalRecords', 0)
+      Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, 0)
+      Session.set(GritsConstants.SESSION_KEY_TOTAL_RECORDS, 0)
       # re-enable the loadMore button when a new filter is applied
       $('#loadMore').prop('disabled', false)
       # pass the callback function if its defined
@@ -454,7 +397,7 @@ class GritsFilterCriteria
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
-    discontinuedDatePicker = Template.gritsSearchAndAdvancedFiltration.getDiscontinuedDatePicker()
+    discontinuedDatePicker = Template.gritsSearch.getDiscontinuedDatePicker()
     if _.isNull(discontinuedDatePicker)
       return
 
@@ -493,7 +436,7 @@ class GritsFilterCriteria
     # do not allow this to run prior to jQuery/DOM
     if _.isUndefined($)
       return
-    effectiveDatePicker = Template.gritsSearchAndAdvancedFiltration.getEffectiveDatePicker()
+    effectiveDatePicker = Template.gritsSearch.getEffectiveDatePicker()
     if _.isNull(effectiveDatePicker)
       return
 
@@ -519,101 +462,6 @@ class GritsFilterCriteria
     Tracker.autorun ->
       obj = self.operatingDateRangeEnd.get()
       self.setOperatingDateRangeEnd(obj)
-      async.nextTick(() ->
-        self.compareStates()
-      )
-    return
-  # sets the weeklyFrequency input on the UI to the 'operator' and 'value'
-  # specified, as well as, updating the underlying FilterCriteria.
-  #
-  # @param [String] operator
-  # @param [Integer] value
-  setWeeklyFrequency: (operator, value) ->
-    self = this
-
-    # do not allow this to run prior to jQuery/DOM
-    if _.isUndefined($)
-      return
-    if _.indexOf(_validOperators, operator) < 0
-      throw new Error('Invalid operator: ', operator)
-    if _.isUndefined(value)
-      throw new Error('A value must be defined or null.')
-
-    if _.isEqual(self.weeklyFrequency.get(), {value: value, operator: operator})
-      # the reactive var is already set, change is from the UI
-      if _.isNull(value)
-        self.remove('weeklyFrequency')
-      else
-        self.createOrUpdate('weeklyFrequency', {key: 'weeklyFrequency', operator: operator, value: value})
-    else
-      self.weeklyFrequency.set({'value': value, 'operator', operator})
-      $('#weeklyFrequencyOperator').val(operator)
-    return
-  trackWeeklyFrequency: () ->
-    self = this
-    Tracker.autorun ->
-      obj = self.weeklyFrequency.get()
-      if _.isNull(obj)
-        return
-      self.setWeeklyFrequency(obj.operator, obj.value)
-      async.nextTick(() ->
-        self.compareStates()
-      )
-    return
-  # sets the stops input on the UI to the 'operator' and 'value'
-  # specified, as well as, updating the underlying FilterCriteria.
-  #
-  # @param [String] operator
-  # @param [Integer] value
-  # setStops: (operator, value, operator2, value2) ->
-  #   self = this
-
-  #   # do not allow this to run prior to jQuery/DOM
-  #   if _.isUndefined($)
-  #     return
-  #   if _.indexOf(_validOperators, operator) < 0
-  #     throw new Error('Invalid operator: ', operator)
-  #   if _.isUndefined(value)
-  #     throw new Error('A value must be defined or null.')
-  #   # the call to change did not come from the UI
-  #   self.createOrUpdate('stops', {key: 'stops', operator: operator, value: value, operator2: operator2, value2: value2})
-  #   return
-  # trackStops: () ->
-  #   self = this
-  #   Tracker.autorun ->
-  #     obj = self.stops.get()
-  #     if _.isNull(obj)
-  #       return
-  #     self.setStops(obj.operator, obj.value, obj.operator2, obj.value2)
-  #     async.nextTick(()->
-  #       self.compareStates()
-  #     )
-  #   return
-  # sets the seats input on the UI to the 'operator' and 'value'
-  # specified, as well as, updating the underlying FilterCriteria.
-  #
-  # @param [String] operator
-  # @param [Integer] value
-  setSeats: (operator, value, operator2, value2) ->
-    self = this
-
-    # do not allow this to run prior to jQuery/DOM
-    if _.isUndefined($)
-      return
-    if _.indexOf(_validOperators, operator) < 0
-      throw new Error('Invalid operator: ', operator)
-    if _.isUndefined(value)
-      throw new Error('A value must be defined or null.')
-
-    self.createOrUpdate('seats', {key: 'totalSeats', operator: operator, value: value, operator2: operator2, value2: value2})
-    return
-  trackSeats: () ->
-    self = this
-    Tracker.autorun ->
-      obj = self.seats.get()
-      if _.isNull(obj)
-        return
-      self.setSeats(obj.operator, obj.value, obj.operator2, obj.value2)
       async.nextTick(() ->
         self.compareStates()
       )
@@ -646,18 +494,18 @@ class GritsFilterCriteria
         self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: [code]})
     else
       if _.isNull(code)
-        Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain().tokenfield('setTokens', [])
+        Template.gritsSearch.getDepartureSearchMain().tokenfield('setTokens', [])
         self.departures.set([])
         return
       if _.isEmpty(code)
-        Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain().tokenfield('setTokens', [])
+        Template.gritsSearch.getDepartureSearchMain().tokenfield('setTokens', [])
         self.departures.set([])
         return
       if _.isArray(code)
-        Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain().tokenfield('setTokens', code)
+        Template.gritsSearch.getDepartureSearchMain().tokenfield('setTokens', code)
         self.departures.set(code)
       else
-        Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain().tokenfield('setTokens', [code])
+        Template.gritsSearch.getDepartureSearchMain().tokenfield('setTokens', [code])
         self.departures.set([code])
     return
   trackDepartures: () ->
@@ -674,100 +522,10 @@ class GritsFilterCriteria
             # clears the sub-layers and resets the layer group
             if layerGroup != null
               layerGroup.reset()
-            Template.gritsSearchAndAdvancedFiltration.resetSimulationProgress()
       self.setDepartures(obj)
       async.nextTick(() ->
         self.compareStates()
       )
-    return
-  # sets the arrival input on the UI to the 'code'
-  # specified, as well as, updating the underlying FilterCriteria.
-  #
-  # @param [String] code, an airport IATA code
-  # @see http://www.iata.org/Pages/airports.aspx
-  setArrivals: (code) ->
-    self = this
-
-    # do not allow this to run prior to jQuery/DOM
-    if _.isUndefined($)
-      return
-    if _.isUndefined(code)
-      throw new Error('A code must be defined or null.')
-
-    if _.isEqual(self.arrivals.get(), code)
-      # the call is from the UI
-      if _.isNull(code)
-        self.remove('arrival')
-        return
-      if _.isEmpty(code)
-        self.remove('arrival')
-        return
-      if _.isArray(code)
-        self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: code})
-      else
-        self.createOrUpdate('arrival', {key: 'arrivalAirport._id', operator: '$in', value: [code]})
-    else
-      if _.isNull(code)
-        Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', [])
-        self.arrivals.set([])
-        return
-      if _.isEmpty(code)
-        Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', [])
-        self.arrivals.set([])
-        return
-      if _.isArray(code)
-        Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', code)
-        self.arrivals.set(code)
-      else
-        Template.gritsSearchAndAdvancedFiltration.getArrivalSearch().tokenfield('setTokens', [code])
-        self.arrivals.set([code])
-    return
-  trackArrivals: () ->
-    self = this
-    Tracker.autorun ->
-      obj = self.arrivals.get()
-      self.setArrivals(obj)
-      async.nextTick(() ->
-        self.compareStates()
-      )
-    return
-  # sets the level input on the UI to the 'value'
-  # specified, as well as, updating the underlying FilterCriteria.
-  #
-  # @note This is not part of the query, but is included to maintain the UI state.  Upon 'apply' the value is deleted from the query and used as an arguement to the server-side method
-  # @param [Integer] value
-  setLevels: (value) ->
-    self = this
-
-    # do not allow this to run prior to jQuery/DOM
-    if _.isUndefined($)
-      return
-
-    if _.isUndefined(value)
-      throw new Error('Level must be defined.')
-
-    if _.isEqual(self.levels.get(), value)
-      if _.isNull(value)
-        self.remove('levels')
-      else
-        val = Math.floor(parseInt(value, 10))
-        if isNaN(val) or val < 1
-          throw new Error('Level must be positive')
-        self.createOrUpdate('levels', {key: 'levels', operator: '$eq', value: val})
-    else
-      self.levels.set(value)
-    return
-  trackLevels: () ->
-    self = this
-    Tracker.autorun ->
-      obj = self.levels.get()
-      try
-        self.setLevels(obj)
-        async.nextTick(() ->
-          self.compareStates()
-        )
-      catch e
-        Meteor.gritsUtil.errorHandler(e)
     return
   # sets the limit input on the UI to the 'value'
   # specified, as well as, updating the underlying FilterCriteria.
@@ -817,14 +575,126 @@ class GritsFilterCriteria
     if _.isUndefined($)
       return
 
-    totalRecords = Session.get('grits-net-meteor:totalRecords')
-    loadedRecords = Session.get('grits-net-meteor:loadedRecords')
+    totalRecords = Session.get(GritsConstants.SESSION_KEY_TOTAL_RECORDS)
+    loadedRecords = Session.get(GritsConstants.SESSION_KEY_LOADED_RECORDS)
 
     if (loadedRecords < totalRecords)
       self.offset.set(loadedRecords)
     else
       self.offset.set(0)
-    self.more()
     return
+  # returns a unique list of tokens from the search bar
+  getOriginIds: () ->
+    self = this
+    return _.chain(self.departures.get())
+      .map (originId)->
+        if originId.startsWith(GritsMetaNode.PREFIX)
+          return GritsMetaNode.find(originId).getAirportIds()
+        else
+          [originId]
+      .flatten()
+      .uniq()
+      .value()
+  # handle setup of subscription to SimulatedIteneraries and process the results
+  processSimulation: (simPas, simId) ->
+    self = this
+    # get the heatmapLayerGroup
+    heatmapLayerGroup = Template.gritsMap.getInstance().getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
+    # get the current mode groupLayer
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+    if layerGroup == null
+      return
+
+    # reset the layers/counters
+    layerGroup.reset()
+    heatmapLayerGroup.reset()
+    loaded = 0
+    # initialize the status-bar counter
+    Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, loaded)
+    # reset the airportCounts
+    self.airportCounts = {}
+
+    originIds = self.getOriginIds()
+    _updateHeatmap = _.throttle(->
+      Heatmaps.remove({})
+      # map the airportCounts object to one with percentage values
+      airportPercentages = _.object([key, val / loaded] for key, val of self.airportCounts)
+      # key the heatmap to the departure airports so it can be filtered
+      # out if the query changes.
+      airportPercentages._id = originIds.sort().join("")
+      Heatmap.createFromDoc(airportPercentages, Meteor.gritsUtil.airportsToLocations)
+    , 500)
+
+    _throttledDraw = _.throttle(->
+      layerGroup.draw()
+      heatmapLayerGroup.draw()
+    , 500)
+
+    Meteor.subscribe('SimulationItineraries', simId)
+    options =
+      transform: null
+
+    _doWork = (id, fields) ->
+      if self.airportCounts[fields.destination]
+        self.airportCounts[fields.destination]++
+      else
+        self.airportCounts[fields.destination] = 1
+      loaded += 1
+      layerGroup.convertItineraries(fields, fields.origin)
+      # update the simulatorProgress bar
+      if simPas > 0
+        progress = Math.ceil((loaded / simPas) * 100)
+        Template.gritsSearch.simulationProgress.set(progress)
+        Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, loaded)
+      if loaded == simPas
+        #finaldraw
+        Template.gritsSearch.simulationProgress.set(100)
+        Session.set(GritsConstants.SESSION_KEY_LOADED_RECORDS, loaded)
+        _updateHeatmap()
+        layerGroup.finish()
+        heatmapLayerGroup.finish()
+      else
+        _updateHeatmap()
+        _throttledDraw()
+
+    Itineraries.find({'simulationId': simId}, options).observeChanges({
+      # UI freeze does not occur
+      added: Meteor.gritsUtil.smoothRate (id, fields) ->
+        _doWork(id, fields)
+    })
+    return
+  # starting a simulation
+  startSimulation: (simPas, startDate, endDate) ->
+    self = this
+    departures = self.departures.get()
+    if departures.length == 0
+      toastr.error('The simulator requires at least one Departure')
+      return
+
+    # switch mode
+    Session.set(GritsConstants.SESSION_KEY_MODE, GritsConstants.MODE_ANALYZE)
+
+    # let the user know the simulation started
+    Template.gritsSearch.simulationProgress.set(1)
+
+    Meteor.call('startSimulation', simPas, startDate, endDate, self.getOriginIds(), (err, res) ->
+      # handle any errors
+      if res.hasOwnProperty('error')
+        Meteor.gritsUtil.errorHandler(res)
+        console.error(res)
+        return
+
+      # set the reactive var on the template
+      Template.gritsDataTable.simId.set(res.simId)
+
+      # set the status-bar total counter
+      Session.set(GritsConstants.SESSION_KEY_TOTAL_RECORDS, simPas)
+
+      # setup parameters for the subscription to SimulationItineraries
+      limit = self.limit.get()
+      skip = 0 # clicking on start risk analysis always starts with zero
+      self.processSimulation(simPas, res.simId)
+      return
+    )
 
 GritsFilterCriteria = new GritsFilterCriteria() # exports as a singleton

@@ -16,10 +16,17 @@ class GritsBoundingBox
     self._initialZoom = self._map.options.zoom
     self._initialCenter = self._map.options.center
 
+    # reset the current layerGroup
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+    if layerGroup != null
+      layerGroup.reset()
+
     # the bounding box works on the 'AllNodes' layer group
     self._allNodesLayerGroup = self._map.getGritsLayerGroup(GritsConstants.ALL_NODES_GROUP_LAYER_ID)
     self._allNodesLayerGroup.add()
     self._allNodesLayer = self._allNodesLayerGroup.getNodeLayer()
+
+
 
     # underscore templates that represent the action menu and actions
     self._actionMenuTmpl = _.template('<ul id="<%= obj.id %>" class="action-menu"></ul>')
@@ -163,23 +170,23 @@ class GritsBoundingBox
   apply: () ->
     self = this
     if self._shape != null
-      Template.gritsOverlay.show()
+      Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, true)
       # apply the boundingbox filter
       metaNode = self._filterNodes()
       if metaNode.hasOwnProperty('error') && metaNode.error == true
         toastr.warning(metaNode.message)
-        Template.gritsOverlay.hide()
+        Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
         self.reset()
         return
       # erase any previous departures
       GritsFilterCriteria.setDepartures(null)
       # set the meta node as the new origin
-      departureSearchMain = Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain()
+      departureSearchMain = Template.gritsSearch.getDepartureSearchMain()
       departureSearchMain.tokenfield('setTokens', metaNode._id)
       async.nextTick(() ->
         # apply the filter
         GritsFilterCriteria.apply((err, res) ->
-          Template.gritsOverlay.hide()
+          Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
           self.reset()
         )
       )
