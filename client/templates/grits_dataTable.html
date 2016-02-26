@@ -1,7 +1,9 @@
 <template name="gritsDataTable">
   {{#if isExploreMode}}
   <ul class="nav nav-tabs table-tabs">
-    <li class="active"><a href="#paths" data-toggle="tab" id="pathTab">{{_ "gritsDataTable.explore.title"}}</a></li>
+    <li class="active">
+      <a href="#paths" data-toggle="tab" id="pathTab">{{_ "gritsDataTable.explore.title"}}</a>
+    </li>
   </ul>
   <div class="tab-content dataTableContent">
     <div class="tab-pane active" id="paths">
@@ -81,10 +83,33 @@
   {{/if}} <!-- end if isExploreMode -->
   {{#if isAnalyzeMode}}
   <ul class="nav nav-tabs table-tabs">
-    <li class="active"><a href="#analysis" data-toggle="tab" id="analysisTab"> Risk Analysis </a></li>
+    <li class="active">
+      <a href="#analysis" data-toggle="tab" id="analysisTab">
+        <div class="share-btn-container">
+          <div class="pull-left">{{_ "gritsDataTable.analyze.title" }}</div>
+          <div class="pull-right">
+            <div class="share-btn">
+              <i class="fa fa-share-alt"></i>
+            </div>
+          </div>
+        </div>
+      </a>
+    </li>
   </ul>
+        <div class="share-link-container">
+        <div class="col-xs-10">
+          <input type="text" class="share-link" value={{ getCurrentURL }} />
+        </div>
+        <div class="col-xs-2">
+          <button class="share-copy-btn btn btn-xs btn-success" data-clipboard-target=".share-link" aria-label="Copied!">Copy</button>
+        </div>
+      </div>
   <div class="tab-content dataTableContent">
+
+
+
     <div class="tab-pane active" id="analysis">
+
       <div class="tab-content pathsTableContainer">
         <div class="risk-analysis-container">
           <div class="progress" style="margin-bottom: 0px;">
