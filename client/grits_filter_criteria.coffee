@@ -679,6 +679,10 @@ class GritsFilterCriteria
 
     Meteor.call('startSimulation', simPas, startDate, endDate, self.getOriginIds(), (err, res) ->
       # handle any errors
+      if err
+        Meteor.gritsUtil.errorHandler(err)
+        console.error(err)
+        return
       if res.hasOwnProperty('error')
         Meteor.gritsUtil.errorHandler(res)
         console.error(res)
@@ -686,6 +690,9 @@ class GritsFilterCriteria
 
       # set the reactive var on the template
       Template.gritsDataTable.simId.set(res.simId)
+
+      # update the url
+      FlowRouter.go('/simulation/'+res.simId)
 
       # set the status-bar total counter
       Session.set(GritsConstants.SESSION_KEY_TOTAL_RECORDS, simPas)
