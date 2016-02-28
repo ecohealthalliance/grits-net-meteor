@@ -170,6 +170,12 @@ findAirportById = (id) ->
   return Airports.findOne({'_id': id})
 
 startSimulation = (simPas, startDate, endDate, origins) ->
+  console.log ("DEBUG: Flight Sim Url: " + _FLIRT_SIMULATOR_URL)
+  console.log ("DEBUG: simPas: " + simPas)
+  console.log ("DEBUG: startDate: " + startDate)
+  console.log ("DEBUG: endDate: " + endDate)
+  console.log ("DEBUG: origins: " + origins)
+
   future = new Future();
   HTTP.post(_FLIRT_SIMULATOR_URL, {
     params: {
