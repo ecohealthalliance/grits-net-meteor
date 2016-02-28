@@ -36,23 +36,23 @@ _updateSimulationProgress = (progress) ->
   $('.simulation-progress').css({width: progress})
   return progress
 
-# throttle how many time we call sort during reactive changes to the dataTable
+# throttle how many time we trigger update during reactive changes to the dataTable
 _throttleTablesChanged = _.throttle(->
   mode = Session.get(GritsConstants.SESSION_KEY_MODE)
   if mode == GritsConstants.MODE_ANALYZE
-    if $('#analyzeTable').hasOwnProperty('tablesorter')
-      # the tablesorter has already been applies, tritter an update
-      $("#analyzeTable").trigger('update')
+    if $('#analyzeTable').hasClass('tablesorter')
+      # the tablesorter has already been applied, trigger an update
+      $('#analyzeTable').trigger('update')
     else
-      # init a new tablesorter, default sort is zero-base array (third column)
-      $("#analyzeTable").tablesorter({sortList:[[2,1]]})
+      # init a new tablesorter
+      $('#analyzeTable').tablesorter()
   else
-    if $("#exploreTable").hasOwnProperty('tablesorter')
-      # the tablesorter has already been applies, tritter an update
-      $("#exploreTable").trigger('update')
+    if $('#exploreTable').hasClass('tablesorter')
+      # the tablesorter has already been applied, trigger an update
+      $('#exploreTable').trigger('update')
     else
-      # init a new tablesorter, default sort is zero-base array (fourth column)
-      $("#exploreTable").tablesorter({sortList:[[3,1]]})
+      # init a new tablesorter
+      $('#exploreTable').tablesorter()
   _tablesChanged.set(false)
 , 250)
 
@@ -222,7 +222,6 @@ Template.gritsDataTable.onRendered ->
   heatmapLayerGroup = self.map.getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
   self.heatmapLayer = heatmapLayerGroup.find(GritsConstants.HEATMAP_LAYER_ID)
 
-
   Tracker.autorun ->
     # determine the current layer group
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
@@ -248,7 +247,6 @@ Template.gritsDataTable.onRendered ->
           return path.throughput * -1
         )
         self.paths.set(sorted)
-    _tablesChanged.set(true)
 
   Tracker.autorun ->
     # determine the current layer group
