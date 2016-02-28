@@ -226,6 +226,8 @@ class GritsNodeLayer extends GritsLayer
 
   _destinationDrawCallback: (selection, projection) ->
     self = this
+    if Session.keys['grits-net-meteor:mode'] is "\"ANALYZE\""
+      return
 
     destinations = self.getDestinations()
     destinationCount = destinations.length
