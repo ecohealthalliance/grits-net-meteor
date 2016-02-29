@@ -359,11 +359,6 @@ Template.gritsSearch.onRendered ->
     if mode == GritsConstants.MODE_EXPLORE
       _resetSimulationProgress()
       _disableLimit.set(false)
-      async.nextTick( ->
-        if GritsFilterCriteria.departures.get().length isnt 0
-          $("#showThroughput").click()
-      )
-
       # reset the URL back to the root
       FlowRouter.go('/')
     else
@@ -371,10 +366,6 @@ Template.gritsSearch.onRendered ->
       # it is done using nextTick to give Blaze template time to render
       async.nextTick(-> $('#simulatedPassengersInputSlider').slider())
       _disableLimit.set(true)
-      async.nextTick( ->
-        if GritsFilterCriteria.departures.get().length isnt 0
-          $("#startSimulation").click()
-      )
 
   Tracker.autorun ->
     departures = GritsFilterCriteria.departures.get()
