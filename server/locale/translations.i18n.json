@@ -71,10 +71,10 @@
                 "en": "Origin"
             },
             "col2-heading": {
-                "en": "Terminal Desgination"
+                "en": "Terminal Destination"
             },
             "col3-heading": {
-                "en": "Occurrances"
+                "en": "Occurrences"
             }
         }
     },
