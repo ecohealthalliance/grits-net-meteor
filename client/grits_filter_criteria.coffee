@@ -493,7 +493,7 @@ class GritsFilterCriteria
         for _id in code
           capsCodes.push _id.toUpperCase()
         if !_.isEqual(capsCodes, code)
-          Template.gritsSearchAndAdvancedFiltration.getDepartureSearchMain().tokenfield('setTokens', capsCodes)
+          Template.gritsSearch.getDepartureSearchMain().tokenfield('setTokens', capsCodes)
         self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: capsCodes})
       else
         self.createOrUpdate('departure', {key: 'departureAirport._id', operator: '$in', value: [code]})
