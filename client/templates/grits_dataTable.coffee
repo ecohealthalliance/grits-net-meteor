@@ -228,13 +228,13 @@ Template.gritsDataTable.onRendered ->
     layerGroup = GritsLayerGroup.getCurrentLayerGroup()
     # update the table reactively to the current visible paths
     if mode == GritsConstants.MODE_ANALYZE
-      # if analyze mode; default sort by occurrances
+      # if analyze mode; default sort by occurrences
       data = layerGroup.getPathLayer().visiblePaths.get()
       if _.isEmpty(data)
         self.paths.set([])
       else
         sorted = _.sortBy(data, (path) ->
-          return path.occurrances * -1
+          return path.occurrences * -1
         )
         self.paths.set(sorted)
     else

@@ -71,10 +71,10 @@
                 "en": "Origin"
             },
             "col2-heading": {
-                "en": "Terminal Desgination"
+                "en": "Terminal Destination"
             },
             "col3-heading": {
-                "en": "Occurrances"
+                "en": "Occurrences"
             }
         }
     },
@@ -144,7 +144,7 @@
             "level-label": {
                 "en": "Level"
             },
-            "occurrances-label": {
+            "occurrences-label": {
                 "en": "Occurrences"
             },
             "weight-label": {
