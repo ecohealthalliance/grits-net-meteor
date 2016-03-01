@@ -210,7 +210,7 @@ Template.gritsDataTable.onRendered ->
   # setup the clipboard for share-btn-link
   self.clip = new Clipboard('.share-copy-btn')
   self.clip.on('success', ->
-    toastr.info('The URL has been copied to your clipboard')
+    toastr.info(i18n.get('toastMessages.clipboard'))
     $('.share-link-container').hide()
     return
   )

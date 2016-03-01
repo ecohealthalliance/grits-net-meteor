@@ -275,12 +275,12 @@ class GritsFilterCriteria
 
     query = self.getQueryObject()
     if _.isUndefined(query) or _.isEmpty(query)
-      toastr.error('The filter requires at least one Departure')
+      toastr.error(i18n.get('toastMessages.departureRequired'))
       Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
       return
 
     if !query.hasOwnProperty('departureAirport._id')
-      toastr.error('The filter requires at least one Departure')
+      toastr.error(i18n.get('toastMessages.departureRequired'))
       Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
       return
 
@@ -334,7 +334,7 @@ class GritsFilterCriteria
         totalRecords = result.getCount
 
         if totalRecords.length <= 0
-          toastr.info('The filter did not return any results')
+          toastr.info(i18n.get('toastMessages.noResults'))
           Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
           callback(null)
           return
@@ -345,7 +345,7 @@ class GritsFilterCriteria
             return
 
           if _.isUndefined(flights) || flights.length <= 0
-            toastr.info('The filter did not return any results')
+            toastr.info(i18n.get('toastMessages.noResults'))
             Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
             callback(null, [])
             return
@@ -673,7 +673,7 @@ class GritsFilterCriteria
     self = this
     departures = self.departures.get()
     if departures.length == 0
-      toastr.error('The simulator requires at least one Departure')
+      toastr.error(i18n.get('toastMessages.departureRequired'))
       return
 
     # switch mode
