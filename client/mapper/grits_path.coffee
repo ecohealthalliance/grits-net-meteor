@@ -42,7 +42,7 @@ class GritsPath
     @throughput = throughput
 
     @normalizedPercent = 0
-    @occurrances = 1
+    @occurrences = 1
 
     @origin = origin
     @destination = destination

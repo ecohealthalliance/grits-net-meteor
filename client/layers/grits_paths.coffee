@@ -338,7 +338,7 @@ class GritsPathLayer extends GritsLayer
         return
     else
       path.level = level
-      path.occurrances += 1
+      path.occurrences += 1
       path.throughput += (flight.totalSeats * flight.weeklyFrequency)
     return
 
@@ -356,7 +356,7 @@ class GritsPathLayer extends GritsLayer
         console.error(e.message)
         return
     else
-      path.occurrances += 1
+      path.occurrences += 1
       path.throughput += 1
     return
 
