@@ -201,5 +201,25 @@
                 "en": "Total Seats"
             }
         }
+    },
+    "toastMessages": {
+        "departureRequired": {
+            "en": "The filter requires at least one Departure"
+        },
+        "noResults": {
+            "en": "The filter did not return any results"
+        },
+        "clipboard": {
+            "en": "The URL has been copied to your clipboard"
+        },
+        "includeNearbyRequired": {
+            "en": "Include nearby requires at least one Departure"
+        },
+        "includeNearbyMetaNode": {
+            "en": "Include nearby does not work with MetaNodes"
+        },
+        "layerLoading": {
+            "en": "The layer has not finished loading"
+        }
     }
 }

@@ -241,7 +241,7 @@ class GritsAllNodesLayer extends GritsLayer
       overlayadd: (e) ->
         if e.name == self._displayName
           if !self.hasLoaded.get()
-            toastr.warning('The layer has not finished loading')
+            toastr.warning(i18n.get('toastMessages.layerLoading'))
           if Meteor.gritsUtil.debug
             console.log("#{self._displayName} layer was added")
       overlayremove: (e) ->

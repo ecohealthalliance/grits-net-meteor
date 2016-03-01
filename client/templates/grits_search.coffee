@@ -466,7 +466,7 @@ _startSimulation = (e) ->
 _showThroughput = (e) ->
   departures = GritsFilterCriteria.departures.get()
   if departures.length == 0
-    toastr.error('The simulator requires at least one Departure')
+    toastr.error(i18n.get('toastMessages.departureRequired'))
     return
   GritsFilterCriteria.apply()
   return
@@ -478,7 +478,7 @@ Template.gritsSearch.events
     if event.keyCode == 13
       departures = GritsFilterCriteria.departures.get()
       if departures.length == 0
-        toastr.error('The simulator requires at least one Departure')
+        toastr.error(i18n.get('toastMessages.departureRequired'))
         return
       GritsFilterCriteria.apply()
     return
@@ -503,11 +503,11 @@ Template.gritsSearch.events
     departures = GritsFilterCriteria.departures.get()
 
     if departures.length <= 0
-      toastr.error('Include Nearby requires a Departure')
+      toastr.error(i18n.get('includeNearbyRequired'))
       return false
 
     if (departures[0].indexOf(GritsMetaNode.PREFIX) >= 0)
-      toastr.error('Include Nearby does not work with MetaNodes')
+      toastr.error(i18n.get('includeNearbyMetaNode'))
       return false
 
     if $('#includeNearbyAirports').is(':checked')
