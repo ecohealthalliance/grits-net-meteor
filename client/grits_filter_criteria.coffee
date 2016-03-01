@@ -275,12 +275,12 @@ class GritsFilterCriteria
 
     query = self.getQueryObject()
     if _.isUndefined(query) or _.isEmpty(query)
-      toastr.error(i18n.get('toastMessages.departureRequired')
+      toastr.error(i18n.get('toastMessages.departureRequired'))
       Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
       return
 
     if !query.hasOwnProperty('departureAirport._id')
-      toastr.error(i18n.get('toastMessages.departureRequired')
+      toastr.error(i18n.get('toastMessages.departureRequired'))
       Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
       return
 
@@ -345,7 +345,7 @@ class GritsFilterCriteria
             return
 
           if _.isUndefined(flights) || flights.length <= 0
-             toastr.info(i18n.get('toastMessages.noResults'))
+            toastr.info(i18n.get('toastMessages.noResults'))
             Session.set(GritsConstants.SESSION_KEY_IS_UPDATING, false)
             callback(null, [])
             return
