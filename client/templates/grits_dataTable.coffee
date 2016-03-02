@@ -275,8 +275,8 @@ Template.gritsDataTable.onRendered ->
         console.error(err)
         return
       self.simPas.set(simulation.get('numberPassengers'))
-      self.startDate.set(moment(simulation.get('startDate')).format('MM/DD/YYYY'))
-      self.endDate.set(moment(simulation.get('endDate')).format('MM/DD/YYYY'))
+      self.startDate.set(moment.utc(simulation.get('startDate')).format('MM/DD/YYYY'))
+      self.endDate.set(moment.utc(simulation.get('endDate')).format('MM/DD/YYYY'))
       tokens = simulation.get('departureNodes')
       airports = _.filter(Meteor.gritsUtil.airports, (a) -> _.indexOf(tokens, a._id) >= 0)
       self.departures.set(airports)
