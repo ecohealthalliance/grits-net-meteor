@@ -29,7 +29,7 @@ addDefaultControls = (map) ->
   Blaze.render(Template.gritsLegend, $('#sidebar-slider')[0])
   Blaze.render(Template.gritsElementDetails, $('#element-details')[0])
   Blaze.render(Template.gritsSearch, $('#sidebar-search')[0])
-  Blaze.render(Template.gritsDataTable, $('#sidebar-flightData')[0])
+  Blaze.render(Template.gritsDataTable, $('#sidebar-table')[0])
   Blaze.render(Template.gritsLayerSelector, $('#sidebar-layer')[0])
 
 Template.gritsMap.onCreated ->
