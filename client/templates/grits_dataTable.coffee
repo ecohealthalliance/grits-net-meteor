@@ -19,7 +19,7 @@ highlightPathTableRow = (path) ->
   $table.find('.activeRow').removeClass('activeRow')
   if _previousPath != path
     # add the active class to this row and remove any background-color
-    $row.addClass('activeRow').css({'background-color':''})
+    $row.addClass('activeRow').css({ 'background-color': '' })
     # reset the previous path background-color
     if !_.isNull(_previousPath)
       $previousPath = $("tr[data-id=#{_previousPath._id}]")
@@ -27,7 +27,7 @@ highlightPathTableRow = (path) ->
     _previousPath = path
   else
     # clicked on same path, reset the color and set _previousPath to null
-    $row.css({'background-color':path.color})
+    $row.css({ 'background-color': path.color })
     _previousPath = null
   return
 
@@ -70,7 +70,7 @@ Template.gritsDataTable.events({
     path = _.find(paths, (path) -> path._id == _id)
     if _.isUndefined(path)
       return
-    element = $('#'+path.elementID)[0]
+    element = $('#' + path.elementID)[0]
     if _.isUndefined(element)
       return
     # simulate a click on the path
@@ -87,7 +87,7 @@ Template.gritsDataTable.events({
 })
 
 Template.gritsDataTable.helpers({
-  getCurrentURL: () ->
+  getCurrentURL: ->
     return FlowRouter.currentURL.get()
   getNodeName: (n) ->
     if _.isUndefined(n)
@@ -117,7 +117,7 @@ Template.gritsDataTable.helpers({
       return 'N/A'
     node = _.find(Meteor.gritsUtil.airports, (node) -> node._id == n._id)
     return node.countryName
-  simulationProgress: () ->
+  simulationProgress: ->
     progress = Template.gritsSearch.simulationProgress.get() + '%'
     return _updateSimulationProgress(progress)
   getAdditionalInfo: (airport) ->
@@ -129,7 +129,7 @@ Template.gritsDataTable.helpers({
     if airport.hasOwnProperty('countryName') && airport.countryName != ''
       additionalInfo += ', ' + airport.countryName
     return additionalInfo
-  isExploreMode: () ->
+  isExploreMode: ->
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     if _.isUndefined(mode)
       return false
@@ -138,7 +138,7 @@ Template.gritsDataTable.helpers({
         return true
       else
         return false
-  isAnalyzeMode: () ->
+  isAnalyzeMode: ->
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     if _.isUndefined(mode)
       return false
@@ -147,27 +147,27 @@ Template.gritsDataTable.helpers({
         return true
       else
         return false
-  simPas: () ->
+  simPas: ->
     if _.isUndefined(Template.instance().simPas)
       return 0
     else
       return Template.instance().simPas.get()
-  startDate: () ->
+  startDate: ->
     if _.isUndefined(Template.instance().startDate)
       return ''
     else
       return Template.instance().startDate.get()
-  endDate: () ->
+  endDate: ->
     if _.isUndefined(Template.instance().endDate)
       return ''
     else
       return Template.instance().endDate.get()
-  departures: () ->
+  departures: ->
     if _.isUndefined(Template.instance().departures)
       return []
     else
       return Template.instance().departures.get()
-  paths: () ->
+  paths: ->
     if _.isUndefined(Template.instance().paths)
       return []
     else
@@ -190,7 +190,7 @@ Template.gritsDataTable.onCreated ->
   this.endDate = new ReactiveVar(null)
   this.departures = new ReactiveVar([])
 
-  this._reset = () ->
+  this._reset = ->
     this.paths.set([])
     this.simPas.set(0)
     this.startDate.set('')
@@ -222,7 +222,7 @@ Template.gritsDataTable.onRendered ->
   heatmapLayerGroup = self.map.getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
   self.heatmapLayer = heatmapLayerGroup.find(GritsConstants.HEATMAP_LAYER_ID)
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     # determine the current layer group
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     layerGroup = GritsLayerGroup.getCurrentLayerGroup()
@@ -248,7 +248,7 @@ Template.gritsDataTable.onRendered ->
         )
         self.paths.set(sorted)
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     # determine the current layer group
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
 
@@ -258,14 +258,14 @@ Template.gritsDataTable.onRendered ->
         self._reset()
     _previousMode = mode
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     departures = GritsFilterCriteria.departures.get()
     # clear the datatable if departures == 0
     if departures.length == 0
       self._reset()
       return
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     # what is the current simId
     simId = _simId.get()
     if _.isEmpty(simId)
@@ -283,6 +283,6 @@ Template.gritsDataTable.onRendered ->
       self.simId = simulation.get('simId')
     )
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     if _tablesChanged.get()
       _throttleTablesChanged()
