@@ -5,23 +5,22 @@
 _previousPath = null # placeholder for the last clicked path
 _previousMode = null # placeholder for thet last mode
 _simId = new ReactiveVar(null)
-_tablesChanged = new ReactiveVar(false)
 
 # highlights the path table row
 #
 # @param [Object] a GritsPath object
 highlightPathTableRow = (path) ->
-  if !(path instanceof GritsPath)
+  if not (path instanceof GritsPath)
     return
   $row = $("tr[data-id=#{path._id}]")
   # remove any previously clicked rows
   $table = $row.closest('table')
   $table.find('.activeRow').removeClass('activeRow')
-  if _previousPath != path
+  if _previousPath isnt path
     # add the active class to this row and remove any background-color
     $row.addClass('activeRow').css({ 'background-color': '' })
     # reset the previous path background-color
-    if !_.isNull(_previousPath)
+    if not _.isNull(_previousPath)
       $previousPath = $("tr[data-id=#{_previousPath._id}]")
     # this path becomes the previousPath
     _previousPath = path
@@ -36,38 +35,125 @@ _updateSimulationProgress = (progress) ->
   $('.simulation-progress').css({width: progress})
   return progress
 
-# throttle how many time we trigger update during reactive changes to the dataTable
-_throttleTablesChanged = _.throttle(->
-  mode = Session.get(GritsConstants.SESSION_KEY_MODE)
-  if mode == GritsConstants.MODE_ANALYZE
-    if $('#analyzeTable').hasClass('tablesorter')
-      # the tablesorter has already been applied, trigger an update
-      $('#analyzeTable').trigger('update')
-    else
-      # init a new tablesorter
-      $('#analyzeTable').tablesorter()
-  else
-    if $('#exploreTable').hasClass('tablesorter')
-      # the tablesorter has already been applied, trigger an update
-      $('#exploreTable').trigger('update')
-    else
-      # init a new tablesorter
-      $('#exploreTable').tablesorter()
-  _tablesChanged.set(false)
-, 250)
+_textToSortKey = (text) ->
+  if text is 'Origin'
+    'origin._id'
+  else if text is 'Destination'
+    'destination._id'
+  else if text is 'Occurrences'
+    'occurrences'
+  else if text is 'Total Seats'
+    'throughput'
 
-Template.gritsDataTable.events({
+Template.gritsDataTable.onCreated ->
+  # initialize reactive-var to hold reference to the paths, nodes, and heatmap data
+  @paths = new Meteor.Collection(null)
+  @sortKey = new ReactiveVar('occurrences')
+  @sortOrder = new ReactiveVar(-1)
+  @heatmaps = new ReactiveVar([])
+  @simId = null
+  @simPas = new ReactiveVar(null)
+  @startDate = new ReactiveVar(null)
+  @endDate = new ReactiveVar(null)
+  @departures = new ReactiveVar([])
+
+  @_reset = =>
+    @paths.remove({})
+    @simPas.set(0)
+    @startDate.set('')
+    @endDate.set('')
+    @departures.set([])
+    _simId.set(null)
+
+  # Public API
+  Template.gritsDataTable.highlightPathTableRow = highlightPathTableRow
+  Template.gritsDataTable.simId = _simId
+  Template.gritsDataTable.reset = @_reset
+
+
+Template.gritsDataTable.onRendered ->
+  # setup the clipboard for share-btn-link
+  @clip = new Clipboard('.share-copy-btn')
+  @clip.on('success', ->
+    toastr.info(i18n.get('toastMessages.clipboard'))
+    @$('.share-link-container').hide()
+  )
+
+  # get the map instance
+  @map = Template.gritsMap.getInstance()
+
+  # get the heatmap layer
+  heatmapLayerGroup = @map.getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
+  @heatmapLayer = heatmapLayerGroup.find(GritsConstants.HEATMAP_LAYER_ID)
+
+  Meteor.autorun =>
+    # determine the current layer group
+    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    # update the table reactively to the current visible paths
+    if mode == GritsConstants.MODE_ANALYZE
+      # if analyze mode; default sort by occurrences
+      @sortKey.set('occurrences')
+    else
+      @sortKey.set('throughput')
+    @sortOrder.set(-1)
+
+  # Populate the minimongo collection
+  Meteor.autorun =>
+    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
+    data = layerGroup.getPathLayer().visiblePaths.get()
+    unless _.isEmpty(data)
+      i = 0
+      l = data.length
+      while i < l
+        item = data[i]
+        @paths.upsert(item._id, item)
+        i++
+
+  Meteor.autorun =>
+    departures = GritsFilterCriteria.departures.get()
+    # clear the datatable if departures == 0
+    if departures.length is 0
+      @_reset()
+
+  Meteor.autorun =>
+    # what is the current simId
+    simId = _simId.get()
+    if _.isEmpty(simId)
+      return
+    Meteor.call('findSimulationBySimId', simId, (err, simulation) =>
+      if err
+        throw new Meteor.Error err
+      @simPas.set(simulation.get('numberPassengers'))
+      @startDate.set(moment(simulation.get('startDate')).format('MM/DD/YYYY'))
+      @endDate.set(moment(simulation.get('endDate')).format('MM/DD/YYYY'))
+      tokens = simulation.get('departureNodes')
+      airports = _.filter(Meteor.gritsUtil.airports, (a) ->
+        _.indexOf(tokens, a._id) >= 0)
+      @departures.set(airports)
+      @simId = simulation.get('simId')
+    )
+
+
+Template.gritsDataTable.events
   'click .share-btn': (event, template) ->
     # toggle the display of the share-link-container
-    $('.share-link-container').slideToggle('fast')
-    return
+    template.$('.share-link-container').slideToggle('fast')
+
+  'click th': (event, template) ->
+    element = event.currentTarget
+    text = element.textContent
+    sortKey = _textToSortKey(text)
+    if template.sortKey.get() is sortKey
+      template.sortOrder.set(-template.sortOrder.get())
+    else
+      template.sortKey.set(sortKey)
+
   'click .pathTableRow': (event, template) ->
     # get the clicked row
     $row = $(event.currentTarget)
     # find the path from template.paths using the DOM's id
     _id = $row.data('id')
-    paths = template.paths.get()
-    path = _.find(paths, (path) -> path._id == _id)
+    path = template.paths.findOne(_id)
     if _.isUndefined(path)
       return
     element = $('#' + path.elementID)[0]
@@ -75,18 +161,25 @@ Template.gritsDataTable.events({
       return
     # simulate a click on the path
     path.eventHandlers.click(element)
-    return
-  'click .exportData': (event) ->
-    $('.dtHidden').show()
+
+  'click .exportData': (event, template) ->
+    template.$('.dtHidden').show()
     fileType = $(event.currentTarget).attr("data-type")
-    activeTable = $('.dataTableContent').find('.active').find('.table.dataTable')
+    activeTable = template.$('.dataTableContent').find('.active').find('.table.dataTable')
     if activeTable.length
       activeTable.tableExport({type: fileType})
-    $('.dtHidden').hide()
-    return
-})
+    template.$('.dtHidden').hide()
 
-Template.gritsDataTable.helpers({
+
+Template.gritsDataTable.helpers
+  sorting: (text) ->
+    instance = Template.instance()
+    sortKey = _textToSortKey(text)
+    if instance.sortKey.get() is sortKey
+      if instance.sortOrder.get() > 0
+        'tablesorter-headerAsc'
+      else
+        'tablesorter-headerDesc'
   getCurrentURL: ->
     return FlowRouter.currentURL.get()
   getNodeName: (n) ->
@@ -134,7 +227,7 @@ Template.gritsDataTable.helpers({
     if _.isUndefined(mode)
       return false
     else
-      if mode == GritsConstants.MODE_EXPLORE
+      if mode is GritsConstants.MODE_EXPLORE
         return true
       else
         return false
@@ -167,122 +260,18 @@ Template.gritsDataTable.helpers({
       return []
     else
       return Template.instance().departures.get()
+  hasPaths: ->
+    Template.instance().paths.find().count() > 0
   paths: ->
-    if _.isUndefined(Template.instance().paths)
-      return []
-    else
-      paths = Template.instance().paths.get()
-      return Template.instance().paths.get()
+    instance = Template.instance()
+    _sort = {}
+    _sort[instance.sortKey.get()] = instance.sortOrder.get()
+    # always back the sorting by the amount of occurences
+    if instance.sortKey.get() isnt 'occurrences'
+      _sort['occurrences'] = -1
+    Template.instance().paths.find({}, {sort: _sort})
   getPathThroughputColor: (path) ->
     if _.isUndefined(path)
       return ''
     layerGroup = GritsLayerGroup.getCurrentLayerGroup()
     return layerGroup.getPathLayer()._getNormalizedColor(path)
-})
-
-Template.gritsDataTable.onCreated ->
-  # initialize reactive-var to hold reference to the paths, nodes, and heatmap data
-  this.paths = new ReactiveVar([])
-  this.heatmaps = new ReactiveVar([])
-  this.simId = null
-  this.simPas = new ReactiveVar(null)
-  this.startDate = new ReactiveVar(null)
-  this.endDate = new ReactiveVar(null)
-  this.departures = new ReactiveVar([])
-
-  this._reset = ->
-    this.paths.set([])
-    this.simPas.set(0)
-    this.startDate.set('')
-    this.endDate.set('')
-    this.departures.set([])
-    _simId.set(null)
-    _tablesChanged.set(true)
-
-  # Public API
-  Template.gritsDataTable.highlightPathTableRow = highlightPathTableRow
-  Template.gritsDataTable.simId = _simId
-  Template.gritsDataTable.reset = this._reset
-
-Template.gritsDataTable.onRendered ->
-  self = this
-
-  # setup the clipboard for share-btn-link
-  self.clip = new Clipboard('.share-copy-btn')
-  self.clip.on('success', ->
-    toastr.info(i18n.get('toastMessages.clipboard'))
-    $('.share-link-container').hide()
-    return
-  )
-
-  # get the map instance
-  self.map = Template.gritsMap.getInstance()
-
-  # get the heatmap layer
-  heatmapLayerGroup = self.map.getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
-  self.heatmapLayer = heatmapLayerGroup.find(GritsConstants.HEATMAP_LAYER_ID)
-
-  Meteor.autorun ->
-    # determine the current layer group
-    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
-    layerGroup = GritsLayerGroup.getCurrentLayerGroup()
-    # update the table reactively to the current visible paths
-    if mode == GritsConstants.MODE_ANALYZE
-      # if analyze mode; default sort by occurrences
-      data = layerGroup.getPathLayer().visiblePaths.get()
-      if _.isEmpty(data)
-        self.paths.set([])
-      else
-        sorted = _.sortBy(data, (path) ->
-          return path.occurrences * -1
-        )
-        self.paths.set(sorted)
-    else
-      # default sort by throughput
-      data = layerGroup.getPathLayer().visiblePaths.get()
-      if _.isEmpty(data)
-        self.paths.set([])
-      else
-        sorted = _.sortBy(data, (path) ->
-          return path.throughput * -1
-        )
-        self.paths.set(sorted)
-
-  Meteor.autorun ->
-    # determine the current layer group
-    mode = Session.get(GritsConstants.SESSION_KEY_MODE)
-
-    # clear the datatable if mode has changed
-    if _previousMode != null
-      if _previousMode != mode
-        self._reset()
-    _previousMode = mode
-
-  Meteor.autorun ->
-    departures = GritsFilterCriteria.departures.get()
-    # clear the datatable if departures == 0
-    if departures.length == 0
-      self._reset()
-      return
-
-  Meteor.autorun ->
-    # what is the current simId
-    simId = _simId.get()
-    if _.isEmpty(simId)
-      return
-    Meteor.call('findSimulationBySimId', simId, (err, simulation) ->
-      if err
-        console.error(err)
-        return
-      self.simPas.set(simulation.get('numberPassengers'))
-      self.startDate.set(moment(simulation.get('startDate')).format('MM/DD/YYYY'))
-      self.endDate.set(moment(simulation.get('endDate')).format('MM/DD/YYYY'))
-      tokens = simulation.get('departureNodes')
-      airports = _.filter(Meteor.gritsUtil.airports, (a) -> _.indexOf(tokens, a._id) >= 0)
-      self.departures.set(airports)
-      self.simId = simulation.get('simId')
-    )
-
-  Meteor.autorun ->
-    if _tablesChanged.get()
-      _throttleTablesChanged()

@@ -15,8 +15,10 @@
     <div class="filter-wrapper">
       <div class="filter-row">
         <div class="col-xs-12 text-center">
-          <input type="checkbox" name="includeNearbyAirports" id="includeNearbyAirports">
-          <span>{{_ "gritsSearch.include-nearby-label"}}</span>
+          <label>
+            <input id="includeNearbyAirports" type="checkbox" name="includeNearbyAirports" />
+            <span>{{_ "gritsSearch.include-nearby-label"}}</span>
+          </label>
           <input type="number" id="includeNearbyAirportsRadius" class="input-sm" min="1" max="500" value="50">
           <span>{{_ "gritsSearch.miles-label"}}</span>
         </div>
