@@ -187,6 +187,7 @@ startSimulation = (simPas, startDate, endDate, origins) ->
     }
   }, (err, res) ->
     if err
+      console.log ("ERROR: " + json.stringify(err) )
       future.throw(err)
       return
     future.return(JSON.parse(res.content))
