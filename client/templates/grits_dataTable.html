@@ -2,31 +2,31 @@
   {{#if isExploreMode}}
   <ul class="nav nav-tabs table-tabs">
     <li class="active">
-      <a href="#paths" data-toggle="tab" id="pathTab">{{_ "gritsDataTable.explore.title"}}</a>
+      <a id="pathTab" href="#paths" data-toggle="tab">{{_ "gritsDataTable.explore.title"}}</a>
     </li>
   </ul>
   <div class="tab-content dataTableContent">
-    <div class="tab-pane active" id="paths">
+    {{#if hasPaths}}
+    <div id="paths" class="tab-pane active">
       <div class="pathsTableContainer">
-        <table id="exploreTable" class="table dataTable">
+        <table id="exploreTable" class="table dataTable tablesorter">
           <thead>
-            <tr>
-              <th>{{_ "gritsDataTable.explore.col1-heading"}}</th>
+            <tr class="tablesorter-headerRow">
+              <th class="tablesorter-header {{sorting 'Origin'}}">{{_ "gritsDataTable.explore.col1-heading"}}</th>
               <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col1"}}</th>
               <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col2"}}</th>
               <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col3"}}</th>
               <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col4"}}</th>
-              <th>{{_ "gritsDataTable.explore.col2-heading"}}</th>
+              <th class="tablesorter-header {{sorting 'Destination'}}">{{_ "gritsDataTable.explore.col2-heading"}}</th>
               <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col5"}}</th>
               <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col6"}}</th>
               <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col7"}}</th>
               <th class="dtHidden">{{_ "gritsDataTable.explore.hidden-col8"}}</th>
-              <th>{{_ "gritsDataTable.explore.col3-heading"}}</th>
-              <th>{{_ "gritsDataTable.explore.col4-heading"}}</th>
+              <th class="tablesorter-header {{sorting 'Occurrences'}}">{{_ "gritsDataTable.explore.col3-heading"}}</th>
+              <th class="tablesorter-header {{sorting 'Total Seats'}}">{{_ "gritsDataTable.explore.col4-heading"}}</th>
             </tr>
           </thead>
           <tbody>
-            {{#with paths}}
               {{#each paths}}
                 <tr class="pathTableRow" data-id="{{this._id}}" >
                   <td>
@@ -68,23 +68,26 @@
                   </td>
                 </tr>
               {{/each}}
-            {{else}}
+            {{#unless paths}}
               <tr>
                 <td colspan="12">
                   <span style="font-style: italic;">No data</span>
                 </td>
               </tr>
-            {{/with}}
+            {{/unless}}
           </tbody>
         </table>
       </div>
     </div>
+    {{else}}
+      <p>Please specify the search parameters in the left sidebar</p>
+    {{/if}}
   </div>
   {{/if}} <!-- end if isExploreMode -->
   {{#if isAnalyzeMode}}
   <ul class="nav nav-tabs table-tabs">
     <li class="active">
-      <a href="#analysis" data-toggle="tab" id="analysisTab">
+      <a id="analysisTab" href="#analysis" data-toggle="tab">
         <div class="share-btn-container">
           <div class="pull-left">{{_ "gritsDataTable.analyze.title" }}</div>
           <div class="pull-right">
@@ -105,7 +108,7 @@
     </div>
   </div>
   <div class="tab-content dataTableContent">
-    <div class="tab-pane active" id="analysis">
+    <div id="analysis" class="tab-pane active">
       <div class="tab-content pathsTableContainer">
         <div class="risk-analysis-container">
           <div class="progress" style="margin-bottom: 0px;">
@@ -201,6 +204,7 @@
     </div>
   </div>
   {{/if}} <!-- end if isAnalyzeMode -->
+  {{#if hasPaths}}
   <div class="sidebarRightFooter">
     <div class="export">
       <i class="fa fa-cloud-download downloadIcon"></i>
@@ -210,4 +214,5 @@
       <button type="button" class="btn btn-sm btn-default exportData" data-type="excel">XLSX</button>
     </div>
   </div>
+  {{/if}}
 </template>

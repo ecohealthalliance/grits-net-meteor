@@ -3,9 +3,9 @@ _boundingBox = null
 _lastMode = null
 
 Template.gritsMapSidebar.helpers
-  'MODE_EXPLORE': () ->
+  'MODE_EXPLORE': ->
     return GritsConstants.MODE_EXPLORE
-  'MODE_ANALYZE': () ->
+  'MODE_ANALYZE': ->
     return GritsConstants.MODE_ANALYZE
 
 Template.gritsMapSidebar.events
