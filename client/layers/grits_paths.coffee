@@ -125,39 +125,6 @@ class GritsPathLayer extends GritsLayer
     self.visiblePaths.set(self.filterMinMaxThroughput(min, max))
     return
 
-  ###
-  # removes the layer
-  #
-  remove: () ->
-    self = this
-    self._removeLayerGroup()
-
-  # adds the layer
-  #
-  add: () ->
-    self = this
-    self._addLayerGroup()
-
-  # removes the layerGroup from the map
-  #
-  # @override
-  _removeLayerGroup: () ->
-    self = this
-    if !(typeof self._layerGroup == 'undefined' or self._layerGroup == null)
-      self._map.removeLayer(self._layerGroup)
-    return
-
-  # adds the layer group to the map
-  #
-  # @override
-  _addLayerGroup: () ->
-    self = this
-    self._layerGroup = L.layerGroup([self._layer])
-    self._map.addOverlayControl(self._displayName, self._layerGroup)
-    self._map.addLayer(self._layerGroup)
-    return
-  ###
-
   # gets the paths from the layer
   #
   # @return [Array] array of nodes
@@ -330,8 +297,9 @@ class GritsPathLayer extends GritsLayer
     path = self._data[_id]
     if (typeof path == 'undefined' or path == null)
       try
-        path = new GritsPath(flight, flight.totalSeats, level, origin, destination)
+        path = new GritsPath(flight, 0, level, origin, destination)
         path.setEventHandlers(_eventHandlers)
+        path.sumThroughput(flight)
         self._data[path._id] = path
       catch e
         console.error(e.message)
@@ -339,7 +307,7 @@ class GritsPathLayer extends GritsLayer
     else
       path.level = level
       path.occurrences += 1
-      path.throughput += (flight.totalSeats * flight.weeklyFrequency)
+      path.sumThroughput(flight)
     return
 
   convertItineraries: (itinerary, origin, destination) ->

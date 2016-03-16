@@ -592,7 +592,7 @@ class GritsNodeLayer extends GritsLayer
       if origin._id in Object.keys(metaNodeChildren)
         node = self._data[metaToken]
         node.level = level
-        node.outgoingThroughput += flight.totalSeats
+        node.sumThroughput(flight)
         originNode = node
       else
         originNode = self._data[origin._id]
@@ -602,7 +602,7 @@ class GritsNodeLayer extends GritsLayer
             originNode = new GritsNode(origin, marker)
             originNode.level = level
             originNode.setEventHandlers(_eventHandlers)
-            originNode.outgoingThroughput = flight.totalSeats
+            originNode.sumThroughput(flight)
             if originNode._id in originTokens
               originNode.isOrigin = true
           catch e
@@ -610,7 +610,7 @@ class GritsNodeLayer extends GritsLayer
             return [null, null]
           self._data[origin._id] = originNode
         else
-          originNode.outgoingThroughput += flight.totalSeats
+          originNode.sumThroughput(flight)
 
     # the arrivalAirport of the flight
     destination = _.find(Meteor.gritsUtil.airports, (airport) -> return airport._id == flight.arrivalAirport._id)
@@ -629,14 +629,13 @@ class GritsNodeLayer extends GritsLayer
 
           destinationNode.level = level
           destinationNode.setEventHandlers(_eventHandlers)
-          destinationNode.incomingThroughput = flight.totalSeats
+          destinationNode.sumThroughput(flight)
         catch e
           console.error(e.message)
           return
         self._data[destination._id] = destinationNode
       else
-        destinationNode.incomingThroughput += flight.totalSeats
-
+        destinationNode.sumThroughput(flight)
     return [originNode, destinationNode]
 
   convertItineraries: (itinerary, originToken) ->
