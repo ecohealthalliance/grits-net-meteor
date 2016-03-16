@@ -28,6 +28,7 @@ Package.on_use(function(api){
     'flawless:meteor-toastr@1.0.1',
     'meteorhacks:aggregate@1.3.0',
     'momentjs:moment@2.10.6',
+    'benmgreene:moment-range@2.10.6',
     'jaywon:meteor-node-uuid@1.0.1',
     'kidovate:bootstrap-slider@0.0.5',
     'tsega:bootstrap3-datetimepicker@4.17.37_1',
