@@ -88,6 +88,79 @@ arrangeQueryKeys = (query) ->
     keys.unshift('discontinuedDate')
   return keys
 
+# calculate TotalSeats over an interval, this is done server-side to avoid
+# having the client process the correct totalSeats twice (within the node
+# converFlight method and path convertFlight methods)
+#
+# @param [Array] flights, an array of fights
+# @param [Object] query, the query from the client
+_calculateSeatsOverInterval = (flights, query) ->
+  if flights.length == 0
+    return flights
+
+  # the query's start date is the discontinuedDate
+  startDate = moment.utc(query.discontinuedDate.$gte)
+  # the query's end date is the effectiveDate
+  endDate = moment.utc(query.effectiveDate.$lte)
+
+  # iterate over each flight and calculate the totalSeats
+  _.each(flights, (flight) ->
+    # the default is 0, which represents a single date range
+    flight.seatsOverInterval = 0
+
+    flightEffectiveDate = moment.utc(flight.effectiveDate)
+    flightDiscontinuedDate = moment.utc(flight.discontinuedDate)
+
+    # default the range is based off the query params
+    rangeStart = moment.utc(startDate)
+    rangeEnd = moment.utc(endDate)
+
+    # determine if the flight is discontinued before the endDate to determine
+    # if the rangeEnd should be updated
+    discontinuedRange = moment.range(flightDiscontinuedDate, endDate)
+    daysDiscontinuedBeforeEnd = discontinuedRange.diff('days')
+    if daysDiscontinuedBeforeEnd > 0
+      # if days is greater than zero the rangeEnd should be the flightDiscontinuedDate
+      rangeEnd = flightDiscontinuedDate
+
+    # determine if the flight is started after the endDate to determine if the
+    # rangeStart should be updated
+    effectiveRange = moment.range(startDate, flightEffectiveDate)
+    daysEffectiveAfterStart = effectiveRange.diff('days')
+    if daysEffectiveAfterStart > 0
+      # if days is greater than zero the rangeStart should be the flightEffectiveDate
+      rangeStart = flightEffectiveDate
+
+    # now that rangeStart and rangeEnd are updated, determine the range for
+    # calculating totalSeats
+    range = moment.range(rangeStart, rangeEnd)
+    rangeDays = range.diff('days')
+
+    # do not calculate seatsOverInterval for invalid range
+    if rangeDays < 0
+      return
+
+    # if the flight happens every day of the week (dow) multiple by the rangeDays
+    if flight.weeklyFrequency == 7
+      if rangeDays > 0
+        flight.seatsOverInterval = flight.totalSeats * rangeDays
+    # determine which days are valid and increment the multiplier
+    else
+      if rangeDays > 0
+        validDays = {1: flight.day1, 2: flight.day2, 3: flight.day3, 4: flight.day4, 5: flight.day5, 6: flight.day6, 7: flight.day7}
+        multiplier = 0
+        # iterate over the range of days, if valid increment the multiplier
+        range.by('days', (d) ->
+          if validDays[d.day()]
+            multiplier++
+        )
+        if multiplier > 0
+          flight.seatsOverInterval = flight.totalSeats * multiplier
+        else
+          flight.seatsOverInterval = flight.totalSeats
+  )
+  return flights
+
 # find flights with an optional limit and offset
 #
 # @param [Object] query, a mongodb query object
@@ -113,8 +186,55 @@ flightsByQuery = (query, limit, skip) ->
   if _useAggregation
     # prepare the aggregate pipeline
     pipeline = [
-      {$skip: skip},
-      {$limit: limit}
+      # first projection is calculation of weeklyRepeats, required for seatsOverInterval
+      {'$project': {
+          'departureAirport._id': 1,
+          'arrivalAirport._id': 1,
+          'totalSeats': 1,
+          'weeklyFrequency': 1,
+          'effectiveDate':  1,
+          'discontinuedDate': 1,
+          'weeklyRepeats': {
+              '$divide': [
+                {'$subtract': [
+                    {'$cond': [
+                      {'$lt': [
+                        query.effectiveDate.$lte,
+                        '$discontinuedDate'
+                      ]},
+                      query.effectiveDate.$lte,
+                      '$discontinuedDate'
+                    ]},
+                    {'$cond': [
+                      {'$gt': [
+                        query.discontinuedDate.$gte,
+                        '$effectiveDate'
+                      ]},
+                      query.discontinuedDate.$gte,
+                      '$effectiveDate'
+                    ]}
+                  ]
+                },
+                # one week in milliseconds
+                7 * 24 * 60 * 60 * 1000
+              ]
+          }
+        }
+      },
+      # second projection includes the first projection fields plus calculates seatsOverInterval
+      {'$project': {
+          'departureAirport._id': 1,
+          'arrivalAirport._id': 1,
+          'totalSeats': 1,
+          'weeklyFrequency': 1,
+          'effectiveDate':  1,
+          'discontinuedDate': 1,
+          'weeklyRepeats': 1,
+          'seatsOverInterval': {'$multiply': ['$totalSeats', '$weeklyFrequency', '$weeklyRepeats']}
+        }
+      },
+      {'$skip': skip},
+      {'$limit': limit}
     ]
     _.each(arrangeQueryKeys(query), (key) ->
       obj = {$match: {}}
@@ -125,6 +245,7 @@ flightsByQuery = (query, limit, skip) ->
     matches = Flights.aggregate(pipeline)
   else
     matches = Flights.find(query, {limit: limit, skip: skip, transform: null}).fetch()
+    matches = _calculateSeatsOverInterval(matches, query)
 
   if _profile
     recordProfile('flightsByQuery', new Date() - start)
