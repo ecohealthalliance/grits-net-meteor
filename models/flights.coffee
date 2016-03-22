@@ -82,5 +82,8 @@ Flight = Astro.Class(
     #'premiumEconomyClassSeats' : 'number'
     #'economyClassSeats' : 'number'
     #'aircraftTonnage' : 'number'
+    'seatsOverInterval':
+      'type': 'number',
+      'default': 0
   events: {}
   methods: {})

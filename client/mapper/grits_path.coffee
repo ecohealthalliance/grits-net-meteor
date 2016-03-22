@@ -86,3 +86,19 @@ class GritsPath
   setEventHandlers: (eventHandlers) ->
     for name, method of eventHandlers
       @eventHandlers[name] = _.bind(method, this)
+
+  # sum throughput for the path, checks if flight has 'seatsOverInterval' property
+  sumThroughput: (flight) ->
+    self = this
+    if flight.hasOwnProperty('seatsOverInterval')
+      # the flight interval was grated than a single day, increment by seatsOverInterval
+      if flight.seatsOverInterval > 0
+        self.throughput += Math.round(flight.seatsOverInterval)
+      # the flight interval was a single day, increment by totalSeats
+      else
+        self.throughput += Math.round(flight.totalSeats)
+    else
+      console.warn('flight is missing seatsOverInterval property: ', flight)
+      self.throughput += Math.round(flight.totalSeats)
+    return
+
