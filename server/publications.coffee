@@ -5,6 +5,7 @@ if _FLIRT_SIMULATOR_URL == ''
   throw new Error('You must set FLIRT_SIMULATOR_URL environment variable, ex: http://localhost:45000/simulator')
 
 _useAggregation = true # enable/disable using the aggregation framework
+_useSeatProjection = false # if _useAggregation and _useSeatProjection is enabled, seatsOverInterval will be projected using an aggregate method
 _profile = false # enable/disable recording method performance to the collection 'profiling'
 _activeAirports = null
 # collection to record profiling results
@@ -183,7 +184,7 @@ flightsByQuery = (query, limit, skip) ->
   extendQuery(query, null)
 
   matches = []
-  if _useAggregation
+  if _useAggregation && _useSeatProjection
     # prepare the aggregate pipeline
     pipeline = [
       # first projection is calculation of weeklyRepeats, required for seatsOverInterval
