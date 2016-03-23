@@ -43,7 +43,8 @@ Package.on_use(function(api){
     'templating',
     'minimongo',
     'session',
-    'tracker'
+    'tracker',
+    'mquandalle:jade@0.4.9'
   ], 'client');
   // client-side only files
   // IMPORTANT: these files are loaded in order
