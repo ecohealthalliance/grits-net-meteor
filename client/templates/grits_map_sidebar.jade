@@ -1,0 +1,37 @@
+template(name='gritsMapSidebar')
+  #sidebar.sidebar.sidebar-left.gritsSidebar.sidebar-main
+    // Nav tabs
+    ul.sidebar-tabs
+      li#sidebar-collapse-tab
+        a(href='#sidebar-search', role='tab')
+          i.fa.fa-chevron-circle-left.fa-white
+      li#sidebar-search-tab.active
+        a(href='#sidebar-search', role='tab')
+          i.fa.fa-search.fa-white
+      li#sidebar-slider-tab
+        a(href='#sidebar-slider', role='tab')
+          i.fa.fa-sliders.fa-white
+      li#sidebar-layer-tab
+        a(href='#sidebar-layer', role='tab')
+          i.fa.fa-map-o.fa-white
+      #sidebar-draw-rectangle-tool
+        .sidebar-button
+          i.fa.fa-object-group.fa-white
+      //- li#sidebar-question-tab
+      //-   a(href='#sidebar-question', role='tab')
+      //-     i.fa.fa-question-circle.fa-white
+      button#sidebar-plus-button.sidebar-zoom-in.fa.fa-plus.btn.btn-sm
+      button#sidebar-minus-button.sidebar-zoom-out.fa.fa-minus.btn.btn-sm
+      #mode-toggle.btn-group(data-toggle='buttons', style='position: absolute; top: 0px; left: 60px; padding-top: 7px; width: 400px;')
+        label.btn.btn-mode.active
+          input(type='radio', name='mode', data-mode='{{MODE_EXPLORE}}', autocomplete='off', checked='')
+          | {{_ "mode.explore" }}
+        label.btn.btn-mode
+          input(type='radio', name='mode', data-mode='{{MODE_ANALYZE}}', autocomplete='off')
+          | {{_ "mode.analyze" }}
+    // Tab panes
+    .sidebar-content
+      #sidebar-search.sidebar-pane.active
+      #sidebar-slider.sidebar-pane
+      #sidebar-layer.sidebar-pane
+  #element-details
