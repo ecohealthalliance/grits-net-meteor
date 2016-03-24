@@ -78,7 +78,16 @@
       {{/if}}
       {{#if isAnalyzeMode}}
       <div class="filter-row">
-        <button class="btn btn-filter" id="startSimulation">{{_ "gritsSearch.startSimulationButton" }}</button>
+        {{#if isSimulatorRunning }}
+          <button class="btn btn-filter disabled" id="startSimulation">
+            {{_ "gritsSearch.startSimulationButton" }}
+            <i class="fa fa-spinner fa-spin simulator-running"></i>
+          </button>
+        {{else}}
+          <button class="btn btn-filter" id="startSimulation">
+            {{_ "gritsSearch.startSimulationButton" }}
+          </button>
+        {{/if}}
       </div>
       <div class="filter-row">
         <div class="progress" style="margin-top: 5px; height: 10px;">

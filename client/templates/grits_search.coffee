@@ -12,7 +12,6 @@ _discontinuedDatePicker = null # onRendered will set this to a datetime picker o
 _matchSkip = null # the amount to skip during typeahead pagination
 _simulationProgress = new ReactiveVar(0)
 _disableLimit = new ReactiveVar(false) # toggle if we will allow limit/skip
-_previousSimId = null # what was the previous simId?
 _suggestionTemplate = _.template('
   <span class="airport-code"><%= raw._id %></span>
   <span class="airport-info">
@@ -221,6 +220,8 @@ _resetSimulationProgress = () ->
 
 # sets an object to be used by Meteors' Blaze templating engine (views)
 Template.gritsSearch.helpers({
+  isSimulatorRunning: () ->
+    return GritsFilterCriteria.isSimulatorRunning.get()
   isExploreMode: () ->
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     if _.isUndefined(mode)
@@ -283,6 +284,7 @@ Template.gritsSearch.onCreated ->
 
 # triggered when the 'filter' template is rendered
 Template.gritsSearch.onRendered ->
+
   departureSearchMain = $('#departureSearchMain').tokenfield({
     typeahead: [{hint: false, highlight: true}, {
       display: (match) ->
@@ -356,6 +358,9 @@ Template.gritsSearch.onRendered ->
 
   Tracker.autorun ->
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
+    # do not run if our mode hasn't changed
+    if self.mode == mode
+      return
     if mode == GritsConstants.MODE_EXPLORE
       _resetSimulationProgress()
       _disableLimit.set(false)
@@ -363,7 +368,6 @@ Template.gritsSearch.onRendered ->
         if GritsFilterCriteria.departures.get().length isnt 0
           $("#showThroughput").click()
       )
-
       # reset the URL back to the root
       FlowRouter.go('/')
     else
@@ -371,28 +375,31 @@ Template.gritsSearch.onRendered ->
       # it is done using nextTick to give Blaze template time to render
       async.nextTick(-> $('#simulatedPassengersInputSlider').slider())
       _disableLimit.set(true)
-      async.nextTick( ->
-        if GritsFilterCriteria.departures.get().length isnt 0
-          $("#startSimulation").click()
-      )
+      # only allow startSimulation to be clicked when an existing simulation
+      # is not running to avoid duplicate occurrences
+      if !GritsFilterCriteria.isSimulatorRunning.get()
+        async.nextTick( ->
+          if GritsFilterCriteria.departures.get().length isnt 0
+            $("#startSimulation").click()
+        )
+    self.mode = mode
 
-  Tracker.autorun ->
+  Tracker.autorun (c) ->
     departures = GritsFilterCriteria.departures.get()
     if departures.length == 0
       _resetSimulationProgress()
-      if _previousSimId
-        # the departures box has been cleared; reset the url
+      if !c.firstRun
+        # reset the route when the departures are cleared
         FlowRouter.go('/')
 
   # Determine if the router set a simId
   # @see lib/router.coffee
-  Tracker.autorun ->
+  Tracker.autorun (c) ->
     simId = Session.get(GritsConstants.SESSION_KEY_SHARED_SIMID)
     if _.isUndefined(simId)
       return
-    # do not apply duplicate simulation
-    if simId == _previousSimId
-      return
+    # mark the simulator as running
+    GritsFilterCriteria.isSimulatorRunning.set(true)
     Meteor.call('findSimulationBySimId', simId, (err, simulation) ->
       if err
         Meteor.gritsUtil.errorHandler(err)
@@ -411,13 +418,18 @@ Template.gritsSearch.onRendered ->
       GritsFilterCriteria.setOperatingDateRangeEnd(endDate)
       GritsFilterCriteria.setDepartures(tokens)
       # GritsFilterCriteria does not have a interface for the simulatedPassengersInputSlider
-      $('#simulatedPassengersInputSlider').slider('setValue', simPas)
+      async.nextTick(->
+        $('#simulatedPassengersInputSlider').slider('setValue', simPas)
+        $('#simulatedPassengersInputSliderValIndicator').html(simPas)
+      )
       # Update the dataTable
       Template.gritsDataTable.simId.set(simId)
+      # Set the total records
+      Session.set(GritsConstants.SESSION_KEY_TOTAL_RECORDS, simPas)
       # Process the existing simulation
       GritsFilterCriteria.processSimulation(simPas, simulation.get('simId'))
-      # Store reference to this simId to avoid duplicate requests
-      _previousSimId = simId
+      # Do not rerun initSharedSim
+      c.stop()
     )
 
 _changeSimulatedPassengersHandler = (e) ->
@@ -458,6 +470,8 @@ _changeLimitHandler = (e) ->
   GritsFilterCriteria.limit.set(val)
   return
 _startSimulation = (e) ->
+  if $(e.target).hasClass('disabled')
+    return
   simPas = parseInt($('#simulatedPassengersInputSlider').slider('getValue'), 10)
   startDate = _discontinuedDatePicker.data('DateTimePicker').date().format('DD/MM/YYYY')
   endDate = _effectiveDatePicker.data('DateTimePicker').date().format('DD/MM/YYYY')

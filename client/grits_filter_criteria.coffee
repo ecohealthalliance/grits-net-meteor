@@ -74,6 +74,8 @@ class GritsFilterCriteria
     # during a simulation the airports are counted to update the heatmap
     self.airportCounts = {}
 
+    # is the simulation running?
+    self.isSimulatorRunning = new ReactiveVar(false)
     return
   # initialize the start date of the filter 'discontinuedDate'
   #
@@ -603,6 +605,13 @@ class GritsFilterCriteria
   # handle setup of subscription to SimulatedIteneraries and process the results
   processSimulation: (simPas, simId) ->
     self = this
+
+    # Prevent multiple invocations on the same simId from generating
+    # duplicated results.
+    if self._processingSimId == simId
+      return
+    self._processingSimId = simId
+
     # get the heatmapLayerGroup
     heatmapLayerGroup = Template.gritsMap.getInstance().getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
     # get the current mode groupLayer
@@ -658,12 +667,12 @@ class GritsFilterCriteria
         _updateHeatmap()
         layerGroup.finish()
         heatmapLayerGroup.finish()
+        self.isSimulatorRunning.set(false)
       else
         _updateHeatmap()
         _throttledDraw()
 
     Itineraries.find({'simulationId': simId}, options).observeChanges({
-      # UI freeze does not occur
       added: Meteor.gritsUtil.smoothRate (id, fields) ->
         _doWork(id, fields)
     })
@@ -671,9 +680,13 @@ class GritsFilterCriteria
   # starting a simulation
   startSimulation: (simPas, startDate, endDate) ->
     self = this
+
     departures = self.departures.get()
     if departures.length == 0
       toastr.error(i18n.get('toastMessages.departureRequired'))
+      return
+
+    if self.isSimulatorRunning.get()
       return
 
     # switch mode
@@ -681,6 +694,9 @@ class GritsFilterCriteria
 
     # let the user know the simulation started
     Template.gritsSearch.simulationProgress.set(1)
+
+    # set the simulation as running
+    self.isSimulatorRunning.set(true)
 
     Meteor.call('startSimulation', simPas, startDate, endDate, self.getOriginIds(), (err, res) ->
       # handle any errors
