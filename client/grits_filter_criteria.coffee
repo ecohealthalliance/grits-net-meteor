@@ -606,6 +606,12 @@ class GritsFilterCriteria
   processSimulation: (simPas, simId) ->
     self = this
 
+    # Prevent multiple invocations on the same simId from generating
+    # duplicated results.
+    if self._processingSimId == simId
+      return
+    self._processingSimId = simId
+
     # get the heatmapLayerGroup
     heatmapLayerGroup = Template.gritsMap.getInstance().getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
     # get the current mode groupLayer
