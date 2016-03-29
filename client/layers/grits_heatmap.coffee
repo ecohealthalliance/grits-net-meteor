@@ -72,11 +72,11 @@ class GritsHeatmapLayer extends GritsLayer
     self.hasLoaded.set(false)
     return
 
-  # setup a Meteor Tracker.autorun function to watch the global reactive var
+  # setup a Meteor Meteor.autorun function to watch the global reactive var
   # departures.
   _trackDepartures: () ->
     self = this
-    Tracker.autorun () ->
+    Meteor.autorun () ->
       departures = GritsFilterCriteria.departures.get()
 
       if _.isEmpty(departures)

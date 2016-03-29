@@ -422,7 +422,7 @@ class GritsFilterCriteria
     return
   trackOperatingDateRangeStart: () ->
     self = this
-    Tracker.autorun ->
+    Meteor.autorun ->
       obj = self.operatingDateRangeStart.get()
       self.setOperatingDateRangeStart(obj)
       async.nextTick(() ->
@@ -461,7 +461,7 @@ class GritsFilterCriteria
     return
   trackOperatingDateRangeEnd: () ->
     self = this
-    Tracker.autorun ->
+    Meteor.autorun ->
       obj = self.operatingDateRangeEnd.get()
       self.setOperatingDateRangeEnd(obj)
       async.nextTick(() ->
@@ -517,7 +517,7 @@ class GritsFilterCriteria
     return
   trackDepartures: () ->
     self = this
-    Tracker.autorun ->
+    Meteor.autorun ->
       obj = self.departures.get()
       if _.isEmpty(obj)
         # checks are necessary as Tracker autorun will fire before the DOM
@@ -562,7 +562,7 @@ class GritsFilterCriteria
     return
   trackLimit: () ->
     self = this
-    Tracker.autorun ->
+    Meteor.autorun ->
       obj = self.limit.get()
       try
         self.setLimit(obj)

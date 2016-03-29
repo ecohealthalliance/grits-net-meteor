@@ -222,7 +222,7 @@ Template.gritsDataTable.onRendered ->
   heatmapLayerGroup = self.map.getGritsLayerGroup(GritsConstants.HEATMAP_GROUP_LAYER_ID)
   self.heatmapLayer = heatmapLayerGroup.find(GritsConstants.HEATMAP_LAYER_ID)
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     # determine the current layer group
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     layerGroup = GritsLayerGroup.getCurrentLayerGroup()
@@ -248,7 +248,7 @@ Template.gritsDataTable.onRendered ->
         )
         self.paths.set(sorted)
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     # determine the current layer group
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
 
@@ -258,14 +258,14 @@ Template.gritsDataTable.onRendered ->
         self._reset()
     _previousMode = mode
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     departures = GritsFilterCriteria.departures.get()
     # clear the datatable if departures == 0
     if departures.length == 0
       self._reset()
       return
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     # what is the current simId
     simId = _simId.get()
     if _.isEmpty(simId)
@@ -283,6 +283,6 @@ Template.gritsDataTable.onRendered ->
       self.simId = simulation.get('simId')
     )
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     if _tablesChanged.get()
       _throttleTablesChanged()

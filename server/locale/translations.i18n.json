@@ -4,10 +4,10 @@
     },
     "mode": {
         "explore": {
-            "en": "Explore"
+            "en": "Scheduled Direct Flights"
         },
         "analyze": {
-            "en": "Analyze"
+            "en": "Passenger Simulation"
         }
     },
     "gritsLegend": {
@@ -24,7 +24,7 @@
     "gritsDataTable": {
         "explore": {
             "title" : {
-               "en": "Flights"
+               "en": "Scheduled Direct Flights"
             },
             "col1-heading": {
                 "en": "Origin"
@@ -33,7 +33,7 @@
                 "en": "Destination"
             },
             "col3-heading": {
-                "en": "Occurrences"
+                "en": "Direct Flights"
             },
             "col4-heading": {
                 "en": "Total Seats"
@@ -65,7 +65,7 @@
         },
         "analyze": {
             "title" : {
-               "en": "Risk Analysis"
+               "en": "Passenger Simulation"
             },
             "col1-heading": {
                 "en": "Origin"
@@ -74,13 +74,13 @@
                 "en": "Terminal Destination"
             },
             "col3-heading": {
-                "en": "Occurrences"
+                "en": "Passengers"
             }
         }
     },
     "gritsSearch": {
         "tokenfield-placeholder": {
-            "en": "Type to search originations"
+            "en": "Type to search airports"
         },
         "title": {
             "en": "Advanced Filtration"
@@ -125,10 +125,10 @@
             "en": "Number of Passengers"
         },
         "startSimulationButton": {
-            "en": "Start Risk Analysis"
+            "en": "Start Passenger Simulation"
         },
         "showThroughputButton": {
-            "en": "Show Throughput"
+            "en": "Show Direct Flights"
         }
     },
     "gritsLayerSelector": {

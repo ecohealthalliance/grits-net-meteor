@@ -45,11 +45,11 @@ Template.gritsMapSidebar.onRendered ->
   self = this
 
   # keep the UI reactive with the current mode
-  Tracker.autorun ->
+  Meteor.autorun ->
     _lastMode = Session.get(GritsConstants.SESSION_KEY_MODE)
     $('#mode-toggle :input[data-mode="' + _lastMode + '"]').click()
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     isReady = Session.get(GritsConstants.SESSION_KEY_IS_READY)
     if isReady
       $('#mode-toggle').show()
