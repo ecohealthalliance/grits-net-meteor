@@ -89,7 +89,7 @@ Template.gritsElementDetails.onRendered ->
   self.map = Template.gritsMap.getInstance()
 
   # update the currentPath
-  Tracker.autorun ->
+  Meteor.autorun ->
     # determine the current layer group
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     layerGroup = GritsLayerGroup.getCurrentLayerGroup()
@@ -102,7 +102,7 @@ Template.gritsElementDetails.onRendered ->
     return
 
   # update the currentNode
-  Tracker.autorun ->
+  Meteor.autorun ->
     # determine the current layer group
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     layerGroup = GritsLayerGroup.getCurrentLayerGroup()

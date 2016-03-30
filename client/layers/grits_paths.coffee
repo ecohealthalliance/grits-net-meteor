@@ -370,7 +370,7 @@ class GritsPathLayer extends GritsLayer
   # tracks min,max set by the UI slider
   trackMinMaxThroughput: () ->
     self = this
-    Tracker.autorun ->
+    Meteor.autorun ->
       min = self.min.get()
       max = self.max.get()
       self.visiblePaths.set(self.filterMinMaxThroughput(min, max))

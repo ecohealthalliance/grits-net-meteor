@@ -47,7 +47,7 @@ _typeaheadFooter = _.template('
 # returns the first origin within GritsFilterCriteria
 #
 # @return [String] origin, a string airport IATA code
-getOrigin = () ->
+getOrigin = ->
   query = GritsFilterCriteria.getQueryObject()
   if _.has(query, 'departureAirport._id')
     # the filter has an array of airports
@@ -61,7 +61,7 @@ getOrigin = () ->
 #
 # @see: http://sliptree.github.io/bootstrap-tokenfield/#methods
 # @return [Object] typeahead
-getDepartureSearchMain = () ->
+getDepartureSearchMain = ->
   return _departureSearchMain
 
 # sets the typeahead object for the '#departureSearchMain' input
@@ -73,7 +73,7 @@ _setDepartureSearchMain = (typeahead) ->
 #
 # @see http://eonasdan.github.io/bootstrap-datetimepicker/Functions/
 # @return [Object] datetimePicker object
-getEffectiveDatePicker = () ->
+getEffectiveDatePicker = ->
   return _effectiveDatePicker
 
 # sets the datetime picker object for the '#effectiveDate' input with the label 'End'
@@ -85,7 +85,7 @@ _setEffectiveDatePicker = (datetimePicker) ->
 #
 # @see http://eonasdan.github.io/bootstrap-datetimepicker/Functions/
 # @return [Object] datetimePicker object
-getDiscontinuedDatePicker = () ->
+getDiscontinuedDatePicker = ->
   return _discontinuedDatePicker
 
 # sets the datetime picker object for the '#discontinuedDate' input with the label 'Start'
@@ -214,15 +214,15 @@ _suggestionGenerator = (query, skip, callback) ->
   return
 
 # resets the simulation-progress bars
-_resetSimulationProgress = () ->
+_resetSimulationProgress = ->
   _simulationProgress.set(0)
   $('.simulation-progress').css({width: '0%'})
 
 # sets an object to be used by Meteors' Blaze templating engine (views)
 Template.gritsSearch.helpers({
-  isSimulatorRunning: () ->
+  isSimulatorRunning: ->
     return GritsFilterCriteria.isSimulatorRunning.get()
-  isExploreMode: () ->
+  isExploreMode: ->
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     if _.isUndefined(mode)
       return false
@@ -231,7 +231,7 @@ Template.gritsSearch.helpers({
         return true
       else
         return false
-  isAnalyzeMode: () ->
+  isAnalyzeMode: ->
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     if _.isUndefined(mode)
       return false
@@ -240,11 +240,11 @@ Template.gritsSearch.helpers({
         return true
       else
         return false
-  loadedRecords: () ->
+  loadedRecords: ->
     return Session.get(GritsConstants.SESSION_KEY_LOADED_RECORDS)
-  totalRecords: () ->
+  totalRecords: ->
     return Session.get(GritsConstants.SESSION_KEY_TOTAL_RECORDS)
-  state: () ->
+  state: ->
     # GritsFilterCriteria.stateChanged is a reactive-var
     state = GritsFilterCriteria.stateChanged.get()
     if _.isNull(state)
@@ -253,11 +253,11 @@ Template.gritsSearch.helpers({
       return true
     else
       return false
-  start: () ->
+  start: ->
     return _initStartDate
-  end: () ->
+  end: ->
     return _initEndDate
-  limit: () ->
+  limit: ->
     if _init
       # set inital limit
       return _initLimit
@@ -284,7 +284,6 @@ Template.gritsSearch.onCreated ->
 
 # triggered when the 'filter' template is rendered
 Template.gritsSearch.onRendered ->
-
   departureSearchMain = $('#departureSearchMain').tokenfield({
     typeahead: [{hint: false, highlight: true}, {
       display: (match) ->
@@ -334,7 +333,7 @@ Template.gritsSearch.onRendered ->
   # When the template is rendered, setup a Tracker autorun to listen to changes
   # on isUpdating.  This session reactive var enables/disables, shows/hides the
   # apply button and filterLoading indicator.
-  Tracker.autorun ->
+  Meteor.autorun ->
     # update the disabled status of the [More] button based loadedRecords
     loadedRecords = Session.get(GritsConstants.SESSION_KEY_LOADED_RECORDS)
     totalRecords = Session.get(GritsConstants.SESSION_KEY_TOTAL_RECORDS)
@@ -345,7 +344,7 @@ Template.gritsSearch.onRendered ->
       # disable the [More] button
       $('#loadMore').prop('disabled', true)
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     # update the ajax-loader
     isUpdating = Session.get(GritsConstants.SESSION_KEY_IS_UPDATING)
     # do not show the filter spinner if the overlay isLoading
@@ -356,7 +355,7 @@ Template.gritsSearch.onRendered ->
       $('#applyFilter').prop('disabled', false)
       $('#filterLoading').hide()
 
-  Tracker.autorun ->
+  Meteor.autorun ->
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     # do not run if our mode hasn't changed
     if self.mode == mode
@@ -384,7 +383,7 @@ Template.gritsSearch.onRendered ->
         )
     self.mode = mode
 
-  Tracker.autorun (c) ->
+  Meteor.autorun (c) ->
     departures = GritsFilterCriteria.departures.get()
     if departures.length == 0
       _resetSimulationProgress()
@@ -394,7 +393,7 @@ Template.gritsSearch.onRendered ->
 
   # Determine if the router set a simId
   # @see lib/router.coffee
-  Tracker.autorun (c) ->
+  Meteor.autorun (c) ->
     simId = Session.get(GritsConstants.SESSION_KEY_SHARED_SIMID)
     if _.isUndefined(simId)
       return
@@ -547,7 +546,7 @@ Template.gritsSearch.events
   'click #applyFilter': (event, template) ->
     GritsFilterCriteria.apply()
     return
-  'click #loadMore': () ->
+  'click #loadMore': ->
     GritsFilterCriteria.setOffset()
     mode = Session.get(GritsConstants.SESSION_KEY_MODE)
     if mode == GritsConstants.MODE_EXPLORE
@@ -591,6 +590,5 @@ Template.gritsSearch.events
     if tokens.length == 0
       if $target.attr('id') in ['departureSearchMain']
         $('#includeNearbyAirports').prop('checked', false)
-
     token = e.attrs.label
     return false
