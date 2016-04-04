@@ -4,18 +4,22 @@ template(name='gritsSearch')
       width: 28px;
     }
   .filter
-    h1#flirtTitle FLIRT
     #departureSearchMainSearchBar.searchBar
       .tokenized.main
         i#searchIcon.fa.fa-search
-        input#departureSearchMain.input-sm.advanced-filter-status(name='departureSearchMain', placeholder='{{_ "gritsSearch.tokenfield-placeholder"}}')
+        input#departureSearchMain.input-sm.advanced-filter-status(
+          name='departureSearchMain'
+          placeholder='{{_ "gritsSearch.tokenfield-placeholder"}}')
     .filter-wrapper
       .filter-row
         .col-xs-12.text-center
           input#includeNearbyAirports(type='checkbox', name='includeNearbyAirports')
           span {{_ "gritsSearch.include-nearby-label"}}
-          input#includeNearbyAirportsRadius.input-sm(type='number', min='1', max='500', value='50')
+
+          input#includeNearbyAirportsRadius.input-sm(
+            type='number', min='1', max='500', value='50')
           span {{_ "gritsSearch.miles-label"}}
+
       .filter-row
         .filter-group
           label.filter-label {{_ "gritsSearch.start-label"}}
@@ -29,7 +33,7 @@ template(name='gritsSearch')
             input.date-button.form-control.input-sm(type='text', value='{{end}}')
             span.input-group-addon
               span.glyphicon.glyphicon-calendar
-              
+
       if isAnalyzeMode
         .filter-row(style='margin-top: 20px; margin-bottom: 20px;')
           .pull-left
@@ -38,21 +42,35 @@ template(name='gritsSearch')
             span#simulatedPassengersInputSliderValIndicator.filter-label 1000
           .legend-scale
             .slider-container
-              input#simulatedPassengersInputSlider.slider(type='text', value='', data-slider-min='0', data-slider-max='20000', data-slider-step='100', data-slider-value='1000', data-slider-orientation='horizontal', data-slider-selection='before', data-slider-tooltip='show', style='position:relative; top:0; left:0; width:100%;')
+              input#simulatedPassengersInputSlider.slider(
+                type='text'
+                value=''
+                data-slider-min='0'
+                data-slider-max='20000'
+                data-slider-step='100'
+                data-slider-value='1000'
+                data-slider-orientation='horizontal'
+                data-slider-selection='before'
+                data-slider-tooltip='show'
+                style='position:relative; top:0; left:0; width:100%;')
           .slider-range-labels.clearfix
             .pull-left.sliderRangeIndicatorLeft 0
             .pull-right.sliderRangeIndicatorRight 20,000
-            
+
       if isExploreMode
         .filter-row
           button#showThroughput.btn.btn-filter {{_ "gritsSearch.showThroughputButton" }}
-          
+
       if isAnalyzeMode
         .filter-row
           button#startSimulation.btn.btn-filter {{_ "gritsSearch.startSimulationButton" }}
         .filter-row
           .progress(style='margin-top: 5px; height: 10px;')
-            .simulation-progress.progress-bar.progress-bar-success(role='progressbar', aria-valuenow='0', aria-valuemin='0', aria-valuemax='100')
+            .simulation-progress.progress-bar.progress-bar-success(
+              role='progressbar'
+              aria-valuenow='0'
+              aria-valuemin='0'
+              aria-valuemax='100')
 
     .filter-footer
       if isExploreMode
@@ -61,17 +79,21 @@ template(name='gritsSearch')
             .limitSearchTitle
               span.filter-label {{_ "gritsSearch.limit-label"}}
             .limitInput
-              input#limit.form-control.input-sm.advanced-filter-status(type='number', value=limit)
+              input#limit.form-control.input-sm.advanced-filter-status(
+                type='number'
+                value=limit)
             div
               button#loadMore.btn.btn-sm.btn-default.pull-right(disabled='true')
                 span.filter-label(style='font-size: smaller;') {{_ "gritsSearch.more-button"}}
-                img#moreLoading(src='/packages/grits_grits-net-meteor/client/images/ajax-loader.gif', style='display: none;')
+                img#moreLoading(
+                  src='/packages/grits_grits-net-meteor/client/images/ajax-loader.gif'
+                  style='display: none;')
 
       .status-bar
         .col.col-xs-2.filter-label {{_ "gritsSearch.status-bar-label" }}
         .col.col-xs-5.text-center
-          span.status-bar-text {{_ "gritsSearch.loaded-records" }} 
+          span.status-bar-text {{_ "gritsSearch.loaded-records" }}
             span.status-bar-val {{ loadedRecords }}
         .col.col-xs-5.text-center
-          span.status-bar-text {{_ "gritsSearch.total-records" }}  
+          span.status-bar-text {{_ "gritsSearch.total-records" }}
             span.status-bar-val {{ totalRecords }}

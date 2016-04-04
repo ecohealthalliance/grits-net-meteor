@@ -405,23 +405,6 @@ p.intro
   strong
     color #000
 
-#flirtTitle
-  background url("/packages/grits_grits-net-meteor/client/images/flirt-logo-inline.png")
-  background-size 250px 49px
-  background-position center center
-  width 300px
-  height 100px
-  margin 0px
-  text-indent -9999px
-  background-repeat no-repeat
-
-#flirtTitleText
-  float right
-  text-align left
-  margin-right 95px
-  font-size 70px
-  font-weight bold
-
 #loadMore
   margin-right 0px
 
@@ -523,27 +506,11 @@ p.intro
 .sidebar-highlight
   color #333
 
-#sidebar-draw-rectangle-tool
-  opacity .5
-  position absolute
-  width 50px
-  height 60px
-  bottom 75px
-  padding 15px 9px 0px 9px
-  cursor pointer
-  cursor hand
-
-#sidebar-draw-rectangle-tool:hover
-  opacity .75
-
-#sidebar-draw-rectangle-tool.sidebar-highlight
-  opacity 1
-
 .action-menu
   display none
   list-style none
   position absolute
-  bottom 90px
+  top 10px
   right -105px
   margin-top 5px
   margin-left 5px
@@ -620,7 +587,6 @@ canvas
 
 .filter-footer
   @extend .sidebar-footer
-  width 305px /* the Flirt logo is 305px so setting to filter-container-width() will leave 5px white space between footer and blue sidebar */
   display table-footer-group
   padding-top 10px
   font-size .8em
@@ -641,21 +607,13 @@ canvas
   margin-top 10px
   margin-bottom 10px
 
-.btn-filter
-  width 100%
-  border-radius 0px
-  color #333
-  background-color #b4e0b4
-  border-color #318f80
-  font-weight bold
-
-.btn-filter:hover
-  color #eee
 
 #element-details
   display none
   position relative
+  bottom 15px
   right 15px
+  z-index 1000
   font-size smaller
 
 .leaflet-control-layers
@@ -673,24 +631,6 @@ canvas
 
 #mode-toggle
   display none /* hide until i18n loads in startup.coffee */
-
-.btn-mode
-  color #eee
-  border-color #537994
-  background-color #537994
-  padding-top 3px
-  padding-bottom 3px
-  width 200px
-  opacity .8
-  font-weight bold
-
-.btn-mode.active
-  border-color #537994
-  background-color #449d44
-
-.btn-mode:hover, .btn-mode.active:hover
-  border-color #537994
-  background-color #449d44
 
 .dataTable th
   text-align center
