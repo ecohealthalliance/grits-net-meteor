@@ -1,0 +1,81 @@
+template(name='gritsElementDetails')
+  .element-details-container
+    ul.nav.element-details-nav
+      li.active
+        a(href='#pathDetails', data-toggle='tab') {{_ "gritsElementDetails.tab-1.title" }}
+      li
+        a(href='#nodeDetails', data-toggle='tab') {{_ "gritsElementDetails.tab-2.title" }}
+      button.close.element-details-close(type='button', aria-label='Close')
+        i.fa.fa-times-circle
+    .tab-content
+      #pathDetails.active.tab-pane.element-details-path
+        with path
+          .row.path-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-1.level-label" }}:
+            .col-xs-7= level
+          .row.path-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-1.occurrences-label" }}:
+            .col-xs-7= occurrences
+          .row.path-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-1.weight-label" }}:
+            .col-xs-7 {{pathWeight path}}
+          .row.path-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-1.origin-label" }}:
+            .col-xs-7 {{getNodeCity origin}}
+          .row.path-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-1.destination-label" }}:
+            .col-xs-7 {{getNodeCity destination}}
+          .row.path-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-1.normalized-label" }}:
+            .col-xs-7 {{normalized path}}%
+          .row.path-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-1.throughput-label" }}:
+            .col-xs-7= throughput
+        else
+          .row.path-detail-row
+            .col-xs-12 No data
+
+      #nodeDetails.tab-pane.element-details-node
+        with node
+          .row.node-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-2.level-label" }}:
+            .col-xs-7= node.level
+          .row.node-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-2.code-label" }}:
+            .col-xs-7= node._id
+          .row.node-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-2.name-label" }}:
+            .col-xs-7 {{getNodeName node}}
+          .row.node-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-2.city-label" }}:
+            .col-xs-7 {{getNodeCity node}}
+          .row.node-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-2.country-label" }}:
+            .col-xs-7 {{getNodeCountry node}}
+          .row.node-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-2.region-label" }}:
+            .col-xs-7 {{getNodeGlobalRegion node}}
+          .row.node-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-2.normalized-label" }}:
+            .col-xs-7 {{normalized node}}%
+          .row.node-detail-row
+            .col-xs-5
+              span.filter-label {{_ "gritsElementDetails.tab-2.total-throughput-label" }}:
+            .col-xs-7 {{nodeTotalThroughput node}}
+        else
+          .row.path-detail-row
+            .col-xs-12 No data

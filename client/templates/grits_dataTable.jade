@@ -1,0 +1,120 @@
+template(name='gritsDataTable')
+  if isExploreMode
+    ul.nav.nav-tabs.table-tabs
+      li.active
+        a#pathTab(href='#paths', data-toggle='tab') {{_ "gritsDataTable.explore.title"}}
+    .tab-content.dataTableContent
+      #paths.tab-pane.active
+        .pathsTableContainer
+          table#exploreTable.table.dataTable
+            thead
+              tr
+                th          {{_ "gritsDataTable.explore.col1-heading"}}
+                th.dtHidden {{_ "gritsDataTable.explore.hidden-col1"}}
+                th.dtHidden {{_ "gritsDataTable.explore.hidden-col2"}}
+                th.dtHidden {{_ "gritsDataTable.explore.hidden-col3"}}
+                th.dtHidden {{_ "gritsDataTable.explore.hidden-col4"}}
+                th          {{_ "gritsDataTable.explore.col2-heading"}}
+                th.dtHidden {{_ "gritsDataTable.explore.hidden-col5"}}
+                th.dtHidden {{_ "gritsDataTable.explore.hidden-col6"}}
+                th.dtHidden {{_ "gritsDataTable.explore.hidden-col7"}}
+                th.dtHidden {{_ "gritsDataTable.explore.hidden-col8"}}
+                th          {{_ "gritsDataTable.explore.col3-heading"}}
+                th          {{_ "gritsDataTable.explore.col4-heading"}}
+            tbody
+              with paths
+                each paths
+                  tr.pathTableRow(data-id='{{this._id}}')
+                    td          {{this.origin._id}}
+                    td.dtHidden {{getNodeName this.origin}}
+                    td.dtHidden {{getNodeCity this.origin}}
+                    td.dtHidden {{getNodeState this.origin}}
+                    td.dtHidden {{getNodeCountry this.origin}}
+                    td          {{this.destination._id}}
+                    td.dtHidden {{getNodeName this.destination}}
+                    td.dtHidden {{getNodeCity this.destination}}
+                    td.dtHidden {{getNodeState this.destination}}
+                    td.dtHidden {{getNodeCountry this.destination}}
+                    td          {{this.occurrences}}
+                    td          {{this.throughput}}
+                      .circle(style='background-color: {{getPathThroughputColor this}}')
+              tr
+                td(colspan='12')
+                  span(style='font-style: italic;') No data
+
+  if isAnalyzeMode
+    ul.nav.nav-tabs.table-tabs
+      li.active
+        a#analysisTab(href='#analysis', data-toggle='tab')
+          .share-btn-container
+            .pull-left {{_ "gritsDataTable.analyze.title" }}
+            .pull-right
+              .share-btn
+                i.fa.fa-share-alt
+    .share-link-container
+      .col-xs-10
+        input.share-link(type='text', value=getcurrenturl)
+      .col-xs-2
+        button.share-copy-btn.btn.btn-xs.btn-success(data-clipboard-target='.share-link', aria-label='Copied!') Copy
+    .tab-content.dataTableContent
+      #analysis.tab-pane.active
+        .tab-content.pathsTableContainer
+          .risk-analysis-container
+            .progress(style='margin-bottom: 0px;')
+              .simulation-progress.progress-bar.progress-bar-success(
+                role='progressbar',
+                aria-valuenow='0',
+                aria-valuemin='0',
+                aria-valuemax='100',
+                style='min-width: 2em;')
+                span.progress-font= simulationProgress
+            .datatable-heading.datatable-row Origins
+            .datatable-hr
+              with departures
+                each departures
+                  .datatable-row
+                    .col.col-xs-2
+                      span.airport-code= this._id
+                    .col.col-xs-10
+                      .datatable-row
+                        span.airport-info= this.name
+                      .datatable-row
+                        span.additional-info {{getAdditionalInfo this}}
+              else
+                .datatable-row
+                  .col.col-xs-12
+                    span(style='font-style: italic;') No data
+
+            .datatable-heading.datatable-row Details
+            .datatable-hr
+            .datatable-row
+              .datatable-row
+                .col.col-xs-6 Start Date: #{startDate}
+                .col.col-xs-6 End Date: #{endDate}
+              .datatable-row
+                .col.col-xs-12 Number of Passengers: #{simPas}
+          .datatable-hr
+          table#analyzeTable.table.dataTable
+            thead
+              tr
+                th {{_ "gritsDataTable.analyze.col1-heading"}}
+                th {{_ "gritsDataTable.analyze.col2-heading"}}
+                th {{_ "gritsDataTable.analyze.col3-heading"}}
+            tbody
+              with paths
+                each paths
+                  tr.pathTableRow(data-id= this._id)
+                    td= this.origin._id
+                    td= this.destination._id
+                    td= this.occurrences
+              tr
+                td(colspan='3')
+                  span(style='font-style: italic;') No data
+
+  .sidebarRightFooter
+    .export
+      i.fa.fa-cloud-download.downloadIcon
+      button.btn.btn-sm.btn-default.exportData(type='button', data-type='json') JSON
+      button.btn.btn-sm.btn-default.exportData(type='button', data-type='csv') CSV
+      button.btn.btn-sm.btn-default.exportData(type='button', data-type='xml') XML
+      button.btn.btn-sm.btn-default.exportData(type='button', data-type='excel') XLSX

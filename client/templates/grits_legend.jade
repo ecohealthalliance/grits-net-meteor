@@ -1,0 +1,58 @@
+template(name='gritsLegend')
+    h1#flirtTitle FLIRT
+    .my-legend
+      .slider-wrapper
+        .legend-title {{_ "gritsLegend.path-throughput"}}
+        .slider-container
+          input.slider(type='text',
+          value='',
+          data-slider-name=pathLayerName,
+          data-slider-min='0',
+          data-slider-max='100',
+          data-slider-step='1',
+          data-slider-value='[0,100]',
+          data-slider-orientation='horizontal',
+          data-slider-selection='after',
+          data-slider-tooltip='show',
+          style='position:relative; top:0; left:0; width:100%;')
+        .legend-scale
+          ul.legend-labels.clearfix
+            li
+              span(style='background-color: {{pathColorScale 20}};') 20%
+            li
+              span(style='background-color: {{pathColorScale 40}};') 40%
+            li
+              span(style='background-color: {{pathColorScale 60}};') 60%
+            li
+              span(style='background-color: {{pathColorScale 80}};') 80%
+            li
+              span(style='background-color: {{pathColorScale 100}};') 100%
+              
+      .slider-wrapper
+        .legend-title {{_ "gritsLegend.node-throughput"}}
+        .legend-scale
+          .slider-container
+            input.slider(
+              type='text',
+              value='',
+              data-slider-name=nodeLayerName,
+              data-slider-min='0',
+              data-slider-max='100',
+              data-slider-step='1',
+              data-slider-value='[0,100]',
+              data-slider-orientation='horizontal',
+              data-slider-selection='after',
+              data-slider-tooltip='show',
+              style='position:relative; top:0; left:0; width:100%;')
+            ul.legend-labels.clearfix
+              li
+                span(style='background-color: {{nodeColorScale 20}};') 20%
+              li
+                span(style='background-color: {{nodeColorScale 40}};') 40%
+              li
+                span(style='background-color: {{nodeColorScale 60}};') 60%
+              li
+                span(style='background-color: {{nodeColorScale 80}};') 80%
+              li
+                span(style='background-color: {{nodeColorScale 100}};') 100%
+        .legend-source {{_ "gritsLegend.source"}}
