@@ -65,6 +65,7 @@ class GritsBoundingBox
     # add default actions [Apply, Select] to the action menu
     self.addAction('Apply', (e) -> self.apply())
     self.addAction('Select', _.bind(self._selectToggle, self))
+    self._addHelpLink()
     return
   # binds the map events that enable selecting and disable panning
   _bindMapEvents: () ->
@@ -123,6 +124,14 @@ class GritsBoundingBox
     self._actionMenu = $(self._actionMenuTmpl({id: self._actionMenuId})).appendTo(self._container.parent()).css(self.elementPosition)
     self._actionMenu.show()
     return
+  # adds a help icon linked to the associated help template
+  _addHelpLink: ->
+    self = this
+    helpTemplateData =
+      helpTemplate: 'helpAllAirports'
+      showTitle: true
+      classNames: 'inline large contrast'
+    Blaze.renderWithData Template.helpLink, helpTemplateData, $(self._actionMenu)[0]
   # onmouseup event handler
   onMouseUp: (e) ->
     self = this

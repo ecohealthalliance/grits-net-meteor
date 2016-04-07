@@ -2,7 +2,9 @@ template(name='gritsDataTable')
   if isExploreMode
     ul.nav.nav-tabs.table-tabs
       li.active
-        a#pathTab(href='#paths', data-toggle='tab') {{_ "gritsDataTable.explore.title"}}
+        a#pathTab(href='#paths', data-toggle='tab')
+          {{_ "gritsDataTable.explore.title"}}
+          +helpLink helpTemplate='helpDirectFlights' showTitle=true classNames='inline'
     .tab-content.dataTableContent
       #paths.tab-pane.active
         .pathsTableContainer
@@ -47,7 +49,9 @@ template(name='gritsDataTable')
       li.active
         a#analysisTab(href='#analysis', data-toggle='tab')
           .share-btn-container
-            .pull-left {{_ "gritsDataTable.analyze.title" }}
+            .pull-left
+              {{_ "gritsDataTable.analyze.title" }}
+              +helpLink helpTemplate='helpSimulation' showTitle=true classNames='inline'
             .pull-right
               .share-btn
                 i.fa.fa-share-alt
