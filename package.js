@@ -36,7 +36,6 @@ Package.on_use(function(api){
     'momentjs:moment@2.10.6',
     'kadira:flow-router@2.10.1',
     'zenorocha:clipboard@1.5.8',
-    'grits:flirt-sidebar@0.0.1'
   ]);
   // client only packages
   api.use([

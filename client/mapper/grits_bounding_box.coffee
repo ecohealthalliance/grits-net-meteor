@@ -26,7 +26,9 @@ class GritsBoundingBox
     self._allNodesLayerGroup.add()
     self._allNodesLayer = self._allNodesLayerGroup.getNodeLayer()
 
-
+    # get position of sidebarElement to position actionMenu adjacent
+    self.elementPosition = self._container.offset()
+    self.elementPosition.left = 50
 
     # underscore templates that represent the action menu and actions
     self._actionMenuTmpl = _.template('<ul id="<%= obj.id %>" class="action-menu"></ul>')
@@ -118,7 +120,7 @@ class GritsBoundingBox
   _buildActionMenu: () ->
     self = this
     self._actionMenuId = uuid.v4()
-    self._actionMenu = $(self._actionMenuTmpl({id: self._actionMenuId})).appendTo(self._container)
+    self._actionMenu = $(self._actionMenuTmpl({id: self._actionMenuId})).appendTo(self._container.parent()).css(self.elementPosition)
     self._actionMenu.show()
     return
   # onmouseup event handler

@@ -1,20 +1,20 @@
 template(name='gritsLegend')
-    h1#flirtTitle FLIRT
     .my-legend
       .slider-wrapper
         .legend-title {{_ "gritsLegend.path-throughput"}}
         .slider-container
-          input.slider(type='text',
-          value='',
-          data-slider-name=pathLayerName,
-          data-slider-min='0',
-          data-slider-max='100',
-          data-slider-step='1',
-          data-slider-value='[0,100]',
-          data-slider-orientation='horizontal',
-          data-slider-selection='after',
-          data-slider-tooltip='show',
-          style='position:relative; top:0; left:0; width:100%;')
+          input.slider(
+            type='text'
+            value=''
+            data-slider-name=pathLayerName
+            data-slider-min='0'
+            data-slider-max='100'
+            data-slider-step='1'
+            data-slider-value='[0,100]'
+            data-slider-orientation='horizontal'
+            data-slider-selection='after'
+            data-slider-tooltip='show'
+            style='position:relative; top:0; left:0; width:100%;')
         .legend-scale
           ul.legend-labels.clearfix
             li
@@ -27,22 +27,22 @@ template(name='gritsLegend')
               span(style='background-color: {{pathColorScale 80}};') 80%
             li
               span(style='background-color: {{pathColorScale 100}};') 100%
-              
+
       .slider-wrapper
         .legend-title {{_ "gritsLegend.node-throughput"}}
         .legend-scale
           .slider-container
             input.slider(
-              type='text',
-              value='',
-              data-slider-name=nodeLayerName,
-              data-slider-min='0',
-              data-slider-max='100',
-              data-slider-step='1',
-              data-slider-value='[0,100]',
-              data-slider-orientation='horizontal',
-              data-slider-selection='after',
-              data-slider-tooltip='show',
+              type='text'
+              value=''
+              data-slider-name=nodeLayerName
+              data-slider-min='0'
+              data-slider-max='100'
+              data-slider-step='1'
+              data-slider-value='[0,100]'
+              data-slider-orientation='horizontal'
+              data-slider-selection='after'
+              data-slider-tooltip='show'
               style='position:relative; top:0; left:0; width:100%;')
             ul.legend-labels.clearfix
               li
